@@ -8,7 +8,7 @@ import {
   getLoggedModelArtifactLocationUrl,
 } from '../../../common/utils/ArtifactUtils';
 import './ShowArtifactTextView.css';
-import { DesignSystemHocProps, WithDesignSystemThemeHoc } from '@databricks/design-system';
+import { DesignSystemHocProps, WithDesignSystemThemeHoc, ToggleButton } from '@databricks/design-system';
 import { ArtifactViewSkeleton } from './ArtifactViewSkeleton';
 import { ArtifactViewErrorState } from './ArtifactViewErrorState';
 import { LoggedModelArtifactViewerProps } from './ArtifactViewComponents.types';
@@ -27,9 +27,12 @@ type State = {
   error?: Error;
   text?: string;
   path?: string;
+  autoRefresh: boolean;
 };
 
 class ShowArtifactTextView extends Component<Props, State> {
+  private autoRefreshInterval?: number;
+
   constructor(props: Props) {
     super(props);
     this.fetchArtifacts = this.fetchArtifacts.bind(this);
@@ -44,17 +47,50 @@ class ShowArtifactTextView extends Component<Props, State> {
     error: undefined,
     text: undefined,
     path: undefined,
+    autoRefresh: false, // auto-refresh is off by default
   };
 
   componentDidMount() {
     this.fetchArtifacts();
+    if (this.state.autoRefresh) {
+      this.startAutoRefresh();
+    }
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: Props, prevState: State) {
     if (this.props.path !== prevProps.path || this.props.runUuid !== prevProps.runUuid) {
       this.fetchArtifacts();
     }
+    if (prevState.autoRefresh !== this.state.autoRefresh) {
+      if (this.state.autoRefresh) {
+        this.startAutoRefresh();
+      } else {
+        this.stopAutoRefresh();
+      }
+    }
   }
+
+  componentWillUnmount() {
+    this.stopAutoRefresh();
+  }
+
+  startAutoRefresh() {
+    if (!this.autoRefreshInterval) {
+      // Set auto-refresh interval (every 5 seconds)
+      this.autoRefreshInterval = window.setInterval(this.fetchArtifacts, 5000);
+    }
+  }
+
+  stopAutoRefresh() {
+    if (this.autoRefreshInterval) {
+      clearInterval(this.autoRefreshInterval);
+      this.autoRefreshInterval = undefined;
+    }
+  }
+
+  handleAutoRefreshToggle = (pressed: boolean) => {
+    this.setState({ autoRefresh: pressed });
+  };
 
   render() {
     if (this.state.loading || this.state.path !== this.props.path) {
@@ -84,6 +120,16 @@ class ShowArtifactTextView extends Component<Props, State> {
 
       return (
         <div className="ShowArtifactPage">
+          {/* auto-refresh toggle button */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px', gap: '8px' }}>
+            <ToggleButton
+              componentId="auto-refresh-toggle"
+              pressed={this.state.autoRefresh}
+              onPressedChange={this.handleAutoRefreshToggle}
+            >
+              Auto-refresh
+            </ToggleButton>
+          </div>
           <div className="text-area-border-box">
             <SyntaxHighlighter language={language} style={syntaxStyle} customStyle={overrideStyles}>
               {renderedContent ?? ''}
