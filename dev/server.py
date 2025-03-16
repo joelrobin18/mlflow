@@ -16,7 +16,7 @@ def random_port() -> int:
 
 
 def main():
-    gateway_port = random_port()
+    gateway_port = 8000
     gateway_host = "localhost"
     with (
         subprocess.Popen(
@@ -27,7 +27,7 @@ def main():
                 "deployments",
                 "start-server",
                 "--config-path",
-                "examples/gateway/openai/config.yaml",
+                "examples/gateway/gemini/config.yaml",
                 "--host",
                 gateway_host,
                 "--port",
