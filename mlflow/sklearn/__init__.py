@@ -19,6 +19,7 @@ import pickle
 import weakref
 from collections import OrderedDict, defaultdict
 from copy import deepcopy
+from pathlib import Path
 from typing import Any, Optional
 
 import numpy as np
@@ -650,6 +651,9 @@ def load_model(model_uri, dst_path=None):
         predictions = sk_model.predict(pandas_df)
     """
     local_model_path = _download_artifact_from_uri(artifact_uri=model_uri, output_path=dst_path)
+    print("--- DEBUGGING AUTOML TESTS ---")  # noqa: T201
+    for f in Path(local_model_path).rglob("*"):
+        print(f)  # noqa: T201
     flavor_conf = _get_flavor_configuration(model_path=local_model_path, flavor_name=FLAVOR_NAME)
     _add_code_from_conf_to_system_path(local_model_path, flavor_conf)
     sklearn_model_artifacts_path = os.path.join(local_model_path, flavor_conf["pickled_model"])
