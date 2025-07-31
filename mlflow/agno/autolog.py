@@ -1,287 +1,197 @@
-from __future__ import annotations
-
 import inspect
-from typing import Any, Dict, Iterable, Tuple
+import logging
+from typing import Any, Dict, Optional
 
 import mlflow
-from mlflow.entities.span import SpanStatus, SpanType, SpanStatusCode
+from mlflow.entities import SpanType
+from mlflow.entities.span import LiveSpan, SpanStatus, SpanStatusCode
+from mlflow.tracing.constant import SpanAttributeKey, TokenUsageKey
 from mlflow.utils.autologging_utils.config import AutoLoggingConfig
 
-
-# Define constants for this integration
 FLAVOR_NAME = "agno"
+_logger = logging.getLogger(__name__)
 
-def _construct_inputs(func: Any, args: Tuple[Any], kwargs: Dict[str, Any]) -> Dict[str, Any]:
-    inputs: Dict[str, Any] = {}
-    try:
-        signature = inspect.signature(func)
-        bound = signature.bind_partial(*args, **kwargs)
-        bound.apply_defaults()
-        for name, val in bound.arguments.items():
-            if name in ("self", "cls"):
-                continue
-            inputs[name] = val
-    except Exception:
-        inputs["args"] = [a for a in args]
-        inputs["kwargs"] = {str(k): v for k, v in kwargs.items()}
-    return inputs
 
-def _parse_tools(tools: Iterable[Any]) -> Iterable[str]:
-    names = []
-    try:
-        for tool in tools:
-            name = getattr(tool, "name", None) or getattr(tool, "__name__", None)
-            if name:
-                names.append(str(name))
-            else:
-                names.append(str(tool))
-    except Exception:
-        try:
-            names = [str(t) for t in tools]
-        except Exception:
-            names = []
-    return names
+def _construct_full_inputs(func, *args, **kwargs) -> Dict[str, Any]:
+    sig = inspect.signature(func)
+    bound = sig.bind_partial(*args, **kwargs).arguments
+    return {
+        k: (v.__dict__ if hasattr(v, "__dict__") else v)
+        for k, v in bound.items()
+        if v is not None
+    }
 
-def _get_agent_attributes(agent: Any) -> Dict[str, Any]:
-    attributes: Dict[str, Any] = {}
+def _compute_span_name(instance, original) -> str:
     try:
-        attributes["agent_class"] = agent.__class__.__name__
-        if hasattr(agent, "name"):
-            name_value = getattr(agent, "name")
-            if name_value:
-                attributes["agent_name"] = str(name_value)
-        if hasattr(agent, "instructions"):
-            attributes["agent_instructions"] = agent.instructions
-        if hasattr(agent, "knowledge"):
-            attributes["agent_knowledge"] = agent.knowledge
-        # Tools
-        if hasattr(agent, "tools"):
-            tools_obj = getattr(agent, "tools")
-            if isinstance(tools_obj, dict):
-                tool_names = list(map(str, tools_obj.keys()))
-            else:
-                tool_names = _parse_tools(tools_obj)
-            attributes["tools"] = tool_names
-        if hasattr(agent, "session_id"):
-            attributes["session_id"] = str(getattr(agent, "session_id"))
-        if hasattr(agent, "user_id"):
-            attributes["user_id"] = str(getattr(agent, "user_id"))
-    except Exception:
+        from agno.tools.function import FunctionCall   
+
+        if isinstance(instance, FunctionCall):
+            tool_name = None
+            for attr in ["function_name", "name", "tool_name"]:
+                val = getattr(instance, attr, None)
+                if val:
+                    return val
+            if not tool_name and hasattr(instance, "function"):
+                underlying_fn = getattr(instance, "function")
+                for attr in ["name", "__name__", "function_name"]:
+                    val = getattr(underlying_fn, attr, None)
+                    if val:
+                        return val
+            if not tool_name:
+                return "AgnoToolCall"
+
+    except ImportError:
         pass
-    return attributes
 
-def _extract_token_usage(metrics: Dict[str, Any]) -> Dict[str, Any]:
-    token_usage: Dict[str, Any] = {}
-    try:
-        if not isinstance(metrics, dict):
-            return token_usage
-        for key in ["input_tokens", "output_tokens", "prompt_tokens", "completion_tokens", "total_tokens"]:
-            if key in metrics:
-                token_usage[key] = metrics.get(key)
-        for parent_key in ["session_metrics", "usage"]:
-            if parent_key in metrics and isinstance(metrics[parent_key], dict):
-                for key in ["input_tokens", "output_tokens", "prompt_tokens", "completion_tokens", "total_tokens"]:
-                    if key in metrics[parent_key]:
-                        token_usage[key] = metrics[parent_key].get(key)
-    except Exception:
-        pass
-    return token_usage
+    return f"{instance.__class__.__name__}.{original.__name__}"
 
-def _set_token_usage_on_span(span: Any, token_usage: Dict[str, Any]) -> None:
-    for key, value in token_usage.items():
+def _parse_tools(tools) -> list[Dict[str, Any]]:
+    result = []
+    for tool in tools or []:
         try:
-            usage_key = {
-                "input_tokens": "input",
-                "prompt_tokens": "prompt",
-                "completion_tokens": "completion",
-                "output_tokens": "output",
-                "total_tokens": "total",
-            }.get(key, key)
-            span.set_token_usage(key=usage_key, value=value)
+            data = tool.model_dumps(exclude_none=True)
+            if data:
+                result.append({"type": "function", "function": data})
         except Exception:
-            continue
+            # Fallback to string representation
+            result.append({"name": str(tool)})
+    return result
 
-def _patched_agent_run(original, agent, *args, **kwargs):
-    cfg = AutoLoggingConfig.init(flavor_name=FLAVOR_NAME)
-    if not cfg.log_traces:
-        return original(agent, *args, **kwargs)
+def _get_agent_attributes(instance) -> Dict[str, Any]:
+    agent_attr: Dict[str, Any] = {}
+    for key, value in instance.__dict__.items():
+        if key == "tools":
+            value = _parse_tools(value)
+        if value is not None:
+            agent_attr[key] = value
+    return agent_attr
+
+def _get_tools_attribute(instance) -> Dict[str, Any]:
+    tools_attr = {
+    f"tool_{key}": val
+    for key, val in vars(instance.function).items()
+    if not key.startswith("_") and val is not None
+    }
+
+    return tools_attr
+
+
+def _set_span_attributes(span: LiveSpan, instance) -> None:
+    try:
+        from agno.agent import Agent
+        from agno.team import Team               
+
+
+        if isinstance(instance, (Agent, Team)):
+            span.set_attributes(_get_agent_attributes(instance))
+    except Exception as exc:  # pragma: no cover
+        _logger.debug("Unable to attach agent attributes: %s", exc)
+
+    try:
+        from agno.tools.function import FunctionCall
+        if isinstance(instance, FunctionCall):
+            span.set_attributes(_get_tools_attribute(instance))
+    except Exception:
+        _logger.debug("Unable to attach agent attributes: %s", exc)
+
+
+def _get_span_type(instance) -> str:
+    try:
+        from agno.agent import Agent
+        from agno.team import Team
+        from agno.tools.function import FunctionCall 
+
+    except ImportError:
+        return SpanType.UNKNOWN
+
+    if isinstance(instance, (Agent, Team)):
+        return SpanType.AGENT
+    if isinstance(instance, FunctionCall):
+        return SpanType.TOOL
+
+    return SpanType.UNKNOWN
+
+# Token usage metrics is given as list of integers. 
+def _coerce_to_int(value) -> int | None:
+    if value is None:
+        return None
+
+    if isinstance(value, list):
+        total = 0
+        for item in value:
+            coerced = _coerce_to_int(item)      # recurse for nested dicts etc.
+            if coerced is None:
+                return None                     # bail if anything isn't numeric
+            total += coerced
+        return total
+
+    if isinstance(value, dict):
+        for k in ("value", "tokens", "count"):
+            if k in value:
+                return _coerce_to_int(value[k])
+        return None
+
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
     
-    inputs = _construct_inputs(original, args, kwargs)
-    attributes = _get_agent_attributes(agent)
-    span_name = attributes.get("agent_name") or attributes.get("agent_class") or "AgnoAgentRun"
-    with mlflow.start_span(span_type=SpanType.AGENT, name=span_name) as span:
-        span.set_inputs(inputs)
-        span.set_attributes(attributes)
-        try:
-            result = original(agent, *args, **kwargs)
-            output = result
-            span.set_outputs(output)
-            metrics = None
-            try:
-                if hasattr(result, "metrics"):
-                    metrics = getattr(result, "metrics")
-                elif hasattr(result, "session_metrics"):
-                    metrics = getattr(result, "session_metrics")
-            except Exception:
-                metrics = None
-            if metrics:
-                token_usage = _extract_token_usage(metrics)
-                _set_token_usage_on_span(span, token_usage)
-            span.set_status(SpanStatus(SpanStatusCode.OK))
-            return result
-        except Exception as e:
-            span.set_status(SpanStatus(SpanStatusCode.ERROR))
-            raise
+def _parse_usage(result) -> dict[str, int] | None:
+    usage = getattr(result, "metrics", None) or getattr(result, "session_metrics", None)
+    if not usage:
+        return None
 
-async def _patched_agent_arun(original, agent, *args, **kwargs):
+    parsed = {
+        TokenUsageKey.INPUT_TOKENS:  _coerce_to_int(usage.get("input_tokens")),
+        TokenUsageKey.OUTPUT_TOKENS: _coerce_to_int(usage.get("output_tokens")),
+        TokenUsageKey.TOTAL_TOKENS:  _coerce_to_int(usage.get("total_tokens")),
+    }
+    return parsed if all(v is not None for v in parsed.values()) else None
+
+
+async def patched_async_class_call(original, self, *args, **kwargs):
     cfg = AutoLoggingConfig.init(flavor_name=FLAVOR_NAME)
     if not cfg.log_traces:
-        return await original(agent, *args, **kwargs)
+        return await original(self, *args, **kwargs)
 
-    inputs = _construct_inputs(original, args, kwargs)
-    attributes = _get_agent_attributes(agent)
-    span_name = attributes.get("agent_name") or attributes.get("agent_class") or "AgnoAgentARun"
-    async with mlflow.start_span(span_type=SpanType.AGENT, name=span_name) as span:
-        span.set_inputs(inputs)
-        span.set_attributes(attributes)
+    span_name = _compute_span_name(self, original)
+    span_type = _get_span_type(self)
+
+    async with mlflow.start_span(name=span_name, span_type=span_type) as span:
+        span.set_inputs(_construct_full_inputs(original, self, *args, **kwargs))
+        _set_span_attributes(span, self)
+
         try:
-            result = await original(agent, *args, **kwargs)
-            output = result
-            span.set_outputs(output)
-            metrics = None
-            try:
-                if hasattr(result, "metrics"):
-                    metrics = getattr(result, "metrics")
-                elif hasattr(result, "session_metrics"):
-                    metrics = getattr(result, "session_metrics")
-            except Exception:
-                metrics = None
-            if metrics:
-                token_usage = _extract_token_usage(metrics)
-                _set_token_usage_on_span(span, token_usage)
+            result = await original(self, *args, **kwargs)
+            span.set_outputs(result.__dict__ if hasattr(result, "__dict__") else result)
+            if usage := _parse_usage(result):
+                span.set_attribute(SpanAttributeKey.CHAT_USAGE, usage)
             span.set_status(SpanStatus(SpanStatusCode.OK))
             return result
-        except Exception as e:
+        except Exception as exc:
             span.set_status(SpanStatus(SpanStatusCode.ERROR))
             raise
 
 
-def _patched_tool_execute(original, func_call, *args, **kwargs):
+def patched_class_call(original, self, *args, **kwargs):
     cfg = AutoLoggingConfig.init(flavor_name=FLAVOR_NAME)
     if not cfg.log_traces:
-        return original(func_call, *args, **kwargs)
-    tool_name = None
-    description = None
-    for attr in ["function_name", "name", "tool_name"]:
-        val = getattr(func_call, attr, None)
-        if val:
-            tool_name = str(val)
-            break
-    if not tool_name and hasattr(func_call, "function"):
-        underlying_fn = getattr(func_call, "function")
-        for attr in ["name", "__name__", "function_name"]:
-            val = getattr(underlying_fn, attr, None)
-            if val:
-                tool_name = str(val)
-                break
-        if hasattr(underlying_fn, "description"):
-            description = getattr(underlying_fn, "description")
-    if not tool_name:
-        tool_name = "AgnoToolCall"
-    if description is None:
-        for attr in ["description", "function_description"]:
-            val = getattr(func_call, attr, None)
-            if val:
-                description = str(val)
-                break
-    span_name = tool_name
-    with mlflow.start_span(span_type=SpanType.TOOL, name=span_name) as span:
-        inputs = _construct_inputs(original, args, kwargs)
-        if hasattr(func_call, "args"):
-            try:
-                inputs["tool_args"] = func_call.args
-            except Exception:
-                pass
-        span.set_inputs(inputs)
-        attrs = {"tool_name": tool_name}
-        if description:
-            attrs["tool_description"] = str(description)
-        span.set_attributes(attrs)
+        return original(self, *args, **kwargs)
+
+    span_name = _compute_span_name(self, original)
+    span_type = _get_span_type(self)
+
+    with mlflow.start_span(name=span_name, span_type=span_type) as span:
+        span.set_inputs(_construct_full_inputs(original, self, *args, **kwargs))
+        _set_span_attributes(span, self)
+
         try:
-            result = original(func_call, *args, **kwargs)
-            span.set_outputs(result)
+            result = original(self, *args, **kwargs)
+            span.set_outputs(result.__dict__ if hasattr(result, "__dict__") else result)
+            if usage := _parse_usage(result):
+                span.set_attribute(SpanAttributeKey.CHAT_USAGE, usage)
             span.set_status(SpanStatus(SpanStatusCode.OK))
             return result
-        except Exception as e:
-            span.set_status(SpanStatus(SpanStatusCode.ERROR))
-            raise
-
-async def _patched_tool_aexecute(original, func_call, *args, **kwargs):
-    cfg = AutoLoggingConfig.get_config(FLAVOR_NAME)
-    if not cfg.log_traces:
-        return await original(func_call, *args, **kwargs)
-    tool_name = None
-    description = None
-    for attr in ["function_name", "name", "tool_name"]:
-        val = getattr(func_call, attr, None)
-        if val:
-            tool_name = str(val)
-            break
-    if not tool_name and hasattr(func_call, "function"):
-        underlying_fn = getattr(func_call, "function")
-        for attr in ["name", "__name__", "function_name"]:
-            val = getattr(underlying_fn, attr, None)
-            if val:
-                tool_name = str(val)
-                break
-        if hasattr(underlying_fn, "description"):
-            description = getattr(underlying_fn, "description")
-    if not tool_name:
-        tool_name = "AgnoToolCall"
-    if description is None:
-        for attr in ["description", "function_description"]:
-            val = getattr(func_call, attr, None)
-            if val:
-                description = str(val)
-                break
-    span_name = tool_name
-    async with mlflow.start_span(span_type=SpanType.TOOL, name=span_name) as span:
-        inputs = _construct_inputs(original, args, kwargs)
-        if hasattr(func_call, "args"):
-            try:
-                inputs["tool_args"] = func_call.args
-            except Exception:
-                pass
-        span.set_inputs(inputs)
-        attrs = {"tool_name": tool_name}
-        if description:
-            attrs["tool_description"] = str(description)
-        span.set_attributes(attrs)
-        try:
-            result = await original(func_call, *args, **kwargs)
-            span.set_outputs(result)
-            span.set_status(SpanStatus(SpanStatusCode.OK))
-            return result
-        except Exception as e:
-            span.set_status(SpanStatus(SpanStatusCode.ERROR), message=str(e))
-            raise
-
-def _patched_agent_print_response(original, agent, *args, **kwargs):
-    cfg = AutoLoggingConfig.init(flavor_name=FLAVOR_NAME)
-    if not cfg.log_traces:
-        return original(agent, *args, **kwargs)
-
-    inputs = _construct_inputs(original, args, kwargs)
-    attributes = _get_agent_attributes(agent)
-    span_name = attributes.get("agent_name") or "print_response"
-    with mlflow.start_span(span_type=SpanType.AGENT, name=span_name) as span:
-        span.set_inputs(inputs)
-        span.set_attributes(attributes)
-        try:
-            result = original(agent, *args, **kwargs)
-            span.set_outputs(result)
-            span.set_status(SpanStatus(SpanStatusCode.OK))
-            return result
-        except Exception as e:
+        except Exception as exc:
             span.set_status(SpanStatus(SpanStatusCode.ERROR))
             raise

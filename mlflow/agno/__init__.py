@@ -1,97 +1,47 @@
-from mlflow.utils.autologging_utils import autologging_integration, safe_patch
-from mlflow.utils.annotations import experimental
-from mlflow.utils.autologging_utils.config import AutoLoggingConfig
+import inspect
 import logging
-from mlflow.agno.autolog import _patched_agent_arun, _patched_agent_run, _patched_tool_aexecute, _patched_tool_execute, _patched_agent_print_response
+
+from mlflow.utils.annotations import experimental
+from mlflow.utils.autologging_utils import autologging_integration, safe_patch
+
+from mlflow.agno.autolog import (
+    patched_async_class_call,
+    patched_class_call,
+)
 
 FLAVOR_NAME = "agno"
 _logger = logging.getLogger(__name__)
 
-@experimental
+
+@experimental(version="3.3.0")
 @autologging_integration(FLAVOR_NAME)
-def autolog(
-    disable: bool = False,
-    silent: bool = False,
-) -> None:
+def autolog(*, log_traces: bool = True, disable: bool = False, silent: bool = False) -> None:
+    class_map = {
+        "agno.agent.Agent": ["run", "arun", "print_response"],
+        "agno.team.Team": ["run", "arun", "print_response"],
+        "agno.tools.function.FunctionCall": ["execute", "aexecute"],
+    }
 
-    try:
-        import agno.agent  # type: ignore[attr-defined]
-        import agno.team  # type: ignore[attr-defined]
-        import agno.models.base  # type: ignore[attr-defined]
-        import agno.tools.function  # type: ignore[attr-defined]
-    except Exception as e:
-        _logger.warning("Failed to import Agno modules for MLflow integration: %s", e)
-        return
+    for cls_path, methods in class_map.items():
+        mod_name, cls_name = cls_path.rsplit(".", 1)
+        try:
+            module = __import__(mod_name, fromlist=[cls_name])
+            cls = getattr(module, cls_name)
+        except (ImportError, AttributeError) as exc:
+            _logger.error("Agno autologging: failed to import %s – %s", cls_path, exc)
+            continue
 
-    # Patch Agent.run and Agent.arun
-    safe_patch(
-        FLAVOR_NAME,
-        agno.agent.Agent,
-        "run",
-        _patched_agent_run,
-        manage_run=False,
-    )
-    # async run
-    safe_patch(
-        FLAVOR_NAME,
-        agno.agent.Agent,
-        "arun",
-        _patched_agent_arun,
-        manage_run=False,
-    )
-    # Patch Team.run and Team.arun
-    safe_patch(
-        FLAVOR_NAME,
-        agno.team.Team,
-        "run",
-        _patched_agent_run,
-        manage_run=False,
-    )
-    safe_patch(
-        FLAVOR_NAME,
-        agno.team.Team,
-        "arun",
-        _patched_agent_arun,
-        manage_run=False,
-    )
+        for method_name in methods:
+            try:
+                original = getattr(cls, method_name)
+                wrapper = (
+                    patched_async_class_call
+                    if inspect.iscoroutinefunction(original)
+                    else patched_class_call
+                )
+                safe_patch(FLAVOR_NAME, cls, method_name, wrapper)
+            except AttributeError as exc:
+                _logger.error("Agno autologging: cannot patch %s.%s – %s", cls_path, method_name, exc)
 
-    # Patch tool execution
-    if hasattr(agno.tools.function, "FunctionCall"):
-        if hasattr(agno.tools.function.FunctionCall, "execute"):
-            safe_patch(
-                FLAVOR_NAME,
-                agno.tools.function.FunctionCall,
-                "execute",
-                _patched_tool_execute,
-                manage_run=False,
-            )
-        if hasattr(agno.tools.function.FunctionCall, "aexecute"):
-            safe_patch(
-                FLAVOR_NAME,
-                agno.tools.function.FunctionCall,
-                "aexecute",
-                _patched_tool_aexecute,
-                manage_run=False,
-            )
-
-    # Patch print_response on Agent and Team to create top-level spans for user-facing calls
-    if hasattr(agno.agent.Agent, "print_response"):
-        safe_patch(
-            FLAVOR_NAME,
-            agno.agent.Agent,
-            "print_response",
-            _patched_agent_print_response,
-            manage_run=False,
-        )
-    if hasattr(agno.team.Team, "print_response"):
-        safe_patch(
-            FLAVOR_NAME,
-            agno.team.Team,
-            "print_response",
-            _patched_agent_print_response,
-            manage_run=False,
-        )
-
-    # Integration is registered at runtime; autologging is now active.
     if not silent:
-        _logger.info("MLflow Agno autologging is enabled.")
+        _logger.info("MLflow Agno autologging enabled (log_traces=%s).", log_traces)
