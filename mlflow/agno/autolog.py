@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import inspect
-import logging
-from functools import wraps
 from typing import Any, Dict, Iterable, Tuple
 
 import mlflow
@@ -12,7 +10,6 @@ from mlflow.utils.autologging_utils.config import AutoLoggingConfig
 
 # Define constants for this integration
 FLAVOR_NAME = "agno"
-_logger = logging.getLogger(__name__)
 
 def _construct_inputs(func: Any, args: Tuple[Any], kwargs: Dict[str, Any]) -> Dict[str, Any]:
     inputs: Dict[str, Any] = {}
@@ -72,26 +69,6 @@ def _get_agent_attributes(agent: Any) -> Dict[str, Any]:
     except Exception:
         pass
     return attributes
-
-def _get_model_attributes(model: Any) -> Dict[str, Any]:
-    attrs: Dict[str, Any] = {}
-    try:
-        attrs["model_class"] = model.__class__.__name__
-        if hasattr(model, "provider"):
-            attrs["model_provider"] = str(getattr(model, "provider"))
-        if hasattr(model, "model_name"):
-            attrs["model_name"] = str(getattr(model, "model_name"))
-        if hasattr(model, "id"):
-            attrs["model_id"] = str(getattr(model, "id"))
-        if hasattr(model, "config"):
-            config = getattr(model, "config")
-            if isinstance(config, dict):
-                for key in ["provider", "model"]:
-                    if key in config and f"model_{key}" not in attrs:
-                        attrs[f"model_{key}"] = str(config[key])
-    except Exception:
-        pass
-    return attrs
 
 def _extract_token_usage(metrics: Dict[str, Any]) -> Dict[str, Any]:
     token_usage: Dict[str, Any] = {}
@@ -188,69 +165,6 @@ async def _patched_agent_arun(original, agent, *args, **kwargs):
             span.set_status(SpanStatus(SpanStatusCode.ERROR))
             raise
 
-def _patched_model_invoke(original, model, *args, **kwargs):
-    cfg = AutoLoggingConfig.init(flavor_name=FLAVOR_NAME)
-    if not cfg.log_traces:
-        return original(model, *args, **kwargs)
-
-    inputs = _construct_inputs(original, args, kwargs)
-    attributes = _get_model_attributes(model)
-    span_name = attributes.get("model_name") or attributes.get("model_class") or "AgnoModelInvoke"
-    with mlflow.start_span(span_type=SpanType.CHAT_MODEL, name=span_name) as span:
-        span.set_inputs(inputs)
-        span.set_attributes(attributes)
-        try:
-            result = original(model, *args, **kwargs)
-            output = result
-            span.set_outputs(output)
-            usage = None
-            try:
-                if hasattr(result, "usage"):
-                    usage = getattr(result, "usage")
-                elif isinstance(result, dict) and "usage" in result:
-                    usage = result["usage"]
-            except Exception:
-                usage = None
-            if usage:
-                token_usage = _extract_token_usage(usage)
-                _set_token_usage_on_span(span, token_usage)
-            span.set_status(SpanStatus(SpanStatusCode.OK))
-            return result
-        except Exception as e:
-            span.set_status(SpanStatus(SpanStatusCode.ERROR))
-            raise
-
-async def _patched_model_ainvoke(original, model, *args, **kwargs):
-    cfg = AutoLoggingConfig.init(flavor_name=FLAVOR_NAME)
-    if not cfg.log_traces:
-        return original(model, *args, **kwargs)
-
-    inputs = _construct_inputs(original, args, kwargs)
-    attributes = _get_model_attributes(model)
-    span_name = attributes.get("model_name") or attributes.get("model_class") or "AgnoModelAInvoke"
-    async with mlflow.start_span(span_type=SpanType.CHAT_MODEL, name=span_name) as span:
-        span.set_inputs(inputs)
-        span.set_attributes(attributes)
-        try:
-            result = await original(model, *args, **kwargs)
-            output = result
-            span.set_outputs(output)
-            usage = None
-            try:
-                if hasattr(result, "usage"):
-                    usage = getattr(result, "usage")
-                elif isinstance(result, dict) and "usage" in result:
-                    usage = result["usage"]
-            except Exception:
-                usage = None
-            if usage:
-                token_usage = _extract_token_usage(usage)
-                _set_token_usage_on_span(span, token_usage)
-            span.set_status(SpanStatus(SpanStatusCode.OK))
-            return result
-        except Exception as e:
-            span.set_status(SpanStatus(SpanStatusCode.ERROR))
-            raise
 
 def _patched_tool_execute(original, func_call, *args, **kwargs):
     cfg = AutoLoggingConfig.init(flavor_name=FLAVOR_NAME)
@@ -295,8 +209,7 @@ def _patched_tool_execute(original, func_call, *args, **kwargs):
         span.set_attributes(attrs)
         try:
             result = original(func_call, *args, **kwargs)
-            output = result
-            span.set_outputs(output)
+            span.set_outputs(result)
             span.set_status(SpanStatus(SpanStatusCode.OK))
             return result
         except Exception as e:
@@ -346,8 +259,7 @@ async def _patched_tool_aexecute(original, func_call, *args, **kwargs):
         span.set_attributes(attrs)
         try:
             result = await original(func_call, *args, **kwargs)
-            output = result
-            span.set_outputs(output)
+            span.set_outputs(result)
             span.set_status(SpanStatus(SpanStatusCode.OK))
             return result
         except Exception as e:
@@ -373,4 +285,3 @@ def _patched_agent_print_response(original, agent, *args, **kwargs):
         except Exception as e:
             span.set_status(SpanStatus(SpanStatusCode.ERROR))
             raise
-
