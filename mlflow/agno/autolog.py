@@ -97,6 +97,7 @@ def _set_span_attributes(span: LiveSpan, instance) -> None:
 
 def _get_span_type(instance) -> str:
     try:
+        import agno
         from agno.agent import Agent
         from agno.team import Team
         from agno.tools.function import FunctionCall 
@@ -108,6 +109,21 @@ def _get_span_type(instance) -> str:
         return SpanType.AGENT
     if isinstance(instance, FunctionCall):
         return SpanType.TOOL
+    if isinstance(
+                instance,
+                (
+                    agno.storage.sqlite.SqliteStorage,
+                    agno.storage.dynamodb.DynamoDbStorage,
+                    agno.storage.json.JsonStorage,
+                    agno.storage.mongodb.MongoDbStorage,
+                    agno.storage.mysql.MySQLStorage,
+                    agno.storage.postgres.PostgresStorage,
+                    agno.storage.yaml.YamlStorage,
+                    agno.storage.singlestore.SingleStoreStorage,
+                    agno.storage.redis.RedisStorage,
+                ),
+            ):
+                return SpanType.RETRIEVER
 
     return SpanType.UNKNOWN
 
