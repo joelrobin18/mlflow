@@ -55,6 +55,24 @@ _CONDA_ENV_FILE_NAME = "conda.yaml"
 _REQUIREMENTS_FILE_NAME = "requirements.txt"
 _CONSTRAINTS_FILE_NAME = "constraints.txt"
 _PYTHON_ENV_FILE_NAME = "python_env.yaml"
+_UV_LOCK_FILE_NAME = "uv.lock"
+_PYPROJECT_FILE_NAME = "pyproject.toml"
+
+
+# Copies uv project files (``pyproject.toml`` and ``uv.lock``) into ``dst_dir`` when
+# the ``uv`` executable is available and the corresponding files exist in the current
+# working directory or any of its parents.
+def _copy_uv_project_files(dst_dir: str) -> None:
+    if shutil.which("uv") is None:
+        return
+
+    current = pathlib.Path.cwd()
+    for file_name in (_PYPROJECT_FILE_NAME, _UV_LOCK_FILE_NAME):
+        for parent in [current, *current.parents]:
+            candidate = parent / file_name
+            if candidate.exists():
+                shutil.copyfile(candidate, os.path.join(dst_dir, file_name))
+                break
 
 
 # Note this regular expression does not cover all possible patterns
@@ -126,6 +144,7 @@ class _PythonEnv:
             # Exclude None and empty lists
             data = {k: v for k, v in self.to_dict().items() if v}
             yaml.safe_dump(data, f, sort_keys=False, default_flow_style=False)
+        _copy_uv_project_files(os.path.dirname(path))
 
     @classmethod
     def from_yaml(cls, path):

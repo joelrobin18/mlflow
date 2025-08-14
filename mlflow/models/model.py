@@ -49,9 +49,12 @@ from mlflow.utils.databricks_utils import (
 from mlflow.utils.docstring_utils import LOG_MODEL_PARAM_DOCS, format_docstring
 from mlflow.utils.environment import (
     _CONDA_ENV_FILE_NAME,
+    _PYPROJECT_FILE_NAME,
     _PYTHON_ENV_FILE_NAME,
     _REQUIREMENTS_FILE_NAME,
+    _UV_LOCK_FILE_NAME,
     _add_or_overwrite_requirements,
+    _copy_uv_project_files,
     _get_requirements_from_file,
     _remove_requirements,
     _write_requirements_to_file,
@@ -93,6 +96,10 @@ METADATA_FILES = [
     _CONDA_ENV_FILE_NAME,
     _REQUIREMENTS_FILE_NAME,
     _PYTHON_ENV_FILE_NAME,
+]
+OPTIONAL_METADATA_FILES = [
+    _PYPROJECT_FILE_NAME,
+    _UV_LOCK_FILE_NAME,
 ]
 MODEL_CONFIG = "config"
 MODEL_CODE_PATH = "model_code_path"
@@ -914,6 +921,8 @@ class Model:
             for pycache in Path(local_path).rglob("__pycache__"):
                 shutil.rmtree(pycache, ignore_errors=True)
 
+            _copy_uv_project_files(local_path)
+
             if is_in_databricks_runtime():
                 _copy_model_metadata_for_uc_sharing(local_path, flavor)
 
@@ -1217,6 +1226,8 @@ class Model:
                 for pycache in Path(local_path).rglob("__pycache__"):
                     shutil.rmtree(pycache, ignore_errors=True)
 
+                _copy_uv_project_files(local_path)
+
                 if is_in_databricks_runtime():
                     _copy_model_metadata_for_uc_sharing(local_path, flavor)
 
@@ -1388,16 +1399,20 @@ def _copy_model_metadata_for_uc_sharing(local_path: str, flavor) -> None:
         # wheeled model updates several metadata files in original model directory
         # copy these updated metadata files to the 'metadata' subdirectory
         os.makedirs(metadata_path, exist_ok=True)
-        for file_name in METADATA_FILES + [
-            _ORIGINAL_REQ_FILE_NAME,
-        ]:
+        for file_name in (
+            METADATA_FILES
+            + OPTIONAL_METADATA_FILES
+            + [
+                _ORIGINAL_REQ_FILE_NAME,
+            ]
+        ):
             src_file_path = os.path.join(local_path, file_name)
             if os.path.exists(src_file_path):
                 dest_file_path = os.path.join(metadata_path, file_name)
                 shutil.copyfile(src_file_path, dest_file_path)
     else:
         os.makedirs(metadata_path, exist_ok=True)
-        for file_name in METADATA_FILES:
+        for file_name in METADATA_FILES + OPTIONAL_METADATA_FILES:
             src_file_path = os.path.join(local_path, file_name)
             if os.path.exists(src_file_path):
                 dest_file_path = os.path.join(metadata_path, file_name)
