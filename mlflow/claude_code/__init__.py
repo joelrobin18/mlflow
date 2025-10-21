@@ -1,11 +1,14 @@
-"""Claude Code integration for MLflow.
+"""Claude Code / Codex integration for MLflow.
 
-This module provides automatic tracing of Claude Code conversations to MLflow.
+This module provides automatic tracing of Claude Code (Codex) conversations to MLflow.
 
 Usage:
+    mlflow autolog codex [directory] [options]
+    # OR
     mlflow autolog claude [directory] [options]
 
 After setup, use the regular 'claude' command and traces will be automatically captured.
+All LLM calls, tool invocations, and conversation context are traced to MLflow.
 
 To enable tracing for the Claude Agent SDK, use `mlflow.anthropic.autolog()`.
 

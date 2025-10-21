@@ -122,7 +122,7 @@ def _show_setup_status(
     current_dir = Path.cwd().resolve()
 
     click.echo("\n" + "=" * 50)
-    click.echo("🎯 Claude Tracing Setup Complete!")
+    click.echo("🎯 Claude/Codex Tracing Setup Complete!")
     click.echo("=" * 50)
 
     click.echo(f"📁 Directory: {target_dir}")
@@ -159,4 +159,60 @@ def _show_setup_status(
         click.echo("\n💡 View your traces in your Databricks workspace")
 
     click.echo("\n🔧 To disable tracing later:")
-    click.echo("   mlflow autolog claude --disable")
+    click.echo("   mlflow autolog claude --disable (or 'mlflow autolog codex --disable')")
+
+
+@commands.command("codex")
+@click.argument("directory", default=".", type=click.Path(file_okay=False, dir_okay=True))
+@click.option(
+    "--tracking-uri", "-u", help="MLflow tracking URI (e.g., 'databricks' or 'file://mlruns')"
+)
+@click.option("--experiment-id", "-e", help="MLflow experiment ID")
+@click.option("--experiment-name", "-n", help="MLflow experiment name")
+@click.option("--disable", is_flag=True, help="Disable Codex tracing in the specified directory")
+@click.option("--status", is_flag=True, help="Show current tracing status")
+@click.pass_context
+def codex(
+    ctx: click.Context,
+    directory: str,
+    tracking_uri: str | None,
+    experiment_id: str | None,
+    experiment_name: str | None,
+    disable: bool,
+    status: bool,
+) -> None:
+    """Set up Codex (Claude Code) tracing in a directory.
+
+    This command configures Codex/Claude Code hooks to automatically trace conversations
+    to MLflow. After setup, use the regular 'claude' command and traces will be
+    automatically created. This is an alias for the 'mlflow autolog claude' command.
+
+    DIRECTORY: Directory to set up tracing in (default: current directory)
+
+    Examples:
+
+      # Set up tracing in current directory with local storage
+      mlflow autolog codex
+
+      # Set up tracing in a specific project directory
+      mlflow autolog codex ~/my-project
+
+      # Set up tracing with Databricks
+      mlflow autolog codex -u databricks -e 123456789
+
+      # Set up tracing with custom tracking URI
+      mlflow autolog codex -u file://./custom-mlruns
+
+      # Disable tracing in current directory
+      mlflow autolog codex --disable
+    """
+    # Call the same implementation as claude command
+    ctx.invoke(
+        claude,
+        directory=directory,
+        tracking_uri=tracking_uri,
+        experiment_id=experiment_id,
+        experiment_name=experiment_name,
+        disable=disable,
+        status=status,
+    )
