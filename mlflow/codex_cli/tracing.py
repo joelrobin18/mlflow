@@ -273,7 +273,7 @@ def process_session_file(
         )
         parent_span.end(end_time_ns=end_time)
 
-        # Flush async logging if enabled
+        # Flush async logging if enabled to ensure trace is exported to backend
         try:
             if hasattr(_get_trace_exporter(), "_async_queue"):
                 mlflow.flush_trace_async_logging()
@@ -281,7 +281,24 @@ def process_session_file(
             get_logger().debug("Failed to flush trace async logging: %s", e)
 
         get_logger().log(CODEX_TRACING_LEVEL, "Created trace: %s", parent_span.trace_id)
-        return mlflow.get_trace(parent_span.trace_id)
+
+        # Retrieve trace from backend to verify it was persisted
+        try:
+            trace = mlflow.get_trace(parent_span.trace_id)
+            if trace is None:
+                get_logger().error(
+                    "Trace was created but could not be retrieved from backend. "
+                    "Check MLflow tracking URI configuration."
+                )
+            return trace
+        except Exception as e:
+            get_logger().error(
+                "Failed to retrieve trace from backend: %s. "
+                "The trace may not be visible in the MLflow UI. "
+                "Check your tracking URI configuration.",
+                e,
+            )
+            return None
 
     except Exception as e:
         get_logger().error("Error processing session file: %s", e, exc_info=True)

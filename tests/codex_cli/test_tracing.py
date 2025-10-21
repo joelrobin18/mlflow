@@ -436,3 +436,56 @@ def test_trace_has_correct_timestamps(temp_sessions_dir):
     # Start time should match first item
     expected_start_ns = int(start_time * 1000000)  # Convert ms to ns
     assert parent_span.start_time_ns == expected_start_ns
+
+
+def test_trace_is_retrievable_from_backend(temp_sessions_dir, tmp_path):
+    """Test that traces are actually persisted to backend and can be retrieved.
+
+    This test uses a real file-based backend to verify end-to-end persistence.
+    """
+    import mlflow
+
+    # Set up a real file-based backend
+    tracking_uri = f"file://{tmp_path / 'mlruns'}"
+
+    with mock.patch("mlflow.codex_cli.tracing.get_env_var") as mock_env:
+        mock_env.return_value = tracking_uri
+
+        # Create a session
+        session_items = [
+            {"role": "user", "content": "Test persistence", "timestamp": 1700000000000},
+            {
+                "role": "assistant",
+                "content": "Trace persisted successfully",
+                "model": "gpt-4",
+                "usage": {"prompt_tokens": 5, "completion_tokens": 10},
+                "timestamp": 1700000001000,
+            },
+        ]
+
+        session_file = create_session_file(temp_sessions_dir, "persistence-test", session_items)
+
+        # Enable tracing and set tracking URI
+        with mock.patch("mlflow.codex_cli.tracing.is_tracing_enabled", return_value=True):
+            mlflow.set_tracking_uri(tracking_uri)
+
+            # Process session
+            trace = process_session_file(session_file, "persistence-test")
+
+            assert trace is not None
+            trace_id = trace.info.request_id
+
+            # Verify trace can be retrieved from backend using search
+            traces = mlflow.search_traces(max_results=10)
+            assert len(traces) > 0
+
+            # Find our trace
+            our_trace = next((t for t in traces if t.info.request_id == trace_id), None)
+            assert our_trace is not None
+            assert our_trace.info.request_id == trace_id
+
+            # Verify trace data
+            assert len(our_trace.data.spans) > 0
+            parent_span = next((s for s in our_trace.data.spans if s.parent_id is None), None)
+            assert parent_span is not None
+            assert parent_span.name == "codex_cli_session"

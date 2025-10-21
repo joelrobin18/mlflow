@@ -127,7 +127,18 @@ def _handle_trace_latest() -> None:
             click.echo(f"   Tracking URI: {status_info.tracking_uri}")
 
         click.echo("\n💡 View trace in MLflow UI:")
-        click.echo("   mlflow ui")
+        # Show correct UI command based on tracking URI
+        if status_info.tracking_uri:
+            if status_info.tracking_uri.startswith("file://"):
+                click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
+            elif status_info.tracking_uri == "databricks":
+                click.echo("   View in your Databricks workspace")
+            elif status_info.tracking_uri.startswith("sqlite://"):
+                click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
+            else:
+                click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
+        else:
+            click.echo("   mlflow ui")
     else:
         click.echo("❌ Failed to create trace")
         click.echo("   Check ~/.codex/mlflow/codex_tracing.log for details")
@@ -178,6 +189,19 @@ def _show_status() -> None:
     click.echo("\n2. Process latest session:")
     click.echo("   mlflow autolog codex --trace-latest")
     click.echo("\n3. View traces:")
-    click.echo("   mlflow ui")
+
+    # Show correct UI command based on tracking URI
+    if status_info.tracking_uri:
+        if status_info.tracking_uri.startswith("file://"):
+            click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
+        elif status_info.tracking_uri == "databricks":
+            click.echo("   View traces in your Databricks workspace")
+        elif status_info.tracking_uri.startswith("sqlite://"):
+            click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
+        else:
+            click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
+    else:
+        click.echo("   mlflow ui")
+
     click.echo("\n🔧 To disable tracing:")
     click.echo("   mlflow autolog codex --disable")
