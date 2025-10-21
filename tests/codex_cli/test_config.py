@@ -72,6 +72,11 @@ def test_setup_environment_config_minimal(mock_codex_dir):
     assert config["environment"]["MLFLOW_CODEX_TRACING_ENABLED"] == "true"
     assert "MLFLOW_TRACKING_URI" in config["environment"]
 
+    # Verify default uses ./mlruns (standard MLflow directory)
+    tracking_uri = config["environment"]["MLFLOW_TRACKING_URI"]
+    assert tracking_uri.endswith("/mlruns")
+    assert "file://" in tracking_uri
+
 
 def test_setup_environment_config_full(mock_codex_dir):
     """Test setup with full configuration."""

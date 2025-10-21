@@ -84,6 +84,16 @@ Each Codex session creates a hierarchical trace:
 
 ## Configuration
 
-- Config file: `~/.codex/mlflow_config.json`
-- Sessions dir: `~/.codex/sessions` (Codex CLI default)
-- Logs: `~/.codex/mlflow/codex_tracing.log`
+- **Config file**: `~/.codex/mlflow_config.json`
+- **Sessions dir**: `~/.codex/sessions` (Codex CLI default)
+- **Traces dir**: `./mlruns` (standard MLflow directory)
+- **Logs**: `~/.codex/mlflow/codex_tracing.log`
+
+## Why ./mlruns?
+
+Traces are saved to `./mlruns` by default (instead of `~/.codex/mlflow`) because:
+
+✅ **Standard MLflow location** - Matches other MLflow integrations
+✅ **No extra flags needed** - Just run `mlflow ui` to see traces
+✅ **Per-project isolation** - Each project directory has its own traces
+✅ **Consistent workflow** - Same as OpenAI, LangChain, Anthropic autolog

@@ -28,13 +28,22 @@ mlflow ui
 - `mlflow autolog codex --trace-latest` - Process latest session
 - `mlflow autolog codex --disable` - Disable tracing
 
-Architecture:
-    - Codex CLI stores sessions in ~/.codex/sessions as JSONL files
-    - MLflow processes these session files to create traces
-    - Each trace captures LLM calls, tool invocations, and conversation context
-    - Traces are automatically created after each Codex session completes
+## Architecture
 
-For more information about Codex CLI:
-    - GitHub: https://github.com/openai/codex
-    - Docs: https://developers.openai.com/codex/
+- **Sessions**: Codex CLI stores sessions in `~/.codex/sessions` as JSONL files
+- **Processing**: MLflow reads session files and creates structured traces
+- **Storage**: Traces saved to `./mlruns` by default (standard MLflow directory)
+- **Viewing**: Run `mlflow ui` to see traces with LLM calls and tool invocations
+
+## What Gets Traced
+
+Each Codex session creates a hierarchical trace:
+- Parent AGENT span: Overall session
+- LLM child spans: Each GPT model call with token usage
+- Tool child spans: File operations with inputs/outputs
+- Full conversation context and metadata
+
+For more information:
+- Codex CLI: https://github.com/openai/codex
+- MLflow Tracing: https://mlflow.org/docs/latest/llms/tracing/
 """

@@ -129,13 +129,14 @@ def _handle_trace_latest() -> None:
         click.echo("\n💡 View trace in MLflow UI:")
         # Show correct UI command based on tracking URI
         if status_info.tracking_uri:
-            if status_info.tracking_uri.startswith("file://"):
-                click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
+            # Check if using default ./mlruns directory
+            if status_info.tracking_uri.endswith("/mlruns"):
+                # For default mlruns, just show 'mlflow ui'
+                click.echo("   mlflow ui")
             elif status_info.tracking_uri == "databricks":
                 click.echo("   View in your Databricks workspace")
-            elif status_info.tracking_uri.startswith("sqlite://"):
-                click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
             else:
+                # For custom URIs, show full command
                 click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
         else:
             click.echo("   mlflow ui")
@@ -192,13 +193,14 @@ def _show_status() -> None:
 
     # Show correct UI command based on tracking URI
     if status_info.tracking_uri:
-        if status_info.tracking_uri.startswith("file://"):
-            click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
+        # Check if using default ./mlruns directory
+        if status_info.tracking_uri.endswith("/mlruns"):
+            # For default mlruns, just show 'mlflow ui'
+            click.echo("   mlflow ui")
         elif status_info.tracking_uri == "databricks":
             click.echo("   View traces in your Databricks workspace")
-        elif status_info.tracking_uri.startswith("sqlite://"):
-            click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
         else:
+            # For custom URIs, show full command
             click.echo(f"   mlflow ui --backend-store-uri {status_info.tracking_uri}")
     else:
         click.echo("   mlflow ui")

@@ -110,8 +110,10 @@ def setup_environment_config(
     if tracking_uri:
         config[ENVIRONMENT_FIELD][MLFLOW_TRACKING_URI.name] = tracking_uri
     elif MLFLOW_TRACKING_URI.name not in config[ENVIRONMENT_FIELD]:
-        # Default to file-based storage in .codex/mlflow
-        default_uri = f"file://{DEFAULT_CODEX_DIR / 'mlflow'}"
+        # Default to standard MLflow directory (./mlruns in current directory)
+        # This makes traces visible with just 'mlflow ui' without extra flags
+        import os
+        default_uri = f"file://{os.path.abspath('./mlruns')}"
         config[ENVIRONMENT_FIELD][MLFLOW_TRACKING_URI.name] = default_uri
 
     # Set experiment configuration
