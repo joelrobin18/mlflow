@@ -30,13 +30,13 @@ brew install --cask codex
 
 ```bash
 # Enable with local storage
-mlflow codex-cli enable
+mlflow autolog codex
 
 # Enable with custom tracking URI
-mlflow codex-cli enable -u file://./mlruns
+mlflow autolog codex -u file://./mlruns
 
 # Enable with Databricks
-mlflow codex-cli enable -u databricks -e 123456789
+mlflow autolog codex -u databricks -e 123456789
 ```
 
 ### 2. Use Codex CLI Normally
@@ -49,7 +49,7 @@ codex "write a function to parse JSON files"
 
 ```bash
 # Process the latest session
-mlflow codex-cli trace-latest
+mlflow autolog codex --trace-latest
 
 # View traces in MLflow UI
 mlflow ui
@@ -68,7 +68,7 @@ mlflow ui
 ### Enable Tracing
 
 ```bash
-mlflow codex-cli enable [OPTIONS]
+mlflow autolog codex [OPTIONS]
 ```
 
 Options:
@@ -80,7 +80,7 @@ Options:
 ### Check Status
 
 ```bash
-mlflow codex-cli status
+mlflow autolog codex --status
 ```
 
 Shows current configuration and number of session files found.
@@ -88,7 +88,7 @@ Shows current configuration and number of session files found.
 ### Process Latest Session
 
 ```bash
-mlflow codex-cli trace-latest
+mlflow autolog codex --trace-latest
 ```
 
 Manually process the most recent Codex session file and create a trace.
@@ -96,7 +96,7 @@ Manually process the most recent Codex session file and create a trace.
 ### Disable Tracing
 
 ```bash
-mlflow codex-cli disable
+mlflow autolog codex --disable
 ```
 
 ## Configuration
@@ -150,13 +150,13 @@ Each Codex session creates a trace with the following structure:
 
 ```bash
 # Enable tracing
-mlflow codex-cli enable
+mlflow autolog codex
 
 # Use Codex
 codex "create a FastAPI endpoint for user authentication"
 
 # Process session
-mlflow codex-cli trace-latest
+mlflow autolog codex --trace-latest
 
 # View in UI
 mlflow ui
@@ -166,7 +166,7 @@ mlflow ui
 
 ```bash
 # Enable with Databricks backend
-mlflow codex-cli enable \
+mlflow autolog codex \
   -u databricks \
   -e 123456789
 
@@ -174,17 +174,17 @@ mlflow codex-cli enable \
 codex "refactor this code to use async/await"
 
 # Process and view in Databricks
-mlflow codex-cli trace-latest
+mlflow autolog codex --trace-latest
 ```
 
 ### Custom Sessions Directory
 
 ```bash
 # If you've configured Codex with a custom sessions directory
-mlflow codex-cli enable -s /custom/path/to/sessions
+mlflow autolog codex -s /custom/path/to/sessions
 
 # Check status
-mlflow codex-cli status
+mlflow autolog codex --status
 ```
 
 ## Troubleshooting
@@ -199,7 +199,7 @@ If you see "No session files found":
 
 ### Tracing Not Working
 
-1. Check status: `mlflow codex-cli status`
+1. Check status: `mlflow autolog codex --status`
 2. View logs: `cat ~/.codex/mlflow/codex_tracing.log`
 3. Verify configuration: `cat ~/.codex/mlflow_config.json`
 
@@ -214,7 +214,7 @@ head ~/.codex/sessions/<session-file>.jsonl
 ## Limitations
 
 - **Post-hoc Processing**: Traces are created after the session completes, not in real-time
-- **Manual Trigger**: You need to run `mlflow codex-cli trace-latest` to process sessions
+- **Manual Trigger**: You need to run `mlflow autolog codex --trace-latest` to process sessions
 - **Latest Only**: The `trace-latest` command only processes the most recent session
 
 ## Future Enhancements

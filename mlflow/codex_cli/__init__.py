@@ -5,24 +5,28 @@ This module provides automatic tracing integration between OpenAI Codex CLI and 
 Codex CLI is an open-source command-line coding agent from OpenAI that runs in your terminal
 and can read, modify, and run code on your machine. It uses GPT-4, GPT-5, or GPT-5-Codex models.
 
-Usage:
-    mlflow autolog codex [options]
-
-After setup, use the regular 'codex' command and traces will be automatically captured
-from session files stored in ~/.codex/sessions.
-
-Example:
+## Quick Start
 
 ```bash
-# Enable Codex tracing
+# 1. Enable tracing
 mlflow autolog codex
 
-# Use Codex normally
+# 2. Use Codex normally
 codex "write a function to parse JSON"
 
-# View traces in MLflow UI
+# 3. Process the session
+mlflow autolog codex --trace-latest
+
+# 4. View traces
 mlflow ui
 ```
+
+## All Commands
+
+- `mlflow autolog codex` - Enable tracing (default)
+- `mlflow autolog codex --status` - Check current status
+- `mlflow autolog codex --trace-latest` - Process latest session
+- `mlflow autolog codex --disable` - Disable tracing
 
 Architecture:
     - Codex CLI stores sessions in ~/.codex/sessions as JSONL files

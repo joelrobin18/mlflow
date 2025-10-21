@@ -12,12 +12,8 @@ from mlflow.codex_cli.config import (
 from mlflow.codex_cli.tracing import process_latest_session
 
 
-@click.group("codex-cli")
-def commands():
-    """Commands for OpenAI Codex CLI autologging with MLflow."""
-
-
-@commands.command("enable")
+# This command will be registered under the autolog group in mlflow/claude_code/cli.py
+@click.command("codex")
 @click.option(
     "--tracking-uri",
     "-u",
@@ -30,35 +26,66 @@ def commands():
     "-s",
     help="Custom Codex sessions directory (default: ~/.codex/sessions)",
 )
-def enable(
+@click.option("--disable", is_flag=True, help="Disable Codex CLI tracing")
+@click.option("--status", is_flag=True, help="Show current tracing status")
+@click.option(
+    "--trace-latest",
+    is_flag=True,
+    help="Process the latest Codex session and create a trace",
+)
+def codex_command(
     tracking_uri: str | None,
     experiment_id: str | None,
     experiment_name: str | None,
     sessions_dir: str | None,
+    disable: bool,
+    status: bool,
+    trace_latest: bool,
 ) -> None:
-    """Enable automatic tracing for Codex CLI sessions.
+    """Set up automatic tracing for OpenAI Codex CLI sessions.
 
     This command configures MLflow to automatically trace Codex CLI sessions.
-    After enabling, use the 'codex' command normally and traces will be created
-    from session files stored in ~/.codex/sessions.
+    After setup, use the 'codex' command normally and process sessions with
+    --trace-latest to create traces from session files in ~/.codex/sessions.
 
     Examples:
 
       # Enable tracing with local storage
-      mlflow codex-cli enable
+      mlflow autolog codex
 
-      # Enable tracing with custom tracking URI
-      mlflow codex-cli enable -u file://./custom-mlruns
+      # Enable with custom tracking URI
+      mlflow autolog codex -u file://./custom-mlruns
 
-      # Enable tracing with Databricks
-      mlflow codex-cli enable -u databricks -e 123456789
+      # Enable with Databricks
+      mlflow autolog codex -u databricks -e 123456789
 
-      # Enable tracing with custom sessions directory
-      mlflow codex-cli enable -s ~/my-codex-sessions
+      # Check status
+      mlflow autolog codex --status
+
+      # Process latest session
+      mlflow autolog codex --trace-latest
+
+      # Disable tracing
+      mlflow autolog codex --disable
     """
+    # Handle status flag
+    if status:
+        _show_status()
+        return
+
+    # Handle disable flag
+    if disable:
+        _handle_disable()
+        return
+
+    # Handle trace-latest flag
+    if trace_latest:
+        _handle_trace_latest()
+        return
+
+    # Default: Enable tracing
     click.echo("Configuring Codex CLI tracing...")
 
-    # Set up configuration
     setup_environment_config(
         tracking_uri=tracking_uri,
         experiment_id=experiment_id,
@@ -67,50 +94,25 @@ def enable(
     )
 
     click.echo("✅ Codex CLI tracing enabled")
-
-    # Show status
     _show_status()
 
 
-@commands.command("disable")
-def disable() -> None:
-    """Disable automatic tracing for Codex CLI sessions.
-
-    Example:
-      mlflow codex-cli disable
-    """
+def _handle_disable() -> None:
+    """Handle the disable command."""
     if disable_tracing():
         click.echo("✅ Codex CLI tracing disabled")
     else:
         click.echo("❌ No Codex CLI configuration found - tracing was not enabled")
 
 
-@commands.command("status")
-def status() -> None:
-    """Show current Codex CLI tracing status.
-
-    Example:
-      mlflow codex-cli status
-    """
-    _show_status()
-
-
-@commands.command("trace-latest")
-def trace_latest() -> None:
-    """Process the latest Codex session and create a trace.
-
-    This command manually processes the most recent Codex CLI session file
-    and creates an MLflow trace. Useful for testing or one-off trace creation.
-
-    Example:
-      mlflow codex-cli trace-latest
-    """
+def _handle_trace_latest() -> None:
+    """Handle the trace-latest command."""
     status_info = get_tracing_status()
 
     if not status_info.enabled:
         click.echo("❌ Codex CLI tracing is not enabled")
         click.echo(f"   Reason: {status_info.reason}")
-        click.echo("\n💡 Enable tracing with: mlflow codex-cli enable")
+        click.echo("\n💡 Enable tracing with: mlflow autolog codex")
         return
 
     click.echo("Processing latest Codex session...")
@@ -143,7 +145,7 @@ def _show_status() -> None:
         click.echo("❌ Status: DISABLED")
         if status_info.reason:
             click.echo(f"   Reason: {status_info.reason}")
-        click.echo("\n💡 Enable tracing with: mlflow codex-cli enable")
+        click.echo("\n💡 Enable tracing with: mlflow autolog codex")
         return
 
     click.echo("✅ Status: ENABLED")
@@ -174,8 +176,8 @@ def _show_status() -> None:
     click.echo("1. Use Codex CLI normally:")
     click.echo("   codex 'write a function to parse JSON'")
     click.echo("\n2. Process latest session:")
-    click.echo("   mlflow codex-cli trace-latest")
+    click.echo("   mlflow autolog codex --trace-latest")
     click.echo("\n3. View traces:")
     click.echo("   mlflow ui")
     click.echo("\n🔧 To disable tracing:")
-    click.echo("   mlflow codex-cli disable")
+    click.echo("   mlflow autolog codex --disable")

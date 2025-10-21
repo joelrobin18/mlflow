@@ -160,3 +160,12 @@ def _show_setup_status(
 
     click.echo("\n🔧 To disable tracing later:")
     click.echo("   mlflow autolog claude --disable")
+
+
+# Import and register the Codex CLI command (OpenAI Codex CLI integration)
+try:
+    from mlflow.codex_cli.cli import codex_command
+
+    commands.add_command(codex_command)
+except ImportError:
+    pass

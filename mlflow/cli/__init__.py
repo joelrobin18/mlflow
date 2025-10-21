@@ -866,19 +866,12 @@ try:
 except ImportError:
     pass
 
-# Add Claude Code integration commands
+# Add Claude Code and Codex CLI integration commands (under 'autolog' group)
+# The claude_code module also registers the codex command for OpenAI Codex CLI
 try:
     import mlflow.claude_code.cli
 
     cli.add_command(mlflow.claude_code.cli.commands)
-except ImportError:
-    pass
-
-# Add Codex CLI integration commands
-try:
-    import mlflow.codex_cli.cli
-
-    cli.add_command(mlflow.codex_cli.cli.commands)
 except ImportError:
     pass
 
