@@ -1,12 +1,12 @@
-# MLflow Claude Code / Codex Integration
+# MLflow Claude Code Integration
 
-This module provides automatic tracing integration between Claude Code (Codex) and MLflow.
+This module provides automatic tracing integration between Claude Code and MLflow.
 
 ## Module Structure
 
 - **`config.py`** - Configuration management (settings files, environment variables)
 - **`hooks.py`** - Claude Code hook setup and management
-- **`cli.py`** - MLflow CLI commands (`mlflow autolog claude` or `mlflow autolog codex`)
+- **`cli.py`** - MLflow CLI commands (`mlflow autolog claude`)
 - **`tracing.py`** - Core tracing logic and processors
 - **`hooks/`** - Hook implementation handlers
 
@@ -18,36 +18,34 @@ pip install mlflow
 
 ## Usage
 
-Set up Claude Code / Codex tracing in any project directory:
+Set up Claude Code tracing in any project directory:
 
 ```bash
-# Set up tracing in current directory (both commands are equivalent)
+# Set up tracing in current directory
 mlflow autolog claude
-# OR
-mlflow autolog codex
 
 # Set up tracing in specific directory
-mlflow autolog codex ~/my-project
+mlflow autolog claude ~/my-project
 
 # Set up with custom tracking URI
-mlflow autolog codex -u file://./custom-mlruns
-mlflow autolog codex -u sqlite:///mlflow.db
+mlflow autolog claude -u file://./custom-mlruns
+mlflow autolog claude -u sqlite:///mlflow.db
 
 # Set up with Databricks
-mlflow autolog codex -u databricks -e 123456789
+mlflow autolog claude -u databricks -e 123456789
 
 # Check status
-mlflow autolog codex --status
+mlflow autolog claude --status
 
 # Disable tracing
-mlflow autolog codex --disable
+mlflow autolog claude --disable
 ```
 
 ## How it Works
 
-1. **Setup**: The `mlflow autolog codex` (or `mlflow autolog claude`) command configures Claude Code hooks in a `.claude/settings.json` file
+1. **Setup**: The `mlflow autolog claude` command configures Claude Code hooks in a `.claude/settings.json` file
 2. **Automatic Tracing**: When you use the `claude` command in the configured directory, your conversations are automatically traced to MLflow
-3. **View Traces**: Use `mlflow ui` to view your conversation traces with detailed LLM calls and tool usage
+3. **View Traces**: Use `mlflow ui` to view your conversation traces
 
 ## Configuration
 
@@ -69,16 +67,16 @@ The setup creates two types of configuration:
 ### Basic Local Setup
 
 ```bash
-mlflow autolog codex
+mlflow autolog claude
 cd .
 claude "help me write a function"
-mlflow ui
+mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
 
 ### Databricks Integration
 
 ```bash
-mlflow autolog codex -u databricks -e 123456789
+mlflow autolog claude -u databricks -e 123456789
 claude "analyze this data"
 # View traces in Databricks
 ```
@@ -86,7 +84,7 @@ claude "analyze this data"
 ### Custom Project Setup
 
 ```bash
-mlflow autolog codex ~/my-ai-project -u sqlite:///mlflow.db -n "My AI Project"
+mlflow autolog claude ~/my-ai-project -u sqlite:///mlflow.db -n "My AI Project"
 cd ~/my-ai-project
 claude "refactor this code"
 mlflow ui --backend-store-uri sqlite:///mlflow.db
@@ -97,13 +95,13 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 ### Check Status
 
 ```bash
-mlflow autolog codex --status
+mlflow autolog claude --status
 ```
 
 ### Disable Tracing
 
 ```bash
-mlflow autolog codex --disable
+mlflow autolog claude --disable
 ```
 
 ### View Raw Configuration
