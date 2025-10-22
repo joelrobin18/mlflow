@@ -1,5 +1,6 @@
 import importlib
 import os
+import subprocess
 import sys
 from importlib.metadata import version
 from unittest import mock
@@ -721,3 +722,169 @@ def test_infer_pip_requirements_on_databricks_agents(tmp_path):
     assert "databricks-connect" in packages
     # pyspark should not exist because it conflicts with databricks-connect
     assert "pyspark" not in packages
+
+
+def test_get_requirements_from_uv_lock_no_uv_binary():
+    """Test that _get_requirements_from_uv_lock returns None when uv binary is not found."""
+    from mlflow.utils.requirements_utils import _get_requirements_from_uv_lock
+
+    with mock.patch("shutil.which", return_value=None):
+        result = _get_requirements_from_uv_lock()
+        assert result is None
+
+
+def test_get_requirements_from_uv_lock_no_lock_file(tmp_path, monkeypatch):
+    """Test that _get_requirements_from_uv_lock returns None when uv.lock file is not found."""
+    from mlflow.utils.requirements_utils import _get_requirements_from_uv_lock
+
+    # Change to a directory without uv.lock
+    monkeypatch.chdir(tmp_path)
+
+    with mock.patch("shutil.which", return_value="/usr/bin/uv"):
+        result = _get_requirements_from_uv_lock()
+        assert result is None
+
+
+def test_get_requirements_from_uv_lock_success(tmp_path, monkeypatch):
+    """Test that _get_requirements_from_uv_lock successfully extracts requirements from uv.lock."""
+    from mlflow.utils.requirements_utils import _get_requirements_from_uv_lock
+
+    # Create a fake uv.lock file
+    lock_file = tmp_path / "uv.lock"
+    lock_file.write_text("# This is a uv.lock file\nversion = 1\n")
+
+    monkeypatch.chdir(tmp_path)
+
+    # Mock uv export output
+    mock_output = "numpy==1.24.0\npandas==2.0.0\nscikit-learn==1.3.0"
+
+    with mock.patch("shutil.which", return_value="/usr/bin/uv"):
+        with mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(
+                returncode=0,
+                stdout=mock_output,
+                stderr=""
+            )
+
+            result = _get_requirements_from_uv_lock()
+
+            assert result is not None
+            assert len(result) == 3
+            assert "numpy==1.24.0" in result
+            assert "pandas==2.0.0" in result
+            assert "scikit-learn==1.3.0" in result
+
+            # Verify uv export was called with correct arguments
+            mock_run.assert_called_once()
+            call_args = mock_run.call_args
+            assert call_args[0][0][0] == "/usr/bin/uv"
+            assert call_args[0][0][1] == "export"
+            assert "--no-dev" in call_args[0][0]
+            assert "--no-hashes" in call_args[0][0]
+            assert "--frozen" in call_args[0][0]
+            assert "--locked" in call_args[0][0]
+
+
+def test_get_requirements_from_uv_lock_filters_mlflow(tmp_path, monkeypatch):
+    """Test that _get_requirements_from_uv_lock filters out mlflow packages."""
+    from mlflow.utils.requirements_utils import _get_requirements_from_uv_lock
+
+    lock_file = tmp_path / "uv.lock"
+    lock_file.write_text("# uv.lock\n")
+
+    monkeypatch.chdir(tmp_path)
+
+    # Mock output with mlflow packages
+    mock_output = (
+        "numpy==1.24.0\n"
+        "mlflow==2.10.0\n"
+        "pandas==2.0.0\n"
+        "mlflow-skinny==2.10.0\n"
+        "scikit-learn==1.3.0"
+    )
+
+    with mock.patch("shutil.which", return_value="/usr/bin/uv"):
+        with mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(
+                returncode=0,
+                stdout=mock_output,
+                stderr=""
+            )
+
+            result = _get_requirements_from_uv_lock()
+
+            assert result is not None
+            assert len(result) == 3  # mlflow packages should be filtered out
+            assert "numpy==1.24.0" in result
+            assert "pandas==2.0.0" in result
+            assert "scikit-learn==1.3.0" in result
+            assert not any("mlflow" in req.lower() for req in result)
+
+
+def test_get_requirements_from_uv_lock_export_fails(tmp_path, monkeypatch):
+    """Test that _get_requirements_from_uv_lock returns None when uv export fails."""
+    from mlflow.utils.requirements_utils import _get_requirements_from_uv_lock
+
+    lock_file = tmp_path / "uv.lock"
+    lock_file.write_text("# uv.lock\n")
+
+    monkeypatch.chdir(tmp_path)
+
+    with mock.patch("shutil.which", return_value="/usr/bin/uv"):
+        with mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(
+                returncode=1,
+                stdout="",
+                stderr="Error: failed to export"
+            )
+
+            result = _get_requirements_from_uv_lock()
+            assert result is None
+
+
+def test_get_requirements_from_uv_lock_timeout(tmp_path, monkeypatch):
+    """Test that _get_requirements_from_uv_lock handles timeout gracefully."""
+    from mlflow.utils.requirements_utils import _get_requirements_from_uv_lock
+
+    lock_file = tmp_path / "uv.lock"
+    lock_file.write_text("# uv.lock\n")
+
+    monkeypatch.chdir(tmp_path)
+
+    with mock.patch("shutil.which", return_value="/usr/bin/uv"):
+        with mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired("uv", 30)):
+            result = _get_requirements_from_uv_lock()
+            assert result is None
+
+
+def test_get_requirements_from_uv_lock_searches_parent_dirs(tmp_path, monkeypatch):
+    """Test that _get_requirements_from_uv_lock searches parent directories for uv.lock."""
+    from mlflow.utils.requirements_utils import _get_requirements_from_uv_lock
+
+    # Create uv.lock in parent directory
+    lock_file = tmp_path / "uv.lock"
+    lock_file.write_text("# uv.lock\n")
+
+    # Create and change to subdirectory
+    subdir = tmp_path / "subdir" / "nested"
+    subdir.mkdir(parents=True)
+    monkeypatch.chdir(subdir)
+
+    mock_output = "numpy==1.24.0"
+
+    with mock.patch("shutil.which", return_value="/usr/bin/uv"):
+        with mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(
+                returncode=0,
+                stdout=mock_output,
+                stderr=""
+            )
+
+            result = _get_requirements_from_uv_lock()
+
+            assert result is not None
+            assert "numpy==1.24.0" in result
+
+            # Verify uv export was run in the directory containing uv.lock
+            call_kwargs = mock_run.call_args[1]
+            assert call_kwargs["cwd"] == tmp_path

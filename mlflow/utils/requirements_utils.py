@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -475,6 +476,98 @@ def _init_packages_to_modules_map():
             _PACKAGES_TO_MODULES[pkg_name] = module
 
 
+def _get_requirements_from_uv_lock():
+    """
+    Attempts to extract requirements from a uv.lock file if uv package manager is being used.
+
+    Returns:
+        A list of requirements in pip format, or None if uv.lock is not found or uv export fails.
+    """
+    # Check if uv is available
+    uv_bin = shutil.which("uv")
+    if uv_bin is None:
+        _logger.debug("`uv` binary not found. Skipping uv-based requirements inference.")
+        return None
+
+    # Search for uv.lock file (check current directory and parent directories)
+    current_dir = Path.cwd()
+    uv_lock_path = None
+
+    for directory in [current_dir] + list(current_dir.parents):
+        potential_lock = directory / "uv.lock"
+        if potential_lock.exists():
+            uv_lock_path = potential_lock
+            _logger.info(f"Found uv.lock file at {uv_lock_path}")
+            break
+
+    if uv_lock_path is None:
+        _logger.debug("No uv.lock file found. Falling back to traditional requirements inference.")
+        return None
+
+    # Run uv export to get requirements
+    try:
+        _logger.info("Using uv package manager to export requirements from uv.lock")
+        result = subprocess.run(
+            [
+                uv_bin,
+                "export",
+                "--no-dev",
+                "--no-hashes",
+                "--no-editable",
+                "--frozen",
+                "--locked",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=uv_lock_path.parent,
+            timeout=30,
+        )
+
+        if result.returncode != 0:
+            _logger.warning(
+                f"Failed to export requirements from uv.lock: {result.stderr}. "
+                "Falling back to traditional requirements inference."
+            )
+            return None
+
+        # Parse the output to extract requirements
+        requirements = []
+        for line in result.stdout.splitlines():
+            line = line.strip()
+            # Skip empty lines and comments
+            if line and not line.startswith("#"):
+                # Filter out mlflow packages (consistent with traditional inference)
+                try:
+                    req = Requirement(line)
+                    if req.name.lower() in ["mlflow", "mlflow-skinny", "mlflow-tracing"]:
+                        _logger.debug(f"Excluding {req.name} from uv requirements")
+                        continue
+                except Exception:
+                    # If parsing fails, include the line as-is (might be a URL or file path)
+                    pass
+                requirements.append(line)
+
+        if requirements:
+            _logger.info(f"Successfully extracted {len(requirements)} requirements from uv.lock")
+            return requirements
+        else:
+            _logger.warning("uv export returned no requirements. Falling back to traditional inference.")
+            return None
+
+    except subprocess.TimeoutExpired:
+        _logger.warning(
+            "uv export command timed out. Falling back to traditional requirements inference."
+        )
+        return None
+    except Exception as e:
+        _logger.debug(
+            f"Unexpected error while extracting requirements from uv.lock: {e}. "
+            "Falling back to traditional requirements inference.",
+            exc_info=True,
+        )
+        return None
+
+
 def _infer_requirements(model_uri, flavor, raise_on_error=False, extra_env_vars=None):
     """Infers the pip requirements of the specified model by creating a subprocess and loading
     the model in it to determine which packages are imported.
@@ -490,6 +583,14 @@ def _infer_requirements(model_uri, flavor, raise_on_error=False, extra_env_vars=
         A list of inferred pip requirements.
 
     """
+    # First, try to get requirements from uv.lock if uv package manager is being used
+    uv_requirements = _get_requirements_from_uv_lock()
+    if uv_requirements is not None:
+        _logger.info("Using requirements from uv.lock file")
+        return sorted(uv_requirements)
+
+    # Fall back to traditional module-based inference
+    _logger.debug("Using traditional module-based requirements inference")
     _init_modules_to_packages_map()
 
     modules = _capture_imported_modules(model_uri, flavor, extra_env_vars=extra_env_vars)
