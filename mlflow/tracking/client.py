@@ -2995,6 +2995,75 @@ class MlflowClient:
             # Log tag indicating that the run includes logged image
             self.set_tag(run_id, MLFLOW_LOGGED_IMAGES, True, synchronous)
 
+    def log_histogram(
+        self,
+        run_id: str,
+        histogram: "mlflow.utils.histogram_utils.HistogramData",
+    ) -> None:
+        """
+        Logs a histogram to artifact storage for the specified run.
+
+        Histograms are stored as JSON files in the artifacts/histograms directory,
+        with one file per histogram name containing data from all steps.
+
+        Args:
+            run_id: String ID of the run.
+            histogram: HistogramData instance containing histogram information.
+
+        .. code-block:: python
+            :caption: Example
+
+            import mlflow
+            import numpy as np
+            from mlflow.utils.histogram_utils import HistogramData
+
+            with mlflow.start_run() as run:
+                # Create histogram data
+                values = np.random.randn(1000)
+                bin_edges = np.histogram_bin_edges(values, bins=30)
+                counts, _ = np.histogram(values, bins=bin_edges)
+
+                histogram = HistogramData(
+                    name="weights",
+                    step=0,
+                    timestamp=1000,
+                    bin_edges=bin_edges,
+                    counts=counts
+                )
+
+                # Log histogram
+                client = mlflow.MlflowClient()
+                client.log_histogram(run.info.run_id, histogram)
+        """
+        from mlflow.utils.histogram_utils import append_histogram_to_json
+
+        # Sanitize histogram name for filename
+        sanitized_name = re.sub(r"/", "#", histogram.name)
+        artifact_file = f"histograms/{sanitized_name}.json"
+
+        # Append histogram to JSON file using temporary file
+        with self._log_artifact_helper(run_id, artifact_file) as tmp_path:
+            # Check if file already exists
+            artifact_dir = posixpath.dirname(artifact_file)
+            artifact_dir = None if artifact_dir == "" else artifact_dir
+            artifacts = [f.path for f in self.list_artifacts(run_id, path=artifact_dir)]
+
+            if artifact_file in artifacts:
+                # Download existing file and append
+                import tempfile
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    downloaded_path = self.download_artifacts(
+                        run_id=run_id, path=artifact_file, dst_path=tmpdir
+                    )
+                    # Copy existing content to tmp_path before appending
+                    import shutil
+
+                    shutil.copy2(downloaded_path, tmp_path)
+
+            # Append new histogram
+            append_histogram_to_json(histogram, tmp_path)
+
     def _check_artifact_file_string(self, artifact_file: str):
         """Check if the artifact_file contains any forbidden characters.
 
