@@ -3064,6 +3064,48 @@ class MlflowClient:
             # Append new histogram
             append_histogram_to_json(histogram, tmp_path)
 
+    def get_histogram(self, run_id: str, key: str) -> list["mlflow.utils.histogram_utils.HistogramData"]:
+        """
+        Get histogram data for a given run and histogram name.
+
+        Args:
+            run_id: String ID of the run.
+            key: Histogram name/key.
+
+        Returns:
+            List of HistogramData instances containing histogram data for all steps.
+
+        .. code-block:: python
+            :caption: Example
+
+            import mlflow
+            from mlflow import MlflowClient
+
+            client = MlflowClient()
+            histograms = client.get_histogram(run_id="...", key="weights/layer1")
+
+            for hist in histograms:
+                print(f"Step {hist.step}: {len(hist.counts)} bins")
+        """
+        from mlflow.utils.histogram_utils import load_histograms_from_json
+
+        # Sanitize histogram name for filename
+        sanitized_name = re.sub(r"/", "#", key)
+        artifact_file = f"histograms/{sanitized_name}.json"
+
+        # Download histogram file
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            try:
+                downloaded_path = self.download_artifacts(
+                    run_id=run_id, path=artifact_file, dst_path=tmpdir
+                )
+                return load_histograms_from_json(downloaded_path)
+            except Exception as e:
+                _logger.warning(f"Failed to load histogram {key} for run {run_id}: {e}")
+                return []
+
     def _check_artifact_file_string(self, artifact_file: str):
         """Check if the artifact_file contains any forbidden characters.
 

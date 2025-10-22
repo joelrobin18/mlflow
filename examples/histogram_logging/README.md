@@ -1,13 +1,13 @@
 # MLflow Histogram Logging Example
 
-This example demonstrates how to use MLflow's histogram logging feature to track distributions of model weights, gradients, and activations during training.
+This example demonstrates how to use MLflow's histogram logging feature to track distributions of model weights, gradients, and activations during training, with 3D visualization in the UI.
 
 ## Overview
 
 MLflow's histogram logging allows you to:
 - Track how weight distributions evolve during training
 - Monitor gradient distributions to detect vanishing/exploding gradients
-- Visualize activation distributions across layers
+- Visualize activation distributions across layers in interactive 3D plots
 - Log pre-computed histograms from other frameworks (e.g., TensorBoard)
 
 ## Features
@@ -44,7 +44,21 @@ After running the example:
 mlflow ui
 ```
 
-Then open http://localhost:5000 in your browser and navigate to the run. Histograms are stored as JSON files in the `artifacts/histograms/` directory.
+Then open http://localhost:5000 in your browser and navigate to the run.
+
+### In the UI:
+1. Navigate to your experiment
+2. Select the run with histogram data
+3. Go to the **Metrics** section
+4. Click on "Add Chart" and select "Histogram" chart type
+5. Configure the chart to select which histograms to visualize (e.g., "weights/layer1")
+6. View the interactive 3D surface plot showing how distributions evolve over training steps
+
+### Histogram Storage:
+Histograms are stored as JSON files in the `artifacts/histograms/` directory:
+- `artifacts/histograms/weights#layer1.json`
+- `artifacts/histograms/gradients#layer2.json`
+- etc.
 
 ## API Usage
 
