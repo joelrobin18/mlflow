@@ -874,6 +874,15 @@ try:
 except ImportError:
     pass
 
+# Add Codex CLI integration commands
+try:
+    import mlflow.codex.cli
+
+    cli.add_command(mlflow.codex.cli.commands)
+    cli.add_command(mlflow.codex.cli.autolog_commands)
+except ImportError:
+    pass
+
 # We are conditional loading these commands since the skinny client does
 # not support them due to the pandas and numpy dependencies of MLflow Models
 try:
