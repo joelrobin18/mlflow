@@ -58,6 +58,14 @@ class CodexSessionTracer:
         # Maps session file path -> number of turns processed
         self.session_turn_counts: dict[str, int] = self._load_session_turn_counts()
 
+        # Track last modification times to implement debouncing
+        # Maps session file path -> last modification time
+        self.file_mod_times: dict[str, float] = {}
+
+        # Minimum time (seconds) a file must be stable before processing
+        # This prevents processing files while they're still being written
+        self.file_stability_threshold = 2.0
+
         # Set tracking URI (default to localhost if not provided)
         if tracking_uri:
             mlflow.set_tracking_uri(tracking_uri)
@@ -121,24 +129,75 @@ class CodexSessionTracer:
         except Exception as e:
             _logger.warning(f"Could not save to tracking file: {e}")
 
+    def _is_file_stable(self, session_file: Path) -> bool:
+        """Check if a file is stable (hasn't been modified recently) using debouncing.
+
+        This implements a production-ready approach similar to file watchers:
+        - Track the last modification time we've seen for each file
+        - Only process if the file hasn't been modified for file_stability_threshold seconds
+        - Avoids blocking sleep() calls
+
+        Args:
+            session_file: Path to the session file to check
+
+        Returns:
+            True if file is stable and ready to process, False otherwise
+        """
+
+        session_path = str(session_file)
+
+        try:
+            current_mtime = session_file.stat().st_mtime
+            current_time = time.time()
+
+            # Check if we've seen this file before
+            if session_path in self.file_mod_times:
+                last_seen_mtime = self.file_mod_times[session_path]
+
+                # If modification time hasn't changed
+                if current_mtime == last_seen_mtime:
+                    # Check if enough time has passed since we first saw this mtime
+                    # We need to track when we first saw this mtime to implement debouncing
+                    # For simplicity, we check if file is old enough from current time
+                    time_since_modification = current_time - current_mtime
+
+                    if time_since_modification >= self.file_stability_threshold:
+                        # File is stable - hasn't been modified for threshold duration
+                        return True
+                    else:
+                        # File modified recently, not stable yet
+                        _logger.debug(
+                            f"File {session_file.name} modified {time_since_modification:.1f}s ago,"
+                            f"waiting for {self.file_stability_threshold}s stability"
+                        )
+                        return False
+                else:
+                    # Modification time changed - file was updated
+                    self.file_mod_times[session_path] = current_mtime
+                    _logger.debug(f"File {session_file.name} modification detected")
+                    return False
+            else:
+                # First time seeing this file
+                self.file_mod_times[session_path] = current_mtime
+
+                # Check if file is already old enough (for existing files on startup)
+                time_since_modification = current_time - current_mtime
+                if time_since_modification >= self.file_stability_threshold:
+                    return True
+                else:
+                    _logger.debug(f"New file {session_file.name} detected, waiting for stability")
+                    return False
+
+        except Exception as e:
+            _logger.warning(f"Could not check file stability for {session_file.name}: {e}")
+            return False
+
     def process_session_file(self, session_file: Path) -> None:
         """Process a session file and create MLflow traces for any new turns."""
         session_path = str(session_file)
 
-        # Wait for file to be stable (fully written by Codex)
-        # Check file size twice with a delay to ensure it's not being written
-
-        try:
-            size1 = session_file.stat().st_size
-            time.sleep(0.5)  # Wait 500ms
-            size2 = session_file.stat().st_size
-
-            if size1 != size2:
-                # File is still being written, skip for now
-                _logger.debug(f"File still being written: {session_file.name}, will retry")
-                return
-        except Exception as e:
-            _logger.warning(f"Could not check file stability for {session_file.name}: {e}")
+        # Check if file is stable using modification time debouncing
+        if not self._is_file_stable(session_file):
             return
 
         try:
@@ -174,7 +233,6 @@ class CodexSessionTracer:
                         get_trace(result["last_trace_id"])
                     except Exception as e:
                         _logger.debug(f"Could not force trace commit: {e}")
-                        time.sleep(0.1)
 
                 # Update turn count and save
                 self.session_turn_counts[session_path] = new_turn_count
@@ -189,7 +247,7 @@ class CodexSessionTracer:
     def _create_traces_for_new_turns(
         self, session_file: Path, events: list[dict[str, Any]], turns_already_processed: int
     ) -> dict[str, Any] | None:
-        """Create MLflow traces for new turns only. Returns Dict with turns_processed
+        """Create MLflow traces for new turns only. Returns dict with turns_processed
         and last_trace_id.
         """
         try:
@@ -222,7 +280,7 @@ class CodexSessionTracer:
 
             if not new_turns:
                 _logger.debug(
-                    f"No new turns in session {session_id[:8]} ({total_turns} total, "
+                    f"No new turns in session {session_id[:8]} ({total_turns} total,"
                     f"{turns_already_processed} already processed)"
                 )
                 return {"turns_processed": turns_already_processed, "last_trace_id": None}
@@ -439,7 +497,7 @@ class CodexSessionTracer:
                                     else tool_output
                                 )
                                 tool_span.set_outputs(output_data)
-                            except json.JSONDecodeError:
+                            except Exception:
                                 tool_span.set_outputs({"output": str(tool_output)})
 
                         tool_span.set_attribute("call_id", call_id)
@@ -500,9 +558,7 @@ class CodexSessionTracer:
                     )
 
                     for session_file in session_files:
-                        # Process all files - they'll check internally if there are new turns
-                        # Wait a bit to ensure file is complete
-                        time.sleep(1)
+                        # Process all files - stability check is done in process_session_file
                         self.process_session_file(session_file)
 
                 time.sleep(poll_interval)
@@ -537,8 +593,8 @@ class SessionState:
 
     def __init__(self, session_id: str):
         self.session_id = session_id
-        self.turns: list[dict[str, Any]] = []
-        self.metadata: dict[str, Any] | None = None
+        self.turns: list[dict[str, Any][str, Any]] = []
+        self.metadata: dict[str, Any][str, Any] | None = None
 
 
 def run_session_tracer(
