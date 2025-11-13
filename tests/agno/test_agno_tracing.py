@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from agno.agent import Agent
@@ -238,3 +238,190 @@ async def test_agno_and_anthropic_autolog_single_trace(simple_agent, is_async):
     assert spans[1].name == "Claude.ainvoke" if is_async else "Claude.invoke"
     assert spans[2].span_type == SpanType.CHAT_MODEL
     assert spans[2].name == "AsyncMessages.create" if is_async else "Messages.create"
+
+
+def test_is_agno_v2_detection():
+    """Test that Agno version detection works correctly."""
+    from mlflow.agno.autolog import _is_agno_v2
+
+    # Mock agno module with V2 version
+    with patch("mlflow.agno.autolog.agno") as mock_agno:
+        mock_agno.__version__ = "2.0.0"
+        assert _is_agno_v2() is True
+
+        mock_agno.__version__ = "2.1.0"
+        assert _is_agno_v2() is True
+
+        mock_agno.__version__ = "1.9.9"
+        assert _is_agno_v2() is False
+
+        mock_agno.__version__ = "1.7.0"
+        assert _is_agno_v2() is False
+
+
+def test_otel_instrumentation_setup_for_v2():
+    """Test that OTel instrumentation is set up for Agno V2."""
+    from mlflow.agno.autolog import _setup_otel_instrumentation
+
+    # Mock all the required imports for OTel setup
+    mock_tracer_provider = Mock()
+    mock_instrumentor = Mock()
+
+    with (
+        patch("mlflow.agno.autolog._is_agno_v2", return_value=True),
+        patch("mlflow.agno.autolog.trace"),
+        patch("mlflow.agno.autolog.OTLPSpanExporter") as mock_exporter,
+        patch("mlflow.agno.autolog.TracerProvider", return_value=mock_tracer_provider),
+        patch("mlflow.agno.autolog.BatchSpanProcessor"),
+        patch("mlflow.agno.autolog.AgnoInstrumentor", return_value=mock_instrumentor),
+        patch("mlflow.get_tracking_uri", return_value="http://localhost:5000"),
+        patch("mlflow.tracking.fluent._get_experiment_id", return_value="0"),
+    ):
+        # Reset the global state
+        import mlflow.agno.autolog
+
+        mlflow.agno.autolog._otel_instrumentation_setup = False
+        mlflow.agno.autolog._agno_instrumentor = None
+
+        _setup_otel_instrumentation()
+
+        # Verify that OTLPSpanExporter was called with correct parameters
+        mock_exporter.assert_called_once_with(
+            endpoint="http://localhost:5000/v1/traces",
+            headers={"x-mlflow-experiment-id": "0"},
+        )
+
+        # Verify that instrumentor was called
+        mock_instrumentor.instrument.assert_called_once()
+
+        # Verify that the instrumentor was stored
+        assert mlflow.agno.autolog._agno_instrumentor is mock_instrumentor
+
+
+def test_otel_uninstrumentation_for_v2():
+    """Test that OTel uninstrumentation works for Agno V2."""
+    from mlflow.agno.autolog import _uninstrument_otel
+
+    mock_instrumentor = Mock()
+
+    # Set the global state to simulate that instrumentation was set up
+    import mlflow.agno.autolog
+
+    mlflow.agno.autolog._otel_instrumentation_setup = True
+    mlflow.agno.autolog._agno_instrumentor = mock_instrumentor
+
+    _uninstrument_otel()
+
+    # Verify that uninstrument was called
+    mock_instrumentor.uninstrument.assert_called_once()
+
+    # Verify that the flag was reset
+    assert mlflow.agno.autolog._otel_instrumentation_setup is False
+
+
+def test_otel_uninstrumentation_skipped_when_not_setup():
+    """Test that uninstrumentation is skipped when OTel was never set up."""
+    # Reset the global state
+    import mlflow.agno.autolog
+    from mlflow.agno.autolog import _uninstrument_otel
+
+    mlflow.agno.autolog._otel_instrumentation_setup = False
+    mlflow.agno.autolog._agno_instrumentor = None
+
+    # Should not raise any errors, just skip uninstrumentation
+    _uninstrument_otel()
+
+    # Verify the flag is still False
+    assert mlflow.agno.autolog._otel_instrumentation_setup is False
+
+
+def test_autolog_v2_uses_otel():
+    """Test that autolog uses OTel for Agno V2."""
+    with (
+        patch("mlflow.agno._is_agno_v2", return_value=True),
+        patch("mlflow.agno._setup_otel_instrumentation") as mock_setup,
+        patch("mlflow.agno._uninstrument_otel") as mock_uninstrument,
+    ):
+        # Test with log_traces=True
+        mlflow.agno.autolog(log_traces=True)
+        mock_setup.assert_called_once()
+        mock_uninstrument.assert_not_called()
+
+        # Reset mocks
+        mock_setup.reset_mock()
+        mock_uninstrument.reset_mock()
+
+        # Test with disable=True
+        mlflow.agno.autolog(disable=True)
+        mock_uninstrument.assert_called_once()
+        mock_setup.assert_not_called()
+
+        # Reset mocks
+        mock_setup.reset_mock()
+        mock_uninstrument.reset_mock()
+
+        # Test with log_traces=False
+        mlflow.agno.autolog(log_traces=False)
+        mock_uninstrument.assert_called_once()
+        mock_setup.assert_not_called()
+
+
+def test_cleanup_callback_registered_for_v2():
+    """Test that cleanup callback is registered when OTel instrumentation is set up."""
+    from mlflow.agno.autolog import _setup_otel_instrumentation
+
+    mock_instrumentor = Mock()
+
+    with (
+        patch("mlflow.agno.autolog.trace"),
+        patch("mlflow.agno.autolog.OTLPSpanExporter"),
+        patch("mlflow.agno.autolog.TracerProvider"),
+        patch("mlflow.agno.autolog.BatchSpanProcessor"),
+        patch("mlflow.agno.autolog.AgnoInstrumentor", return_value=mock_instrumentor),
+        patch("mlflow.get_tracking_uri", return_value="http://localhost:5000"),
+        patch("mlflow.tracking.fluent._get_experiment_id", return_value="0"),
+        patch("mlflow.utils.autologging_utils.safety.register_cleanup_callback") as mock_register,
+    ):
+        # Reset the global state
+        import mlflow.agno.autolog
+
+        mlflow.agno.autolog._otel_instrumentation_setup = False
+        mlflow.agno.autolog._agno_instrumentor = None
+
+        _setup_otel_instrumentation()
+
+        # Verify that cleanup callback was registered
+        mock_register.assert_called_once()
+        call_args = mock_register.call_args
+        assert call_args[0][0] == "agno"  # Integration name
+        # Verify the callback is our cleanup function
+        assert callable(call_args[0][1])
+
+
+def test_disable_true_calls_cleanup_via_decorator():
+    """Test that disable=True triggers cleanup through the decorator's revert_patches."""
+    from mlflow.utils.autologging_utils.safety import (
+        _AUTOLOGGING_CLEANUP_CALLBACKS,
+        register_cleanup_callback,
+        revert_patches,
+    )
+
+    # Setup: Register a mock cleanup callback
+    cleanup_called = []
+
+    def mock_cleanup():
+        cleanup_called.append(True)
+
+    register_cleanup_callback("test_integration", mock_cleanup)
+
+    # Verify callback is registered
+    assert "test_integration" in _AUTOLOGGING_CLEANUP_CALLBACKS
+
+    # Call revert_patches (this is what happens when disable=True)
+    revert_patches("test_integration")
+
+    # Verify cleanup was called
+    assert len(cleanup_called) == 1
+
+    # Verify callback was removed after revert
+    assert "test_integration" not in _AUTOLOGGING_CLEANUP_CALLBACKS

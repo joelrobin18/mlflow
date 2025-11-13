@@ -27,6 +27,131 @@ except ImportError:
     pass
 
 
+def _is_agno_v2() -> bool:
+    """Check if the installed Agno version is V2 or later."""
+    try:
+        import agno
+        from packaging.version import Version
+
+        version_str = getattr(agno, "__version__", "1.0.0")
+        return Version(version_str) >= Version("2.0.0")
+    except Exception as exc:
+        _logger.debug("Unable to determine Agno version: %s. Assuming V1.", exc)
+        return False
+
+
+# Global flag and instrumentor instance to track OTel instrumentation state
+_otel_instrumentation_setup = False
+_agno_instrumentor = None
+
+
+def _cleanup_otel_instrumentation():
+    """
+    Cleanup function registered with autologging to uninstrument OTel when autologging is disabled.
+    This ensures uninstrumentation happens even when the @autologging_integration decorator
+    returns early due to disable=True.
+    """
+    if _otel_instrumentation_setup:
+        _uninstrument_otel()
+
+
+def _setup_otel_instrumentation() -> None:
+    """
+    Set up OpenTelemetry instrumentation for Agno V2 using OpenInference AgnoInstrumentor.
+    This function configures OTLP to export traces to MLflow.
+    """
+    global _otel_instrumentation_setup, _agno_instrumentor
+
+    # Only set up instrumentation once
+    if _otel_instrumentation_setup:
+        _logger.debug("OpenTelemetry instrumentation already set up for Agno V2")
+        return
+
+    try:
+        from openinference.instrumentation.agno import AgnoInstrumentor
+        from opentelemetry import trace
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+        # Get the MLflow tracking URI and experiment ID
+        tracking_uri = mlflow.get_tracking_uri()
+
+        # Construct the endpoint for MLflow's OTLP traces endpoint
+        # Remove trailing slashes from tracking URI
+        tracking_uri = tracking_uri.rstrip("/")
+        endpoint = f"{tracking_uri}/v1/traces"
+
+        # Get the current experiment ID
+        from mlflow.tracking.fluent import _get_experiment_id
+
+        experiment_id = _get_experiment_id()
+
+        # Configure OTLP to export to MLflow
+        exporter = OTLPSpanExporter(
+            endpoint=endpoint, headers={"x-mlflow-experiment-id": experiment_id}
+        )
+
+        # Set up tracer provider if not already configured
+        current_tracer_provider = trace.get_tracer_provider()
+        if not isinstance(current_tracer_provider, TracerProvider):
+            tracer_provider = TracerProvider()
+            trace.set_tracer_provider(tracer_provider)
+        else:
+            tracer_provider = current_tracer_provider
+
+        # Add span processor
+        tracer_provider.add_span_processor(BatchSpanProcessor(exporter))
+
+        # Create or reuse instrumentor instance
+        if _agno_instrumentor is None:
+            _agno_instrumentor = AgnoInstrumentor()
+
+        # Instrument Agno
+        _agno_instrumentor.instrument()
+
+        _otel_instrumentation_setup = True
+
+        # Register cleanup callback to ensure uninstrumentation happens during revert_patches
+        from mlflow.utils.autologging_utils.safety import register_cleanup_callback
+
+        register_cleanup_callback(FLAVOR_NAME, _cleanup_otel_instrumentation)
+
+        _logger.info("OpenTelemetry instrumentation enabled for Agno V2")
+
+    except ImportError as exc:
+        _logger.warning(
+            "Failed to set up OpenTelemetry instrumentation for Agno V2. "
+            "Please install required packages: "
+            "'pip install opentelemetry-exporter-otlp openinference-instrumentation-agno'. "
+            "Error: %s",
+            exc,
+        )
+    except Exception as exc:
+        _logger.warning("Failed to set up OpenTelemetry instrumentation for Agno V2: %s", exc)
+
+
+def _uninstrument_otel() -> None:
+    """Uninstrument OpenTelemetry instrumentation for Agno V2."""
+    global _otel_instrumentation_setup
+
+    # Only uninstrument if we previously instrumented
+    if not _otel_instrumentation_setup:
+        _logger.debug("OpenTelemetry instrumentation was not set up, skipping uninstrumentation")
+        return
+
+    try:
+        # Use the stored instrumentor instance to ensure we uninstrument the same instance
+        if _agno_instrumentor is not None:
+            _agno_instrumentor.uninstrument()
+            _otel_instrumentation_setup = False
+            _logger.info("OpenTelemetry instrumentation disabled for Agno V2")
+        else:
+            _logger.warning("Instrumentor instance not found, cannot uninstrument")
+    except Exception as exc:
+        _logger.warning("Failed to uninstrument Agno V2: %s", exc)
+
+
 def _compute_span_name(instance, original) -> str:
     try:
         from agno.tools.function import FunctionCall
