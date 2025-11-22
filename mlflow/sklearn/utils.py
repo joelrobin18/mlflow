@@ -598,7 +598,15 @@ def _log_specialized_estimator_content(
                 except Exception as e:
                     _log_warning_for_artifacts(artifact.name, artifact.function, e)
 
-            MlflowClient().log_artifacts(run_id, tmp_dir.path())
+            client = MlflowClient()
+            if model_id:
+                # Log to both the model's artifact location and the run's artifact location
+                # for backward compatibility and UI display
+                client.log_model_artifacts(model_id, tmp_dir.path())
+                client.log_artifacts(run_id, tmp_dir.path())
+            else:
+                # Log to the run's artifact location
+                client.log_artifacts(run_id, tmp_dir.path())
 
     return metrics
 
@@ -610,7 +618,7 @@ def _is_estimator_html_repr_supported():
     return Version(sklearn.__version__) >= Version("0.23.0")
 
 
-def _log_estimator_html(run_id, estimator):
+def _log_estimator_html(run_id, estimator, model_id=None):
     if not _is_estimator_html_repr_supported():
         return
 
@@ -628,7 +636,22 @@ def _log_estimator_html(run_id, estimator):
   </body>
 </html>
     """
-    MlflowClient().log_text(run_id, estimator_html_string, artifact_file="estimator.html")
+    client = MlflowClient()
+    if model_id:
+        # Log to both the model's artifact location and the run's artifact location
+        # for backward compatibility and UI display
+        from mlflow.utils.file_utils import TempDir
+
+        with TempDir() as tmp_dir:
+            html_file_path = tmp_dir.path("estimator.html")
+            with open(html_file_path, "w") as f:
+                f.write(estimator_html_string)
+            client.log_model_artifact(model_id, html_file_path)
+        # Also log to run for backward compatibility
+        client.log_text(run_id, estimator_html_string, artifact_file="estimator.html")
+    else:
+        # Log to the run's artifact location
+        client.log_text(run_id, estimator_html_string, artifact_file="estimator.html")
 
 
 def _log_estimator_content(
@@ -705,7 +728,7 @@ def _log_estimator_content(
                 dataset=dataset,
             )
             metrics[score_key] = score
-    _log_estimator_html(run_id, estimator)
+    _log_estimator_html(run_id, estimator, model_id=model_id)
     return metrics
 
 
