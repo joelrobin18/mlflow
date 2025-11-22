@@ -520,6 +520,7 @@ def construct_eval_result_df(
                 data=eval_result.eval_item.trace.data,
             )
             for eval_result in eval_results
+            if eval_result.eval_item.trace is not None
         ]
         df = traces_to_df(traces)
         # Add unpacked assessment columns. The result df should look like:
@@ -589,7 +590,11 @@ def batch_link_traces_to_run(
         eval_results: List of evaluation results containing traces
         max_batch_size: Maximum number of traces to link per batch call
     """
-    trace_ids = [eval_result.eval_item.trace.info.trace_id for eval_result in eval_results]
+    trace_ids = [
+        eval_result.eval_item.trace.info.trace_id
+        for eval_result in eval_results
+        if eval_result.eval_item.trace is not None
+    ]
     # Batch the trace IDs to avoid overwhelming the MLflow backend
     for i in range(0, len(trace_ids), max_batch_size):
         batch = trace_ids[i : i + max_batch_size]

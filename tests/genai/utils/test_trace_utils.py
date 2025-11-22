@@ -18,6 +18,7 @@ from mlflow.genai.evaluation.utils import is_none_or_nan
 from mlflow.genai.scorers.base import scorer
 from mlflow.genai.utils.trace_utils import (
     _does_store_support_trace_linking,
+    batch_link_traces_to_run,
     convert_predict_fn,
     extract_expectations_from_trace,
     extract_inputs_from_trace,
@@ -695,3 +696,40 @@ def test_does_store_support_trace_linking():
                 run_id="run-123",
             )
         mock_client.link_traces_to_run.assert_called_once()
+
+
+def test_batch_link_traces_to_run_handles_none_traces():
+    """Test that batch_link_traces_to_run handles eval results with None traces."""
+    from mlflow.genai.evaluation.entities import EvalItem, EvalResult
+
+    trace1 = Trace(info=create_test_trace_info(trace_id="tr-123"), data=TraceData(spans=[]))
+    trace2 = Trace(info=create_test_trace_info(trace_id="tr-456"), data=TraceData(spans=[]))
+
+    eval_item_with_trace1 = EvalItem(
+        request_id="req-1", inputs={"test": "input1"}, outputs="output1", expectations={}
+    )
+    eval_item_with_trace1.trace = trace1
+
+    eval_item_with_trace2 = EvalItem(
+        request_id="req-2", inputs={"test": "input2"}, outputs="output2", expectations={}
+    )
+    eval_item_with_trace2.trace = trace2
+
+    eval_item_without_trace = EvalItem(
+        request_id="req-3", inputs={"test": "input3"}, outputs="output3", expectations={}
+    )
+    eval_item_without_trace.trace = None
+
+    eval_results = [
+        EvalResult(eval_item=eval_item_with_trace1, assessments=[]),
+        EvalResult(eval_item=eval_item_without_trace, assessments=[]),
+        EvalResult(eval_item=eval_item_with_trace2, assessments=[]),
+    ]
+
+    mock_client = mock.MagicMock()
+    with mock.patch("mlflow.genai.utils.trace_utils.MlflowClient", return_value=mock_client):
+        batch_link_traces_to_run(run_id="run-123", eval_results=eval_results)
+
+        mock_client.link_traces_to_run.assert_called_once_with(
+            run_id="run-123", trace_ids=["tr-123", "tr-456"]
+        )

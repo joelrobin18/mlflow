@@ -168,23 +168,24 @@ def _run_single(
     tags = eval_item.tags if not is_none_or_nan(eval_item.tags) else {}
     validate_tags(tags)
 
-    for key in tags.keys() - IMMUTABLE_TAGS:
+    if eval_item.trace is not None:
+        for key in tags.keys() - IMMUTABLE_TAGS:
+            try:
+                mlflow.set_trace_tag(trace_id=eval_item.trace.info.trace_id, key=key, value=tags[key])
+            except Exception as e:
+                # Failures in logging to MLflow should not fail the entire harness run
+                _logger.warning(f"Failed to log tag {key} to MLflow: {e}")
+
         try:
-            mlflow.set_trace_tag(trace_id=eval_item.trace.info.trace_id, key=key, value=tags[key])
+            logged_trace = _log_assessments(
+                run_id=run_id,
+                trace=eval_item.trace,
+                assessments=eval_result.assessments,
+            )
+            eval_result.eval_item.trace = logged_trace
         except Exception as e:
             # Failures in logging to MLflow should not fail the entire harness run
-            _logger.warning(f"Failed to log tag {key} to MLflow: {e}")
-
-    try:
-        logged_trace = _log_assessments(
-            run_id=run_id,
-            trace=eval_item.trace,
-            assessments=eval_result.assessments,
-        )
-        eval_result.eval_item.trace = logged_trace
-    except Exception as e:
-        # Failures in logging to MLflow should not fail the entire harness run
-        _logger.warning(f"Failed to log trace and assessments to MLflow: {e}")
+            _logger.warning(f"Failed to log trace and assessments to MLflow: {e}")
 
     return eval_result
 
