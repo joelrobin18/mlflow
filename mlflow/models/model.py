@@ -1301,6 +1301,11 @@ class Model:
                     client.delete_logged_model_tag(model.model_id, MLFLOW_MODEL_IS_EXTERNAL)
                 # client.finalize_logged_model(model.model_id, status=LoggedModelStatus.READY)
 
+                # Also log model artifacts to the run's artifact directory for
+                # backward compatibility and to ensure they are visible in the UI
+                if run_id and name:
+                    client.log_artifacts(run_id, local_path, artifact_path=name)
+
                 # Associate prompts to the model Run and LoggedModel
                 if prompts:
                     client = mlflow.MlflowClient()
