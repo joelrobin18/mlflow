@@ -441,7 +441,10 @@ class Span:
 
         otel_span.status.CopyFrom(self.status.to_otel_proto_status())
 
-        for key, value in self.attributes.items():
+        # Apply schema conversion if configured
+        attributes = self._apply_export_schema_conversion(self.attributes)
+
+        for key, value in attributes.items():
             attr = otel_span.attributes.add()
             attr.key = key
             _set_otel_proto_anyvalue(attr.value, value)
@@ -451,6 +454,31 @@ class Span:
             otel_span.events.append(otel_event)
 
         return otel_span
+
+    @staticmethod
+    def _apply_export_schema_conversion(attributes: dict[str, Any]) -> dict[str, Any]:
+        """
+        Apply schema conversion based on OTEL_EXPORTER_OTLP_TRACES_SCHEMA configuration.
+
+        Args:
+            attributes: Original span attributes
+
+        Returns:
+            Converted attributes (or original if no conversion configured)
+        """
+        from mlflow.environment_variables import OTEL_EXPORTER_OTLP_TRACES_SCHEMA
+
+        schema = OTEL_EXPORTER_OTLP_TRACES_SCHEMA.get()
+        if not schema:
+            return attributes
+
+        if schema.lower() == "genai":
+            from mlflow.tracing.otel.export.genai_semconv import GenAiExportConverter
+
+            converter = GenAiExportConverter()
+            return converter.convert_span_attributes(attributes)
+
+        return attributes
 
 
 def _encode_span_id_to_byte(span_id: int | None) -> bytes:

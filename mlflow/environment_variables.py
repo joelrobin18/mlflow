@@ -716,6 +716,24 @@ MLFLOW_USE_DEFAULT_TRACER_PROVIDER = _BooleanEnvironmentVariable(
     "MLFLOW_USE_DEFAULT_TRACER_PROVIDER", True
 )
 
+#: Specifies the schema format to use when exporting traces via OTLP.
+#: Supported values:
+#:   - "genai": OpenTelemetry GenAI Semantic Conventions
+#:   - None/empty: Default MLflow schema (default)
+#: (default: ``None``)
+OTEL_EXPORTER_OTLP_TRACES_SCHEMA = _EnvironmentVariable(
+    "OTEL_EXPORTER_OTLP_TRACES_SCHEMA", str, None
+)
+
+#: Specifies the schema format to use when exporting metrics via OTLP.
+#: Supported values:
+#:   - "genai": OpenTelemetry GenAI Semantic Conventions
+#:   - None/empty: Default MLflow schema (default)
+#: (default: ``None``)
+OTEL_EXPORTER_OTLP_METRICS_SCHEMA = _EnvironmentVariable(
+    "OTEL_EXPORTER_OTLP_METRICS_SCHEMA", str, None
+)
+
 # Default addressing style to use for boto client
 MLFLOW_BOTO_CLIENT_ADDRESSING_STYLE = _EnvironmentVariable(
     "MLFLOW_BOTO_CLIENT_ADDRESSING_STYLE", str, "auto"

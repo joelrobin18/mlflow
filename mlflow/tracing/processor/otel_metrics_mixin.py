@@ -70,8 +70,12 @@ class OtelMetricsMixin:
         provider = MeterProvider(metric_readers=[reader])
         metrics.set_meter_provider(provider)
         meter = metrics.get_meter("mlflow.tracing")
+
+        # Get metric name based on schema configuration
+        metric_name = self._get_metric_name("mlflow.trace.span.duration")
+
         self._duration_histogram = meter.create_histogram(
-            name="mlflow.trace.span.duration",
+            name=metric_name,
             description="Duration of spans in milliseconds",
             unit="ms",
         )
@@ -119,6 +123,59 @@ class OtelMetricsMixin:
                         for meta_key, meta_value in trace.info.trace_metadata.items():
                             attributes[f"metadata.{meta_key}"] = str(meta_value)
 
+        # Apply schema conversion to attributes if configured
+        attributes = self._apply_metrics_schema_conversion(attributes)
+
         self._duration_histogram.record(
             amount=(span.end_time - span.start_time) / 1e6, attributes=attributes
         )
+
+    @staticmethod
+    def _get_metric_name(mlflow_metric_name: str) -> str:
+        """
+        Get metric name based on OTEL_EXPORTER_OTLP_METRICS_SCHEMA configuration.
+
+        Args:
+            mlflow_metric_name: Original MLflow metric name
+
+        Returns:
+            Schema-specific metric name (or original if no schema configured)
+        """
+        from mlflow.environment_variables import OTEL_EXPORTER_OTLP_METRICS_SCHEMA
+
+        schema = OTEL_EXPORTER_OTLP_METRICS_SCHEMA.get()
+        if not schema:
+            return mlflow_metric_name
+
+        if schema.lower() == "genai":
+            from mlflow.tracing.otel.export.genai_semconv import GenAiExportConverter
+
+            converter = GenAiExportConverter()
+            return converter.get_metric_name(mlflow_metric_name)
+
+        return mlflow_metric_name
+
+    @staticmethod
+    def _apply_metrics_schema_conversion(attributes: dict[str, Any]) -> dict[str, Any]:
+        """
+        Apply schema conversion to metric attributes based on configuration.
+
+        Args:
+            attributes: Original metric attributes
+
+        Returns:
+            Converted attributes (or original if no conversion configured)
+        """
+        from mlflow.environment_variables import OTEL_EXPORTER_OTLP_METRICS_SCHEMA
+
+        schema = OTEL_EXPORTER_OTLP_METRICS_SCHEMA.get()
+        if not schema:
+            return attributes
+
+        if schema.lower() == "genai":
+            from mlflow.tracing.otel.export.genai_semconv import GenAiExportConverter
+
+            converter = GenAiExportConverter()
+            return converter.convert_metric_attributes(attributes)
+
+        return attributes
