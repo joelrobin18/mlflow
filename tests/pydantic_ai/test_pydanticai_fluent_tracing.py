@@ -66,6 +66,17 @@ def _make_dummy_response_with_tool():
         yield final_resp, usage_final
 
 
+@pytest.fixture
+def test_model_agent():
+    from pydantic_ai.models.test import TestModel
+
+    return Agent(
+        TestModel(),
+        system_prompt="Tell me the capital of {{input}}.",
+        instrument=True,
+    )
+
+
 @pytest.fixture(autouse=True)
 def clear_autolog_state():
     from mlflow.utils.autologging_utils import AUTOLOGGING_INTEGRATIONS
@@ -238,3 +249,40 @@ async def test_agent_run_enable_disable_fluent_autolog_with_tool(agent_with_tool
     assert span3.name == "InstrumentedModel.request"
     assert span3.span_type == SpanType.LLM
     assert span3.parent_id == spans[0].span_id
+
+
+@pytest.mark.asyncio
+async def test_agent_run_stream_creates_trace(test_model_agent):
+    mlflow.pydantic_ai.autolog(log_traces=True)
+
+    async with test_model_agent.run_stream("France") as result:
+        output = await result.get_output()
+        assert output is not None
+
+    traces = get_traces()
+    assert len(traces) == 1
+    spans = traces[0].data.spans
+
+    # Should have Agent.run_stream span
+    run_stream_span = next((s for s in spans if s.name == "Agent.run_stream"), None)
+    assert run_stream_span is not None
+    assert run_stream_span.span_type == SpanType.AGENT
+
+
+@pytest.mark.asyncio
+async def test_agent_run_stream_disabled_autolog_no_trace(test_model_agent):
+    mlflow.pydantic_ai.autolog(log_traces=True)
+
+    async with test_model_agent.run_stream("France") as result:
+        await result.get_output()
+
+    traces_before = get_traces()
+    assert len(traces_before) == 1
+
+    mlflow.pydantic_ai.autolog(disable=True)
+
+    async with test_model_agent.run_stream("France") as result:
+        await result.get_output()
+
+    traces_after = get_traces()
+    assert len(traces_after) == 1

@@ -1,5 +1,6 @@
 import inspect
 import logging
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import asdict
 from typing import Any
 
@@ -99,6 +100,74 @@ def patched_class_call(original, self, *args, **kwargs):
         return result
 
 
+def patched_async_stream_call(original, self, *args, **kwargs):
+    @asynccontextmanager
+    async def _wrapper():
+        cfg = AutoLoggingConfig.init(flavor_name=mlflow.pydantic_ai.FLAVOR_NAME)
+        if not cfg.log_traces:
+            async with original(self, *args, **kwargs) as result:
+                yield result
+            return
+
+        fullname = f"{self.__class__.__name__}.{original.__name__}"
+        span_type = _get_span_type(self)
+
+        with mlflow.start_span(name=fullname, span_type=span_type) as span:
+            inputs = _construct_full_inputs(original, self, *args, **kwargs)
+            span.set_inputs(inputs)
+            _set_span_attributes(span, self)
+
+            async with original(self, *args, **kwargs) as stream_result:
+                try:
+                    yield stream_result
+                finally:
+                    # After the stream is consumed, get the final result
+                    try:
+                        # The stream_result should have the final data after being consumed
+                        outputs = _serialize_output(stream_result)
+                        span.set_outputs(outputs)
+                        if usage_dict := _parse_usage(stream_result):
+                            span.set_attribute(SpanAttributeKey.CHAT_USAGE, usage_dict)
+                    except Exception as e:
+                        _logger.debug(f"Failed to set streaming outputs: {e}")
+
+    return _wrapper()
+
+
+def patched_stream_call(original, self, *args, **kwargs):
+    @contextmanager
+    def _wrapper():
+        cfg = AutoLoggingConfig.init(flavor_name=mlflow.pydantic_ai.FLAVOR_NAME)
+        if not cfg.log_traces:
+            with original(self, *args, **kwargs) as result:
+                yield result
+            return
+
+        fullname = f"{self.__class__.__name__}.{original.__name__}"
+        span_type = _get_span_type(self)
+
+        with mlflow.start_span(name=fullname, span_type=span_type) as span:
+            inputs = _construct_full_inputs(original, self, *args, **kwargs)
+            span.set_inputs(inputs)
+            _set_span_attributes(span, self)
+
+            with original(self, *args, **kwargs) as stream_result:
+                try:
+                    yield stream_result
+                finally:
+                    # After the stream is consumed, get the final result
+                    try:
+                        # The stream_result should have the final data after being consumed
+                        outputs = _serialize_output(stream_result)
+                        span.set_outputs(outputs)
+                        if usage_dict := _parse_usage(stream_result):
+                            span.set_attribute(SpanAttributeKey.CHAT_USAGE, usage_dict)
+                    except Exception as e:
+                        _logger.debug(f"Failed to set streaming outputs: {e}")
+
+    return _wrapper()
+
+
 def _get_span_type(instance) -> str:
     try:
         from pydantic_ai import Agent, Tool
@@ -146,7 +215,13 @@ def _serialize_output(result: Any) -> Any:
         try:
             new_messages = result.new_messages()
             serialized_messages = [asdict(msg) for msg in new_messages]
-            serialized_result = asdict(result)
+
+            try:
+                serialized_result = asdict(result)
+            except Exception:
+                # We can't use asdict for StreamedRunResult because its async generator
+                serialized_result = dict(result.__dict__) if hasattr(result, "__dict__") else {}
+
             serialized_result["_new_messages_serialized"] = serialized_messages
             return serialized_result
         except Exception as e:
@@ -209,7 +284,16 @@ def _parse_usage(result: Any) -> dict[str, int] | None:
         if isinstance(result, tuple) and len(result) == 2:
             usage = result[1]
         else:
-            usage = getattr(result, "usage", None)
+            usage_attr = getattr(result, "usage", None)
+            if usage_attr is None:
+                return None
+
+            # Handle both property (RunResult) and method (StreamedRunResult)
+            # StreamedRunResult has .usage() as a method
+            usage = usage_attr() if callable(usage_attr) else usage_attr
+
+        if usage is None:
+            return None
 
         return {
             TokenUsageKey.INPUT_TOKENS: usage.request_tokens,
