@@ -1,0 +1,273 @@
+---
+sidebar_position: 15
+sidebar_label: Codex CLI
+---
+
+import ImageBox from '@site/src/components/ImageBox';
+
+# Tracing Codex CLI with MLflow
+
+[Codex CLI](https://github.com/openai/codex) is an AI-powered coding assistant that runs in your terminal. This guide shows how to trace Codex CLI conversations in MLflow, enabling you to:
+
+- Visualize the complete flow of AI interactions
+- Monitor API requests, tool executions, and user prompts
+- Analyze token usage and response times
+- Debug and optimize your AI-assisted development workflow
+
+## Prerequisites
+
+- MLflow 3.6.0 or later with a SQL-based backend store
+- Codex CLI with OpenTelemetry enabled
+
+## Quick Start
+
+### 1. Start MLflow Server
+
+Start MLflow with a SQL backend store to enable trace ingestion:
+
+```bash
+mlflow server --backend-store-uri sqlite:///mlflow.db
+```
+
+For production, use PostgreSQL or MySQL:
+
+```bash
+mlflow server --backend-store-uri postgresql://user:password@localhost/mlflow
+```
+
+### 2. Create an Experiment
+
+Create an MLflow experiment to store your Codex traces:
+
+```bash
+mlflow experiments create --experiment-name "codex-traces"
+```
+
+Note the experiment ID from the output (e.g., `1`).
+
+### 3. Configure Codex CLI
+
+Configure Codex CLI to export telemetry to MLflow by editing your Codex configuration file (`~/.codex/config.toml`):
+
+```toml
+[otel]
+# Enable user prompt logging (optional, disabled by default for privacy)
+log_user_prompt = true
+
+# Set the environment name
+environment = "dev"
+
+# Configure OTLP HTTP exporter to send logs to MLflow
+exporter = { otlp-http = {
+  endpoint = "http://localhost:5000/v1/logs",
+  protocol = "binary",
+  headers = { "x-mlflow-experiment-id" = "1" }
+}}
+```
+
+Replace `"1"` with your actual experiment ID.
+
+### 4. Run Codex CLI
+
+Now run Codex CLI as usual:
+
+```bash
+codex
+```
+
+All your interactions will be automatically traced and sent to MLflow!
+
+### 5. View Traces
+
+Open the MLflow UI at `http://localhost:5000` and navigate to your experiment to see the traces.
+
+## Understanding Codex Traces
+
+MLflow converts Codex CLI events into a hierarchical trace structure:
+
+### Trace Structure
+
+```
+Codex Conversation (root span)
+├── Conversation Start
+├── User Prompt
+├── API Request (attempt 1)
+├── SSE: response.created
+├── SSE: response.output_item.done
+├── Tool Decision: shell (approved)
+├── Tool: shell (success=true)
+├── SSE: response.completed
+└── ...
+```
+
+### Event Types
+
+| Event | Description | MLflow Span Type |
+|-------|-------------|------------------|
+| `codex.conversation_starts` | Conversation initialization | CHAIN |
+| `codex.user_prompt` | User input | CHAIN |
+| `codex.api_request` | API call to the model | LLM |
+| `codex.sse_event` | Server-sent event from API | CHAIN |
+| `codex.tool_decision` | Tool approval/denial | CHAIN |
+| `codex.tool_result` | Tool execution result | TOOL |
+| `codex.sandbox_assessment` | Sandbox security check | CHAIN |
+
+### Key Attributes
+
+Each span captures relevant attributes:
+
+**Conversation-level:**
+- `model` - The AI model being used
+- `provider_name` - Model provider
+- `approval_policy` - Tool approval settings
+- `sandbox_policy` - Sandbox security settings
+
+**API Request spans:**
+- `duration_ms` - Request duration
+- `http.response.status_code` - HTTP status
+- `attempt` - Retry attempt number
+
+**Tool spans:**
+- `tool_name` - Name of the tool executed
+- `arguments` - Tool arguments
+- `output` - Tool output
+- `success` - Whether the tool succeeded
+
+**SSE Event spans:**
+- `event.kind` - Type of SSE event
+- `input_token_count` - Input tokens used
+- `output_token_count` - Output tokens generated
+- `cached_token_count` - Cached tokens (if any)
+
+## Configuration Options
+
+### OTEL Configuration
+
+```toml
+[otel]
+# Log user prompts in traces (default: false for privacy)
+log_user_prompt = true
+
+# Environment name for filtering traces
+environment = "production"
+
+# OTLP HTTP exporter configuration
+exporter = { otlp-http = {
+  endpoint = "http://mlflow-server:5000/v1/logs",
+  protocol = "binary",  # or "json"
+  headers = {
+    "x-mlflow-experiment-id" = "123",
+    "Authorization" = "Bearer ${MLFLOW_TOKEN}"
+  }
+}}
+```
+
+### Using OTLP gRPC (Advanced)
+
+MLflow's `/v1/logs` endpoint currently supports HTTP only. If you need gRPC, you can use an OpenTelemetry Collector as an intermediary:
+
+```yaml
+# otel-collector-config.yaml
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+exporters:
+  otlphttp:
+    endpoint: http://mlflow-server:5000/v1/logs
+    headers:
+      x-mlflow-experiment-id: "1"
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      exporters: [otlphttp]
+```
+
+Then configure Codex to use the collector:
+
+```toml
+[otel]
+exporter = { otlp-grpc = {
+  endpoint = "http://localhost:4317",
+  headers = {}
+}}
+```
+
+## Privacy Considerations
+
+By default, Codex CLI does **not** log user prompts to protect your privacy. The prompts appear as `[REDACTED]` in traces.
+
+To enable prompt logging:
+
+```toml
+[otel]
+log_user_prompt = true
+```
+
+:::warning
+Only enable prompt logging in trusted environments. User prompts may contain sensitive information like file contents, credentials, or personal data.
+:::
+
+## Troubleshooting
+
+### Traces Not Appearing
+
+1. **Check MLflow server is running:**
+   ```bash
+   curl http://localhost:5000/health
+   ```
+
+2. **Verify experiment ID is correct:**
+   ```bash
+   mlflow experiments list
+   ```
+
+3. **Check Codex logs for OTEL errors:**
+   ```bash
+   RUST_LOG=debug codex
+   ```
+
+### Connection Errors
+
+If you see connection errors, ensure:
+- MLflow server is accessible from where Codex is running
+- The endpoint URL is correct (include `/v1/logs`)
+- Any firewalls allow the connection
+
+### Empty Traces
+
+If traces appear but are empty:
+- Check that `otel.exporter` is configured correctly
+- Ensure the protocol matches (`binary` for protobuf, `json` for JSON)
+
+## Example: Analyzing Token Usage
+
+Once traces are collected, you can analyze them programmatically:
+
+```python
+import mlflow
+
+# Search for traces from your Codex experiment
+traces = mlflow.search_traces(experiment_ids=["1"])
+
+# Analyze token usage
+for trace in traces:
+    for span in trace.data.spans:
+        if span.name.startswith("SSE: response.completed"):
+            attrs = span.attributes
+            print(f"Trace: {trace.info.trace_id}")
+            print(f"  Input tokens: {attrs.get('input_token_count')}")
+            print(f"  Output tokens: {attrs.get('output_token_count')}")
+            print(f"  Cached tokens: {attrs.get('cached_token_count')}")
+```
+
+## Next Steps
+
+- [MLflow Tracing Overview](/genai/tracing/index) - Learn more about MLflow Tracing
+- [Search Traces](/genai/tracing/search-traces) - Query and filter your traces
+- [Trace Data Model](/genai/tracing/data-model) - Understand the trace structure
+

@@ -11,6 +11,7 @@ from mlflow.protos.databricks_pb2 import RESOURCE_DOES_NOT_EXIST
 # Constants for OpenTelemetry integration
 MLFLOW_EXPERIMENT_ID_HEADER = "x-mlflow-experiment-id"
 OTLP_TRACES_PATH = "/v1/traces"
+OTLP_LOGS_PATH = "/v1/logs"
 
 
 def should_use_otlp_exporter() -> bool:

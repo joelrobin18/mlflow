@@ -14,6 +14,7 @@ from mlflow.server import app as flask_app
 from mlflow.server.fastapi_security import init_fastapi_security
 from mlflow.server.job_api import job_api_router
 from mlflow.server.otel_api import otel_router
+from mlflow.server.otel_logs_api import otel_logs_router
 from mlflow.version import VERSION
 
 
@@ -39,9 +40,10 @@ def create_fastapi_app(flask_app: Flask = flask_app):
     # Initialize security middleware BEFORE adding routes
     init_fastapi_security(fastapi_app)
 
-    # Include OpenTelemetry API router BEFORE mounting Flask app
+    # Include OpenTelemetry API routers BEFORE mounting Flask app
     # This ensures FastAPI routes take precedence over the catch-all Flask mount
     fastapi_app.include_router(otel_router)
+    fastapi_app.include_router(otel_logs_router)
 
     fastapi_app.include_router(job_api_router)
 
