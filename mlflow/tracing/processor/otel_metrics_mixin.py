@@ -18,9 +18,31 @@ from mlflow.entities.span import SpanType
 from mlflow.tracing.constant import SpanAttributeKey
 from mlflow.tracing.trace_manager import InMemoryTraceManager
 from mlflow.tracing.utils import get_experiment_id_for_trace
-from mlflow.tracing.utils.otlp import _get_otlp_metrics_endpoint, _get_otlp_metrics_protocol
+from mlflow.tracing.utils.otlp import (
+    _get_metrics_export_schema,
+    _get_otlp_metrics_endpoint,
+    _get_otlp_metrics_protocol,
+)
 
 _logger = logging.getLogger(__name__)
+
+
+# GenAI semantic convention metric names
+GENAI_OPERATION_DURATION_METRIC = "gen_ai.client.operation.duration"
+MLFLOW_SPAN_DURATION_METRIC = "mlflow.trace.span.duration"
+
+# GenAI semantic convention attribute keys for metrics
+GENAI_OPERATION_NAME = "gen_ai.operation.name"
+GENAI_SYSTEM = "gen_ai.system"
+
+# Mapping from MLflow SpanType to GenAI operation.name for metrics
+MLFLOW_TYPE_TO_GENAI_OPERATION_FOR_METRICS = {
+    SpanType.CHAT_MODEL: "chat",
+    SpanType.LLM: "text_completion",
+    SpanType.EMBEDDING: "embeddings",
+    SpanType.AGENT: "invoke_agent",
+    SpanType.TOOL: "execute_tool",
+}
 
 
 class OtelMetricsMixin:
@@ -29,6 +51,9 @@ class OtelMetricsMixin:
 
     This mixin is designed to be used with OpenTelemetry span processors to record
     span-related metrics (e.g. duration) and metadata.
+
+    When MLFLOW_OTLP_METRICS_EXPORT_SCHEMA is set to "genai", the mixin will use
+    GenAI semantic convention metric names and attribute keys.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -36,6 +61,7 @@ class OtelMetricsMixin:
         super().__init__(*args, **kwargs)
         self._duration_histogram = None
         self._trace_manager = InMemoryTraceManager.get_instance()
+        self._use_genai_schema = False
 
     def _setup_metrics_if_necessary(self) -> None:
         """
@@ -65,15 +91,34 @@ class OtelMetricsMixin:
             )
             return
 
+        # Determine the export schema
+        try:
+            self._use_genai_schema = _get_metrics_export_schema() == "genai"
+        except Exception:
+            self._use_genai_schema = False
+
+        # Select metric name based on schema
+        if self._use_genai_schema:
+            metric_name = GENAI_OPERATION_DURATION_METRIC
+            description = "Duration of GenAI operations in seconds"
+            unit = "s"  # GenAI conventions use seconds
+        else:
+            metric_name = MLFLOW_SPAN_DURATION_METRIC
+            description = "Duration of spans in milliseconds"
+            unit = "ms"
+
         metric_exporter = OTLPMetricExporter(endpoint=endpoint)
         reader = PeriodicExportingMetricReader(metric_exporter)
         provider = MeterProvider(metric_readers=[reader])
         metrics.set_meter_provider(provider)
-        meter = metrics.get_meter("mlflow.tracing")
+
+        # Use appropriate meter name based on schema
+        meter_name = "gen_ai.client" if self._use_genai_schema else "mlflow.tracing"
+        meter = metrics.get_meter(meter_name)
         self._duration_histogram = meter.create_histogram(
-            name="mlflow.trace.span.duration",
-            description="Duration of spans in milliseconds",
-            unit="ms",
+            name=metric_name,
+            description=description,
+            unit=unit,
         )
 
     def record_metrics_for_span(self, span: OTelReadableSpan) -> None:
@@ -82,6 +127,9 @@ class OtelMetricsMixin:
 
         This method should be called at the beginning of the on_end() method
         to record span duration and associated metadata.
+
+        When GenAI schema is configured, metrics use GenAI semantic convention
+        attribute names (e.g., gen_ai.operation.name instead of span_type).
 
         Args:
             span: The completed OpenTelemetry span to record metrics for.
@@ -98,14 +146,13 @@ class OtelMetricsMixin:
         except (json.JSONDecodeError, TypeError):
             pass
 
-        attributes = {
-            "root": span.parent is None,
-            "span_type": span_type,
-            "span_status": span.status.status_code.name if span.status else "UNSET",
-            "experiment_id": get_experiment_id_for_trace(span),
-        }
+        # Build attributes based on configured schema
+        if self._use_genai_schema:
+            attributes = self._build_genai_attributes(span, span_type)
+        else:
+            attributes = self._build_mlflow_attributes(span, span_type)
 
-        # Add trace tags and metadata if trace is available
+        # Add trace tags and metadata if trace is available (common to both schemas)
         # Get MLflow trace ID from OpenTelemetry trace ID
         mlflow_trace_id = self._trace_manager.get_mlflow_trace_id_from_otel_id(
             span.context.trace_id
@@ -119,6 +166,52 @@ class OtelMetricsMixin:
                         for meta_key, meta_value in trace.info.trace_metadata.items():
                             attributes[f"metadata.{meta_key}"] = str(meta_value)
 
-        self._duration_histogram.record(
-            amount=(span.end_time - span.start_time) / 1e6, attributes=attributes
-        )
+        # Calculate duration - GenAI uses seconds, MLflow uses milliseconds
+        duration_ns = span.end_time - span.start_time
+        duration = duration_ns / 1e9 if self._use_genai_schema else duration_ns / 1e6
+
+        self._duration_histogram.record(amount=duration, attributes=attributes)
+
+    def _build_mlflow_attributes(self, span: OTelReadableSpan, span_type: str) -> dict[str, Any]:
+        """
+        Build metric attributes using MLflow's default attribute names.
+
+        Args:
+            span: The OpenTelemetry span.
+            span_type: The decoded span type.
+
+        Returns:
+            A dictionary of metric attributes.
+        """
+        return {
+            "root": span.parent is None,
+            "span_type": span_type,
+            "span_status": span.status.status_code.name if span.status else "UNSET",
+            "experiment_id": get_experiment_id_for_trace(span),
+        }
+
+    def _build_genai_attributes(self, span: OTelReadableSpan, span_type: str) -> dict[str, Any]:
+        """
+        Build metric attributes using GenAI semantic convention attribute names.
+
+        Args:
+            span: The OpenTelemetry span.
+            span_type: The decoded span type.
+
+        Returns:
+            A dictionary of metric attributes following GenAI conventions.
+        """
+        # Map MLflow span type to GenAI operation name
+        operation_name = MLFLOW_TYPE_TO_GENAI_OPERATION_FOR_METRICS.get(span_type, span_type)
+
+        attributes = {
+            GENAI_OPERATION_NAME: operation_name,
+            GENAI_SYSTEM: "mlflow",  # Identify MLflow as the GenAI system
+            "root": span.parent is None,  # Keep root indicator
+            "error.type": span.status.status_code.name
+            if span.status and span.status.status_code.name == "ERROR"
+            else None,
+        }
+
+        # Remove None values
+        return {k: v for k, v in attributes.items() if v is not None}

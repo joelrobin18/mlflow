@@ -6,7 +6,11 @@ from typing import Any
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, ArrayValue, KeyValueList
 from opentelemetry.sdk.trace.export import SpanExporter
 
-from mlflow.environment_variables import MLFLOW_ENABLE_OTLP_EXPORTER
+from mlflow.environment_variables import (
+    MLFLOW_ENABLE_OTLP_EXPORTER,
+    MLFLOW_OTLP_METRICS_EXPORT_SCHEMA,
+    MLFLOW_OTLP_TRACES_EXPORT_SCHEMA,
+)
 from mlflow.exceptions import MlflowException
 from mlflow.protos.databricks_pb2 import RESOURCE_DOES_NOT_EXIST
 
@@ -34,7 +38,10 @@ def should_export_otlp_metrics() -> bool:
 
 def get_otlp_exporter() -> SpanExporter:
     """
-    Get the OTLP exporter based on the configured protocol.
+    Get the OTLP exporter based on the configured protocol and export schema.
+
+    If MLFLOW_OTLP_TRACES_EXPORT_SCHEMA is set to "genai", the exporter will be wrapped
+    with GenAiSchemaSpanExporter to transform span attributes to GenAI semantic conventions.
     """
     endpoint = _get_otlp_traces_endpoint()
     protocol = _get_otlp_protocol()
@@ -48,7 +55,7 @@ def get_otlp_exporter() -> SpanExporter:
                 error_code=RESOURCE_DOES_NOT_EXIST,
             )
 
-        return OTLPSpanExporter(endpoint=endpoint)
+        base_exporter = OTLPSpanExporter(endpoint=endpoint)
     elif protocol == "http/protobuf":
         try:
             from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -59,12 +66,66 @@ def get_otlp_exporter() -> SpanExporter:
                 error_code=RESOURCE_DOES_NOT_EXIST,
             ) from e
 
-        return OTLPSpanExporter(endpoint=endpoint)
+        base_exporter = OTLPSpanExporter(endpoint=endpoint)
     else:
         raise MlflowException.invalid_parameter_value(
             f"Unsupported OTLP protocol '{protocol}' is configured. Please set "
             "the protocol to either 'grpc' or 'http/protobuf'."
         )
+
+    # Wrap with GenAI schema exporter if configured
+    return _wrap_exporter_with_schema(base_exporter)
+
+
+def _wrap_exporter_with_schema(base_exporter: SpanExporter) -> SpanExporter:
+    """
+    Wrap the base exporter with a schema transformer if configured.
+
+    Args:
+        base_exporter: The base SpanExporter to potentially wrap.
+
+    Returns:
+        The base exporter wrapped with a schema transformer if configured,
+        otherwise the base exporter unchanged.
+    """
+    export_schema = _get_traces_export_schema()
+    if export_schema == "genai":
+        from mlflow.tracing.otel.export import GenAiSchemaSpanExporter
+
+        return GenAiSchemaSpanExporter(base_exporter)
+    return base_exporter
+
+
+def _get_traces_export_schema() -> str:
+    """
+    Get the configured export schema for traces.
+
+    Returns:
+        The export schema name ("mlflow" or "genai").
+    """
+    schema = MLFLOW_OTLP_TRACES_EXPORT_SCHEMA.get()
+    if schema not in ("mlflow", "genai"):
+        raise MlflowException.invalid_parameter_value(
+            f"Unsupported OTLP traces export schema '{schema}'. "
+            "Supported values are 'mlflow' and 'genai'."
+        )
+    return schema
+
+
+def _get_metrics_export_schema() -> str:
+    """
+    Get the configured export schema for metrics.
+
+    Returns:
+        The export schema name ("mlflow" or "genai").
+    """
+    schema = MLFLOW_OTLP_METRICS_EXPORT_SCHEMA.get()
+    if schema not in ("mlflow", "genai"):
+        raise MlflowException.invalid_parameter_value(
+            f"Unsupported OTLP metrics export schema '{schema}'. "
+            "Supported values are 'mlflow' and 'genai'."
+        )
+    return schema
 
 
 def _get_otlp_traces_endpoint() -> str | None:

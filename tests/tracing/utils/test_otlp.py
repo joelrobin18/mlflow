@@ -276,3 +276,52 @@ def test_decompress_otlp_body_valid(
 def test_decompress_otlp_body_invalid(encoding: str, invalid_data: bytes, expected_error: str):
     with pytest.raises(HTTPException, match=expected_error, check=lambda e: e.status_code == 400):
         decompress_otlp_body(invalid_data, encoding)
+
+
+class TestExportSchema:
+    def test_default_schema_returns_base_exporter(self, monkeypatch):
+        monkeypatch.setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", _TEST_HTTP_OTLP_ENDPOINT)
+        monkeypatch.delenv("MLFLOW_OTLP_TRACES_EXPORT_SCHEMA", raising=False)
+
+        exporter = get_otlp_exporter()
+
+        # Default schema should return the base OTLP exporter (grpc by default)
+        assert isinstance(exporter, GrpcExporter)
+
+    def test_mlflow_schema_returns_base_exporter(self, monkeypatch):
+        monkeypatch.setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", _TEST_HTTP_OTLP_ENDPOINT)
+        monkeypatch.setenv("MLFLOW_OTLP_TRACES_EXPORT_SCHEMA", "mlflow")
+
+        exporter = get_otlp_exporter()
+
+        assert isinstance(exporter, GrpcExporter)
+
+    def test_genai_schema_wraps_exporter(self, monkeypatch):
+        from mlflow.tracing.otel.export import GenAiSchemaSpanExporter
+
+        monkeypatch.setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", _TEST_HTTP_OTLP_ENDPOINT)
+        monkeypatch.setenv("MLFLOW_OTLP_TRACES_EXPORT_SCHEMA", "genai")
+
+        exporter = get_otlp_exporter()
+
+        assert isinstance(exporter, GenAiSchemaSpanExporter)
+        assert isinstance(exporter._base_exporter, GrpcExporter)
+
+    def test_genai_schema_with_http_protocol(self, monkeypatch):
+        from mlflow.tracing.otel.export import GenAiSchemaSpanExporter
+
+        monkeypatch.setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", _TEST_HTTP_OTLP_ENDPOINT)
+        monkeypatch.setenv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL", "http/protobuf")
+        monkeypatch.setenv("MLFLOW_OTLP_TRACES_EXPORT_SCHEMA", "genai")
+
+        exporter = get_otlp_exporter()
+
+        assert isinstance(exporter, GenAiSchemaSpanExporter)
+        assert isinstance(exporter._base_exporter, HttpExporter)
+
+    def test_invalid_schema_raises_error(self, monkeypatch):
+        monkeypatch.setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", _TEST_HTTP_OTLP_ENDPOINT)
+        monkeypatch.setenv("MLFLOW_OTLP_TRACES_EXPORT_SCHEMA", "invalid_schema")
+
+        with pytest.raises(MlflowException, match="Unsupported OTLP traces export schema"):
+            get_otlp_exporter()
