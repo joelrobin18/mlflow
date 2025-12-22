@@ -1410,6 +1410,29 @@ service MlflowService {
     };
   }
 
+  // Delete evaluation dataset records
+  rpc deleteDatasetRecords(DeleteDatasetRecords) returns (DeleteDatasetRecords.Response) {
+    option (rpc) = {
+      endpoints: [
+        {
+          method: "DELETE"
+          path: "/mlflow/datasets/{dataset_id}/records"
+          since: {
+            major: 3
+            minor: 0
+          }
+        }
+      ]
+      error_codes: [
+        INVALID_PARAMETER_VALUE,
+        RESOURCE_DOES_NOT_EXIST,
+        INTERNAL_ERROR
+      ]
+      visibility: PUBLIC_UNDOCUMENTED
+      rpc_doc_title: "Delete Evaluation Dataset Records"
+    };
+  }
+
   // Get experiment IDs associated with an evaluation dataset
   rpc getDatasetExperimentIds(GetDatasetExperimentIds) returns (GetDatasetExperimentIds.Response) {
     option (rpc) = {
