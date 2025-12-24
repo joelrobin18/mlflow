@@ -96,6 +96,7 @@ from mlflow.server.handlers import (
     _create_registered_model,
     _delete_artifact_mlflow_artifacts,
     _delete_dataset_handler,
+    _delete_dataset_records_handler,
     _delete_dataset_tag_handler,
     _delete_model_version,
     _delete_model_version_tag,
@@ -1229,6 +1230,47 @@ def test_upsert_dataset_records(mock_tracking_store):
     response_data = json.loads(resp.get_data())
     assert response_data["inserted_count"] == 2
     assert response_data["updated_count"] == 0
+
+
+def test_delete_dataset_records(mock_tracking_store):
+    mock_tracking_store.delete_dataset_records.return_value = 2
+
+    dataset_id = "d-1234567890abcdef1234567890abcdef"
+    record_ids = ["dr-record1", "dr-record2"]
+
+    with app.test_request_context(
+        method="DELETE",
+        json={
+            "dataset_record_ids": record_ids,
+        },
+    ):
+        resp = _delete_dataset_records_handler(dataset_id)
+
+    mock_tracking_store.delete_dataset_records.assert_called_once_with(
+        dataset_id=dataset_id,
+        dataset_record_ids=record_ids,
+    )
+
+    response_data = json.loads(resp.get_data())
+    assert response_data["deleted_count"] == 2
+
+
+def test_delete_dataset_records_empty(mock_tracking_store):
+    mock_tracking_store.delete_dataset_records.return_value = 0
+
+    dataset_id = "d-1234567890abcdef1234567890abcdef"
+    record_ids = ["dr-nonexistent"]
+
+    with app.test_request_context(
+        method="DELETE",
+        json={
+            "dataset_record_ids": record_ids,
+        },
+    ):
+        resp = _delete_dataset_records_handler(dataset_id)
+
+    response_data = json.loads(resp.get_data())
+    assert response_data["deleted_count"] == 0
 
 
 def test_get_dataset_experiment_ids(mock_tracking_store):
