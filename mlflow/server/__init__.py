@@ -18,6 +18,7 @@ from mlflow.environment_variables import (
     _MLFLOW_SGI_NAME,
     MLFLOW_FLASK_SERVER_SECRET_KEY,
     MLFLOW_SERVER_ENABLE_JOB_EXECUTION,
+    MLFLOW_UI_SUPPORT_PAGE_URL,
 )
 from mlflow.exceptions import MlflowException
 from mlflow.server import handlers
@@ -32,6 +33,7 @@ from mlflow.server.constants import (
     SECRETS_CACHE_MAX_SIZE_ENV_VAR,
     SECRETS_CACHE_TTL_ENV_VAR,
     SERVE_ARTIFACTS_ENV_VAR,
+    UI_SUPPORT_PAGE_URL_ENV_VAR,
 )
 from mlflow.server.handlers import (
     STATIC_PREFIX_ENV_VAR,
@@ -45,6 +47,7 @@ from mlflow.server.handlers import (
     get_metric_history_bulk_interval_handler,
     get_model_version_artifact_handler,
     get_trace_artifact_handler,
+    get_ui_config_handler,
     get_ui_telemetry_handler,
     post_ui_telemetry_handler,
     upload_artifact_handler,
@@ -167,6 +170,11 @@ def serve_get_ui_telemetry():
 @app.route(_add_static_prefix("/ajax-api/3.0/mlflow/ui-telemetry"), methods=["POST"])
 def serve_post_ui_telemetry():
     return post_ui_telemetry_handler()
+
+
+@app.route(_add_static_prefix("/ajax-api/3.0/mlflow/ui-config"), methods=["GET"])
+def serve_get_ui_config():
+    return get_ui_config_handler()
 
 
 # We expect the react app to be built assuming it is hosted at /static-files, so that requests for
@@ -365,6 +373,10 @@ def _run_server(
 
     if secret_key := MLFLOW_FLASK_SERVER_SECRET_KEY.get():
         env_map[MLFLOW_FLASK_SERVER_SECRET_KEY.name] = secret_key
+
+    # Pass UI support page URL to workers if configured
+    if support_page_url := MLFLOW_UI_SUPPORT_PAGE_URL.get():
+        env_map[UI_SUPPORT_PAGE_URL_ENV_VAR] = support_page_url
 
     # Determine which server we're using (only one should be true)
     using_gunicorn = gunicorn_opts is not None

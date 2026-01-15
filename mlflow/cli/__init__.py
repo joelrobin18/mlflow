@@ -482,6 +482,17 @@ def _validate_static_prefix(ctx, param, value):
         "Range: 1-10000 entries."
     ),
 )
+@click.option(
+    "--support-page-url",
+    envvar="MLFLOW_UI_SUPPORT_PAGE_URL",
+    default=None,
+    help=(
+        "Custom URL for the support page link shown on error pages. "
+        "Set this to your organization's internal support page for self-hosted MLflow servers. "
+        "Example: 'https://your-company.com/mlflow-support' or 'mailto:support@company.com'. "
+        "If not specified, defaults to MLflow's GitHub issues page."
+    ),
+)
 def server(
     ctx,
     backend_store_uri,
@@ -506,6 +517,7 @@ def server(
     uvicorn_opts,
     secrets_cache_ttl,
     secrets_cache_max_size,
+    support_page_url,
 ):
     """
     Run the MLflow tracking server with built-in security middleware.
@@ -573,6 +585,9 @@ def server(
 
         if x_frame_options:
             os.environ["MLFLOW_SERVER_X_FRAME_OPTIONS"] = x_frame_options
+
+    if support_page_url:
+        os.environ["MLFLOW_UI_SUPPORT_PAGE_URL"] = support_page_url
 
     if not backend_store_uri:
         backend_store_uri = _get_default_tracking_uri()

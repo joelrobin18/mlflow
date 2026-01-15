@@ -64,6 +64,10 @@ CRYPTO_KEK_PASSPHRASE_ENV_VAR = "MLFLOW_CRYPTO_KEK_PASSPHRASE"
 # Automatically tracked during rotation. See `mlflow crypto rotate-kek` for rotation workflow.
 CRYPTO_KEK_VERSION_ENV_VAR = "MLFLOW_CRYPTO_KEK_VERSION"
 
+# UI Configuration
+# Custom support page URL for error pages (configured via --support-page-url or env var)
+UI_SUPPORT_PAGE_URL_ENV_VAR = "_MLFLOW_SERVER_UI_SUPPORT_PAGE_URL"
+
 # Secrets cache configuration
 # Time-to-live for server-side secrets cache in seconds (10-300s range, default 60s)
 SECRETS_CACHE_TTL_ENV_VAR = "MLFLOW_SERVER_SECRETS_CACHE_TTL"

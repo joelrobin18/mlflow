@@ -55,6 +55,7 @@ from mlflow.entities.webhook import WebhookAction, WebhookEntity, WebhookEvent, 
 from mlflow.environment_variables import (
     MLFLOW_CREATE_MODEL_VERSION_SOURCE_VALIDATION_REGEX,
     MLFLOW_DEPLOYMENTS_TARGET,
+    MLFLOW_UI_SUPPORT_PAGE_URL,
 )
 from mlflow.exceptions import (
     MlflowException,
@@ -216,6 +217,7 @@ from mlflow.protos.webhooks_pb2 import (
     UpdateWebhook,
     WebhookService,
 )
+from mlflow.server.constants import UI_SUPPORT_PAGE_URL_ENV_VAR
 from mlflow.server.validation import _validate_content_type
 from mlflow.store.artifact.artifact_repo import MultipartUploadMixin
 from mlflow.store.artifact.artifact_repository_registry import get_artifact_repository
@@ -5141,6 +5143,28 @@ def post_ui_telemetry_handler():
         # to send records. if we return an error, the UI will retry sending
         # records. the safest thing to do is to tell the UI to stop sending
         return jsonify({"status": "disabled"})
+
+
+# Default support page URL (MLflow GitHub issues)
+_DEFAULT_SUPPORT_PAGE_URL = (
+    "https://github.com/mlflow/mlflow/issues/new?template=ui_bug_report_template.yaml"
+)
+
+
+@catch_mlflow_exception
+def get_ui_config_handler():
+    """
+    GET handler for /ui-config endpoint.
+    Returns UI configuration including customizable settings like support page URL.
+    """
+    # Check internal server env var first (set by _run_server), then user-facing env var
+    support_page_url = (
+        os.environ.get(UI_SUPPORT_PAGE_URL_ENV_VAR)
+        or MLFLOW_UI_SUPPORT_PAGE_URL.get()
+        or _DEFAULT_SUPPORT_PAGE_URL
+    )
+
+    return jsonify({"support_page_url": support_page_url})
 
 
 HANDLERS = {

@@ -3064,3 +3064,29 @@ def test_download_artifact_streams_in_chunks(enable_serve_artifacts, tmp_path):
         # Verify that all data is correctly streamed
         streamed_data = b"".join(response_chunks)
         assert streamed_data == test_data
+
+
+def test_get_ui_config_default():
+    """Test the /ui-config endpoint returns default support page URL."""
+    with app.test_client() as c:
+        response = c.get("/ajax-api/3.0/mlflow/ui-config")
+        assert response.status_code == 200
+        data = response.get_json()
+        assert "support_page_url" in data
+        # Default URL should point to MLflow GitHub issues
+        assert "github.com/mlflow/mlflow" in data["support_page_url"]
+
+
+def test_get_ui_config_custom(monkeypatch):
+    """Test the /ui-config endpoint returns custom support page URL when configured."""
+    custom_url = "https://internal.company.com/mlflow-support"
+
+    # Set the environment variable for custom support page URL
+    monkeypatch.setenv("MLFLOW_UI_SUPPORT_PAGE_URL", custom_url)
+
+    with app.test_client() as c:
+        response = c.get("/ajax-api/3.0/mlflow/ui-config")
+        assert response.status_code == 200
+        data = response.get_json()
+        assert "support_page_url" in data
+        assert data["support_page_url"] == custom_url

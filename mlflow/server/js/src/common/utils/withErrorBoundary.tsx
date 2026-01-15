@@ -4,6 +4,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import ErrorUtils from './ErrorUtils';
 import { DangerIcon, Empty } from '@databricks/design-system';
 import { FormattedMessage } from 'react-intl';
+import { getSupportPageUrl } from './uiConfig';
 
 export type ErrorBoundaryProps = {
   children: React.Component;
@@ -17,8 +18,15 @@ function ErrorFallback() {
       title={<FormattedMessage defaultMessage="Error" description="Title of editor error fallback component" />}
       description={
         <FormattedMessage
-          defaultMessage="An error occurred while rendering this component."
-          description="Description of error fallback component"
+          defaultMessage="An error occurred while rendering this component. If this error persists, please report an issue {link}."
+          description="Description of error fallback component with support link"
+          values={{
+            link: (
+              <a href={getSupportPageUrl()} target="_blank" rel="noopener noreferrer">
+                <FormattedMessage defaultMessage="here" description="Link text for support page" />
+              </a>
+            ),
+          }}
         />
       }
       image={<DangerIcon />}

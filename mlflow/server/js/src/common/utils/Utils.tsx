@@ -10,7 +10,8 @@ import moment from 'moment';
 import qs from 'qs';
 import { MLFLOW_INTERNAL_PREFIX } from './TagUtils';
 import { flatMap as lodashFlatMap, merge, omit, sortBy, spread, uniq, uniqWith, groupBy } from 'lodash';
-import { ErrorCodes, SupportPageUrl } from '../constants';
+import { ErrorCodes } from '../constants';
+import { getSupportPageUrl } from './uiConfig';
 import type { IntlShape } from 'react-intl';
 import { FormattedMessage } from 'react-intl';
 import { ErrorWrapper } from './ErrorWrapper';
@@ -1131,7 +1132,7 @@ class Utils {
     return aId.localeCompare(bId);
   }
 
-  static getSupportPageUrl = () => SupportPageUrl;
+  static getSupportPageUrl = () => getSupportPageUrl();
 
   static isUsingExternalRouter() {
     // Running inside the iFrame indicates that we're using externally managed routing.

@@ -20,6 +20,7 @@ import { MlflowRouter as MlflowRouter } from './MlflowRouter';
 import { useMLflowDarkTheme } from './common/hooks/useMLflowDarkTheme';
 import { DarkThemeProvider } from './common/contexts/DarkThemeContext';
 import { telemetryClient } from './telemetry';
+import { initUIConfig } from './common/utils/uiConfig';
 
 export function MLFlowRoot() {
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -34,6 +35,13 @@ export function MLFlowRoot() {
 
   const logObservabilityEvent = useCallback((event: any) => {
     telemetryClient.logEvent(event);
+  }, []);
+
+  // Initialize UI configuration from server (fire-and-forget)
+  // This fetches server-side settings like custom support page URL
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    initUIConfig();
   }, []);
 
   if (!intl) {

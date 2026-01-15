@@ -9,7 +9,7 @@ import { describe, beforeEach, test, expect } from '@jest/globals';
 import React from 'react';
 import { renderWithIntl, screen } from '@mlflow/mlflow/src/common/utils/TestUtils.react18';
 import { SectionErrorBoundary } from './SectionErrorBoundary';
-import { SupportPageUrl } from '../../constants';
+import Utils from '../../utils/Utils';
 
 describe('SectionErrorBoundary', () => {
   let minimalProps: any;
@@ -36,7 +36,7 @@ describe('SectionErrorBoundary', () => {
 
     expect(screen.getByTestId('icon-fail')).toBeInTheDocument();
     expect(screen.queryByText('testChild')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /here/i })).toHaveAttribute('href', SupportPageUrl);
+    expect(screen.getByRole('link', { name: /here/i })).toHaveAttribute('href', Utils.getSupportPageUrl());
   });
 
   test('should show error if showServerError prop passed in', () => {

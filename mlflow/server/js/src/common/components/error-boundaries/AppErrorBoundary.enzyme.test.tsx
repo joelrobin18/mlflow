@@ -9,7 +9,6 @@ import { describe, beforeEach, jest, afterEach, test, expect } from '@jest/globa
 import React from 'react';
 import { mount, shallow } from 'enzyme';
 import AppErrorBoundary from './AppErrorBoundary';
-import { SupportPageUrl } from '../../constants';
 import Utils from '../../utils/Utils';
 
 describe('AppErrorBoundary', () => {
@@ -39,7 +38,7 @@ describe('AppErrorBoundary', () => {
     instance.forceUpdate();
     expect(wrapper.find('.mlflow-error-image').length).toBe(1);
     expect(wrapper.text()).not.toMatch('testChild');
-    expect(wrapper.find({ href: SupportPageUrl }).length).toBe(1);
+    expect(wrapper.find({ href: Utils.getSupportPageUrl() }).length).toBe(1);
   });
   test('register its notifications API in global utils', () => {
     jest.spyOn(Utils, 'registerNotificationsApi').mockImplementation(() => {});

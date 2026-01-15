@@ -880,6 +880,12 @@ MLFLOW_SERVER_X_FRAME_OPTIONS = _EnvironmentVariable(
     "MLFLOW_SERVER_X_FRAME_OPTIONS", str, "SAMEORIGIN"
 )
 
+#: (MLflow 3.6.0+) Custom URL for the support page link shown on error pages.
+#: Set this to your organization's internal support page for self-hosted MLflow servers.
+#: Example: "https://your-company.com/mlflow-support" or "mailto:support@company.com"
+#: (default: ``None`` - uses MLflow GitHub issues page)
+MLFLOW_UI_SUPPORT_PAGE_URL = _EnvironmentVariable("MLFLOW_UI_SUPPORT_PAGE_URL", str, None)
+
 #: Specifies the max length (in chars) of an experiment's artifact location.
 #: The default is 2048.
 MLFLOW_ARTIFACT_LOCATION_MAX_LENGTH = _EnvironmentVariable(
