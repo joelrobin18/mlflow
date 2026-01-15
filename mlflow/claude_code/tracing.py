@@ -12,6 +12,7 @@ import dateutil.parser
 
 import mlflow
 from mlflow.claude_code.config import (
+    MLFLOW_SESSION_TRACKING,
     MLFLOW_TRACING_ENABLED,
     get_env_var,
 )
@@ -116,6 +117,16 @@ def setup_mlflow() -> None:
 def is_tracing_enabled() -> bool:
     """Check if MLflow Claude tracing is enabled via environment variable."""
     return get_env_var(MLFLOW_TRACING_ENABLED).lower() in ("true", "1", "yes")
+
+
+def is_session_tracking_enabled() -> bool:
+    """Check if session-level tracking is enabled via environment variable.
+
+    When session tracking is enabled, a single trace is created for the entire
+    Claude Code session, with each user prompt becoming a child span. When disabled
+    (default), a separate trace is created for each user prompt.
+    """
+    return get_env_var(MLFLOW_SESSION_TRACKING).lower() in ("true", "1", "yes")
 
 
 # ============================================================================
@@ -534,6 +545,130 @@ def find_final_assistant_response(transcript: list[dict[str, Any]], start_idx: i
     return final_response
 
 
+def find_all_user_message_indices(transcript: list[dict[str, Any]]) -> list[int]:
+    """Find all user message indices in the transcript (excluding tool results).
+
+    Args:
+        transcript: List of conversation entries from Claude Code transcript
+
+    Returns:
+        List of indices where actual user messages occur
+    """
+    indices = []
+
+    for i, entry in enumerate(transcript):
+        if entry.get(MESSAGE_FIELD_TYPE) != MESSAGE_TYPE_USER or entry.get("toolUseResult"):
+            continue
+
+        msg = entry.get(MESSAGE_FIELD_MESSAGE, {})
+        content = msg.get(MESSAGE_FIELD_CONTENT, "")
+
+        # Skip tool result entries
+        if isinstance(content, list) and len(content) > 0:
+            if (
+                isinstance(content[0], dict)
+                and content[0].get(MESSAGE_FIELD_TYPE) == CONTENT_TYPE_TOOL_RESULT
+            ):
+                continue
+
+        # Skip stdout entries
+        if isinstance(content, str) and "<local-command-stdout>" in content:
+            continue
+
+        # Skip empty messages
+        if not content or (isinstance(content, str) and content.strip() == ""):
+            continue
+
+        indices.append(i)
+
+    return indices
+
+
+def _find_next_user_message_index(
+    transcript: list[dict[str, Any]], current_idx: int, all_user_indices: list[int]
+) -> int | None:
+    """Find the index of the next user message after current_idx."""
+    for idx in all_user_indices:
+        if idx > current_idx:
+            return idx
+    return None
+
+
+def _create_prompt_span(
+    parent_span,
+    transcript: list[dict[str, Any]],
+    user_idx: int,
+    end_idx: int | None,
+    prompt_num: int,
+) -> None:
+    """Create a span for a single user prompt and its responses.
+
+    Args:
+        parent_span: The session-level parent span
+        transcript: Full transcript
+        user_idx: Index of the user message
+        end_idx: Index of the next user message (or None if last)
+        prompt_num: Prompt number for naming
+    """
+    user_entry = transcript[user_idx]
+    user_prompt = user_entry.get(MESSAGE_FIELD_MESSAGE, {}).get(MESSAGE_FIELD_CONTENT, "")
+    prompt_text = extract_text_content(user_prompt)
+
+    start_ns = parse_timestamp_to_ns(user_entry.get(MESSAGE_FIELD_TIMESTAMP))
+
+    # Determine end time from the last entry before next user message
+    if end_idx is not None:
+        search_end = end_idx
+    else:
+        search_end = len(transcript)
+
+    # Find the last timestamp in this prompt's range
+    end_ns = start_ns
+    for i in range(user_idx, search_end):
+        if ts := parse_timestamp_to_ns(transcript[i].get(MESSAGE_FIELD_TIMESTAMP)):
+            end_ns = ts
+
+    # Add a small duration if end equals start
+    if end_ns <= start_ns:
+        end_ns = start_ns + int(5 * NANOSECONDS_PER_S)
+
+    prompt_span = mlflow.start_span_no_context(
+        name=f"prompt_{prompt_num}",
+        parent_span=parent_span,
+        span_type=SpanType.AGENT,
+        start_time_ns=start_ns,
+        inputs={"prompt": prompt_text[:MAX_PREVIEW_LENGTH] if prompt_text else ""},
+    )
+
+    # Create LLM and tool spans for this prompt's responses
+    _create_llm_and_tool_spans(prompt_span, transcript[user_idx:search_end], 1)
+
+    # Find final response for this prompt
+    final_response = find_final_assistant_response(transcript, user_idx + 1)
+    if end_idx is not None:
+        # Only look within this prompt's range
+        final_response = None
+        for i in range(user_idx + 1, end_idx):
+            entry = transcript[i]
+            if entry.get(MESSAGE_FIELD_TYPE) == MESSAGE_TYPE_ASSISTANT:
+                msg = entry.get(MESSAGE_FIELD_MESSAGE, {})
+                content = msg.get(MESSAGE_FIELD_CONTENT, [])
+                if isinstance(content, list):
+                    for part in content:
+                        if (
+                            isinstance(part, dict)
+                            and part.get(MESSAGE_FIELD_TYPE) == CONTENT_TYPE_TEXT
+                        ):
+                            text = part.get(CONTENT_TYPE_TEXT, "")
+                            if text.strip():
+                                final_response = text
+
+    prompt_span.set_outputs(
+        {"response": final_response or "No response", "status": "completed"}
+    )
+    prompt_span.end(end_time_ns=end_ns)
+
+
 # ============================================================================
 # MAIN TRANSCRIPT PROCESSING
 # ============================================================================
@@ -631,4 +766,118 @@ def process_transcript(
 
     except Exception as e:
         get_logger().error("Error processing transcript: %s", e, exc_info=True)
+        return None
+
+
+def process_full_session_transcript(
+    transcript_path: str, session_id: str | None = None
+) -> mlflow.entities.Trace | None:
+    """Process an entire Claude session transcript into a single MLflow trace.
+
+    Unlike process_transcript which creates a trace for the last prompt only,
+    this function creates a single session-level trace with all prompts as child spans.
+    This provides a complete view of the entire Claude Code session.
+
+    Args:
+        transcript_path: Path to the Claude Code transcript.jsonl file
+        session_id: Optional session identifier, defaults to timestamp-based ID
+
+    Returns:
+        MLflow trace object if successful, None if processing fails
+    """
+    try:
+        transcript = read_transcript(transcript_path)
+        if not transcript:
+            get_logger().warning("Empty transcript, skipping")
+            return None
+
+        user_indices = find_all_user_message_indices(transcript)
+        if not user_indices:
+            get_logger().warning("No user messages found in transcript")
+            return None
+
+        if not session_id:
+            session_id = f"claude-session-{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+        get_logger().log(
+            CLAUDE_TRACING_LEVEL, "Creating session-level MLflow trace: %s", session_id
+        )
+
+        # Session starts at first user message
+        first_user_entry = transcript[user_indices[0]]
+        session_start_ns = parse_timestamp_to_ns(first_user_entry.get(MESSAGE_FIELD_TIMESTAMP))
+
+        # Get first prompt for preview
+        first_prompt = first_user_entry.get(MESSAGE_FIELD_MESSAGE, {}).get(
+            MESSAGE_FIELD_CONTENT, ""
+        )
+        first_prompt_text = extract_text_content(first_prompt)
+
+        # Create session-level parent span
+        session_span = mlflow.start_span_no_context(
+            name="claude_code_session",
+            inputs={
+                "prompt_count": len(user_indices),
+                "first_prompt": first_prompt_text[:MAX_PREVIEW_LENGTH] if first_prompt_text else "",
+            },
+            start_time_ns=session_start_ns,
+            span_type=SpanType.AGENT,
+        )
+
+        # Create child spans for each prompt
+        for i, user_idx in enumerate(user_indices):
+            next_user_idx = _find_next_user_message_index(transcript, user_idx, user_indices)
+            _create_prompt_span(session_span, transcript, user_idx, next_user_idx, i + 1)
+
+        # Find final response from last prompt
+        last_user_idx = user_indices[-1]
+        final_response = find_final_assistant_response(transcript, last_user_idx + 1)
+
+        # Set trace previews for UI display
+        try:
+            with InMemoryTraceManager.get_instance().get_trace(
+                session_span.trace_id
+            ) as in_memory_trace:
+                if first_prompt_text:
+                    in_memory_trace.info.request_preview = first_prompt_text[:MAX_PREVIEW_LENGTH]
+                if final_response:
+                    in_memory_trace.info.response_preview = final_response[:MAX_PREVIEW_LENGTH]
+                in_memory_trace.info.trace_metadata = {
+                    **in_memory_trace.info.trace_metadata,
+                    TraceMetadataKey.TRACE_SESSION: session_id,
+                    TraceMetadataKey.TRACE_USER: os.environ.get("USER", ""),
+                    "mlflow.trace.working_directory": os.getcwd(),
+                    "mlflow.trace.session_tracking": "true",
+                    "mlflow.trace.prompt_count": str(len(user_indices)),
+                }
+        except Exception as e:
+            get_logger().warning("Failed to update trace metadata and previews: %s", e)
+
+        # Calculate end time from last transcript entry
+        last_entry = transcript[-1]
+        session_end_ns = parse_timestamp_to_ns(last_entry.get(MESSAGE_FIELD_TIMESTAMP))
+        if not session_end_ns or session_end_ns <= session_start_ns:
+            session_end_ns = session_start_ns + int(10 * NANOSECONDS_PER_S)
+
+        session_span.set_outputs({
+            "response": final_response or "Session completed",
+            "status": "completed",
+            "prompt_count": len(user_indices),
+        })
+        session_span.end(end_time_ns=session_end_ns)
+
+        try:
+            if hasattr(_get_trace_exporter(), "_async_queue"):
+                mlflow.flush_trace_async_logging()
+        except Exception as e:
+            get_logger().debug("Failed to flush trace async logging: %s", e)
+
+        get_logger().log(
+            CLAUDE_TRACING_LEVEL, "Created session-level trace: %s", session_span.trace_id
+        )
+
+        return mlflow.get_trace(session_span.trace_id)
+
+    except Exception as e:
+        get_logger().error("Error processing session transcript: %s", e, exc_info=True)
         return None

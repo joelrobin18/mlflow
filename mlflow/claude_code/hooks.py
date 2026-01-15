@@ -12,8 +12,10 @@ from mlflow.claude_code.config import (
     MLFLOW_EXPERIMENT_ID,
     MLFLOW_EXPERIMENT_NAME,
     MLFLOW_HOOK_IDENTIFIER,
+    MLFLOW_SESSION_TRACKING,
     MLFLOW_TRACING_ENABLED,
     MLFLOW_TRACKING_URI,
+    get_env_var,
     load_claude_config,
     save_claude_config,
 )
@@ -21,7 +23,9 @@ from mlflow.claude_code.tracing import (
     CLAUDE_TRACING_LEVEL,
     get_hook_response,
     get_logger,
+    is_session_tracking_enabled,
     is_tracing_enabled,
+    process_full_session_transcript,
     process_transcript,
     read_hook_input,
     setup_mlflow,
@@ -134,6 +138,7 @@ def disable_tracing_hooks(settings_path: Path) -> bool:
     if ENVIRONMENT_FIELD in config:
         mlflow_vars = [
             MLFLOW_TRACING_ENABLED,
+            MLFLOW_SESSION_TRACKING,
             MLFLOW_TRACKING_URI,
             MLFLOW_EXPERIMENT_ID,
             MLFLOW_EXPERIMENT_NAME,
@@ -174,12 +179,20 @@ def _process_stop_hook(session_id: str | None, transcript_path: str | None) -> d
     Returns:
         Hook response dictionary
     """
+    session_tracking = is_session_tracking_enabled()
     get_logger().log(
-        CLAUDE_TRACING_LEVEL, "Stop hook: session=%s, transcript=%s", session_id, transcript_path
+        CLAUDE_TRACING_LEVEL,
+        "Stop hook: session=%s, transcript=%s, session_tracking=%s",
+        session_id,
+        transcript_path,
+        session_tracking,
     )
 
-    # Process the transcript and create MLflow trace
-    trace = process_transcript(transcript_path, session_id)
+    # Choose processing mode based on session tracking setting
+    if session_tracking:
+        trace = process_full_session_transcript(transcript_path, session_id)
+    else:
+        trace = process_transcript(transcript_path, session_id)
 
     if trace is not None:
         return get_hook_response()

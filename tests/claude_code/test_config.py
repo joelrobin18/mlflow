@@ -3,6 +3,7 @@ import json
 import pytest
 
 from mlflow.claude_code.config import (
+    MLFLOW_SESSION_TRACKING,
     MLFLOW_TRACING_ENABLED,
     get_env_var,
     get_tracing_status,
@@ -172,3 +173,66 @@ def test_setup_environment_config_experiment_id_precedence(temp_settings_path):
     assert env_vars[MLFLOW_TRACING_ENABLED] == "true"
     assert env_vars["MLFLOW_TRACKING_URI"] == new_tracking_uri
     assert env_vars["MLFLOW_EXPERIMENT_ID"] == new_experiment_id
+
+
+# ============================================================================
+# SESSION TRACKING CONFIGURATION TESTS
+# ============================================================================
+
+
+def test_setup_environment_config_session_tracking_enabled(temp_settings_path):
+    setup_environment_config(temp_settings_path, session_tracking=True)
+
+    config = json.loads(temp_settings_path.read_text())
+    env_vars = config["environment"]
+
+    assert env_vars[MLFLOW_SESSION_TRACKING] == "true"
+
+
+def test_setup_environment_config_session_tracking_disabled(temp_settings_path):
+    setup_environment_config(temp_settings_path, session_tracking=False)
+
+    config = json.loads(temp_settings_path.read_text())
+    env_vars = config["environment"]
+
+    assert env_vars[MLFLOW_SESSION_TRACKING] == "false"
+
+
+def test_get_tracing_status_with_session_tracking_enabled(temp_settings_path):
+    config_data = {
+        "environment": {
+            MLFLOW_TRACING_ENABLED: "true",
+            MLFLOW_SESSION_TRACKING: "true",
+        }
+    }
+    with open(temp_settings_path, "w") as f:
+        json.dump(config_data, f)
+
+    status = get_tracing_status(temp_settings_path)
+    assert status.enabled is True
+    assert status.session_tracking is True
+
+
+def test_get_tracing_status_with_session_tracking_disabled(temp_settings_path):
+    config_data = {
+        "environment": {
+            MLFLOW_TRACING_ENABLED: "true",
+            MLFLOW_SESSION_TRACKING: "false",
+        }
+    }
+    with open(temp_settings_path, "w") as f:
+        json.dump(config_data, f)
+
+    status = get_tracing_status(temp_settings_path)
+    assert status.enabled is True
+    assert status.session_tracking is False
+
+
+def test_get_tracing_status_session_tracking_defaults_to_false(temp_settings_path):
+    config_data = {"environment": {MLFLOW_TRACING_ENABLED: "true"}}
+    with open(temp_settings_path, "w") as f:
+        json.dump(config_data, f)
+
+    status = get_tracing_status(temp_settings_path)
+    assert status.enabled is True
+    assert status.session_tracking is False

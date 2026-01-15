@@ -9,8 +9,10 @@ import mlflow
 import mlflow.claude_code.tracing as tracing_module
 from mlflow.claude_code.tracing import (
     CLAUDE_TRACING_LEVEL,
+    find_all_user_message_indices,
     get_hook_response,
     parse_timestamp_to_ns,
+    process_full_session_transcript,
     process_transcript,
     setup_logging,
 )
@@ -233,6 +235,190 @@ def test_process_transcript_returns_none_for_nonexistent_file():
 def test_process_transcript_links_trace_to_run(mock_transcript_file):
     with mlflow.start_run() as run:
         trace = process_transcript(mock_transcript_file, "test-session-123")
+
+        assert trace is not None
+        assert trace.info.trace_metadata.get(TraceMetadataKey.SOURCE_RUN) == run.info.run_id
+
+
+# ============================================================================
+# SESSION-LEVEL TRACKING TESTS
+# ============================================================================
+
+# Multi-prompt transcript for session-level testing
+MULTI_PROMPT_TRANSCRIPT = [
+    # First prompt
+    {
+        "type": "user",
+        "message": {"role": "user", "content": "What is 2 + 2?"},
+        "timestamp": "2025-01-15T10:00:00.000Z",
+        "sessionId": "test-session-456",
+    },
+    {
+        "type": "assistant",
+        "message": {
+            "role": "assistant",
+            "content": [{"type": "text", "text": "The answer is 4."}],
+        },
+        "timestamp": "2025-01-15T10:00:01.000Z",
+    },
+    # Second prompt
+    {
+        "type": "user",
+        "message": {"role": "user", "content": "Now multiply that by 3"},
+        "timestamp": "2025-01-15T10:00:05.000Z",
+        "sessionId": "test-session-456",
+    },
+    {
+        "type": "assistant",
+        "message": {
+            "role": "assistant",
+            "content": [{"type": "text", "text": "4 times 3 equals 12."}],
+        },
+        "timestamp": "2025-01-15T10:00:06.000Z",
+    },
+    # Third prompt with tool use
+    {
+        "type": "user",
+        "message": {"role": "user", "content": "Please verify that using bash"},
+        "timestamp": "2025-01-15T10:00:10.000Z",
+        "sessionId": "test-session-456",
+    },
+    {
+        "type": "assistant",
+        "message": {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": "tool_456",
+                    "name": "Bash",
+                    "input": {"command": "echo $((4 * 3))"},
+                }
+            ],
+        },
+        "timestamp": "2025-01-15T10:00:11.000Z",
+    },
+    {
+        "type": "user",
+        "message": {
+            "role": "user",
+            "content": [{"type": "tool_result", "tool_use_id": "tool_456", "content": "12"}],
+        },
+        "timestamp": "2025-01-15T10:00:12.000Z",
+    },
+    {
+        "type": "assistant",
+        "message": {
+            "role": "assistant",
+            "content": [{"type": "text", "text": "Confirmed! 4 × 3 = 12."}],
+        },
+        "timestamp": "2025-01-15T10:00:13.000Z",
+    },
+]
+
+
+@pytest.fixture
+def mock_multi_prompt_transcript_file(tmp_path):
+    transcript_path = tmp_path / "multi_transcript.jsonl"
+    with open(transcript_path, "w") as f:
+        for entry in MULTI_PROMPT_TRANSCRIPT:
+            f.write(json.dumps(entry) + "\n")
+    return str(transcript_path)
+
+
+def test_find_all_user_message_indices():
+    indices = find_all_user_message_indices(MULTI_PROMPT_TRANSCRIPT)
+
+    # Should find 3 actual user messages (excluding tool results)
+    assert len(indices) == 3
+    assert indices == [0, 2, 4]
+
+
+def test_find_all_user_message_indices_empty():
+    indices = find_all_user_message_indices([])
+    assert indices == []
+
+
+def test_find_all_user_message_indices_no_user_messages():
+    transcript = [
+        {
+            "type": "assistant",
+            "message": {"role": "assistant", "content": [{"type": "text", "text": "Hello"}]},
+            "timestamp": "2025-01-15T10:00:00.000Z",
+        }
+    ]
+    indices = find_all_user_message_indices(transcript)
+    assert indices == []
+
+
+def test_process_full_session_transcript_creates_session_trace(mock_multi_prompt_transcript_file):
+    trace = process_full_session_transcript(
+        mock_multi_prompt_transcript_file, "test-session-456"
+    )
+
+    assert trace is not None
+
+    # Verify root span is session-level
+    root_span = trace.data.spans[0]
+    assert root_span.name == "claude_code_session"
+    assert root_span.span_type == SpanType.AGENT
+
+    # Verify session metadata
+    assert trace.info.trace_metadata.get("mlflow.trace.session") == "test-session-456"
+    assert trace.info.trace_metadata.get("mlflow.trace.session_tracking") == "true"
+    assert trace.info.trace_metadata.get("mlflow.trace.prompt_count") == "3"
+
+
+def test_process_full_session_transcript_creates_prompt_spans(mock_multi_prompt_transcript_file):
+    trace = process_full_session_transcript(
+        mock_multi_prompt_transcript_file, "test-session-456"
+    )
+
+    assert trace is not None
+
+    spans = list(trace.search_spans())
+
+    # Find prompt spans (direct children of session)
+    prompt_spans = [s for s in spans if s.name.startswith("prompt_")]
+
+    # Should have 3 prompt spans
+    assert len(prompt_spans) == 3
+
+
+def test_process_full_session_transcript_with_tools(mock_multi_prompt_transcript_file):
+    trace = process_full_session_transcript(
+        mock_multi_prompt_transcript_file, "test-session-456"
+    )
+
+    assert trace is not None
+
+    spans = list(trace.search_spans())
+
+    # Find tool spans
+    tool_spans = [s for s in spans if s.span_type == SpanType.TOOL]
+
+    # Should have at least 1 tool span from the third prompt
+    assert len(tool_spans) >= 1
+
+
+def test_process_full_session_transcript_returns_none_for_nonexistent_file():
+    result = process_full_session_transcript("/nonexistent/path/transcript.jsonl", "test-session")
+    assert result is None
+
+
+def test_process_full_session_transcript_returns_none_for_empty_transcript(tmp_path):
+    transcript_path = tmp_path / "empty.jsonl"
+    transcript_path.touch()
+
+    result = process_full_session_transcript(str(transcript_path), "test-session")
+    assert result is None
+
+
+def test_process_full_session_transcript_links_to_run(mock_multi_prompt_transcript_file):
+    with mlflow.start_run() as run:
+        trace = process_full_session_transcript(
+            mock_multi_prompt_transcript_file, "test-session-456"
+        )
 
         assert trace is not None
         assert trace.info.trace_metadata.get(TraceMetadataKey.SOURCE_RUN) == run.info.run_id

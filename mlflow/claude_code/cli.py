@@ -20,6 +20,12 @@ def commands():
 )
 @click.option("--experiment-id", "-e", help="MLflow experiment ID")
 @click.option("--experiment-name", "-n", help="MLflow experiment name")
+@click.option(
+    "--session-tracking",
+    "-s",
+    is_flag=True,
+    help="Enable session-level tracking (one trace per session instead of per-prompt)",
+)
 @click.option("--disable", is_flag=True, help="Disable Claude tracing in the specified directory")
 @click.option("--status", is_flag=True, help="Show current tracing status")
 def claude(
@@ -27,6 +33,7 @@ def claude(
     tracking_uri: str | None,
     experiment_id: str | None,
     experiment_name: str | None,
+    session_tracking: bool,
     disable: bool,
     status: bool,
 ) -> None:
@@ -52,6 +59,9 @@ def claude(
       # Set up tracing with custom tracking URI
       mlflow autolog claude -u file://./custom-mlruns
 
+      # Enable session-level tracking (one trace per session)
+      mlflow autolog claude --session-tracking
+
       # Disable tracing in current directory
       mlflow autolog claude --disable
     """
@@ -75,10 +85,12 @@ def claude(
     click.echo("✅ Claude Code hooks configured")
 
     # Set up environment variables
-    setup_environment_config(settings_file, tracking_uri, experiment_id, experiment_name)
+    setup_environment_config(
+        settings_file, tracking_uri, experiment_id, experiment_name, session_tracking
+    )
 
     # Show final status
-    _show_setup_status(target_dir, tracking_uri, experiment_id, experiment_name)
+    _show_setup_status(target_dir, tracking_uri, experiment_id, experiment_name, session_tracking)
 
 
 def _handle_disable(settings_file: Path) -> None:
@@ -111,12 +123,18 @@ def _show_status(target_dir: Path, settings_file: Path) -> None:
     else:
         click.echo("🔬 Experiment: Default (experiment 0)")
 
+    if status.session_tracking:
+        click.echo("📦 Session Tracking: ENABLED (one trace per session)")
+    else:
+        click.echo("📦 Session Tracking: DISABLED (one trace per prompt)")
+
 
 def _show_setup_status(
     target_dir: Path,
     tracking_uri: str | None,
     experiment_id: str | None,
     experiment_name: str | None,
+    session_tracking: bool = False,
 ) -> None:
     """Show setup completion status."""
     current_dir = Path.cwd().resolve()
@@ -137,6 +155,9 @@ def _show_setup_status(
         click.echo(f"🔬 Experiment Name: {experiment_name}")
     else:
         click.echo("🔬 Experiment: Default (experiment 0)")
+
+    if session_tracking:
+        click.echo("📦 Session Tracking: ENABLED (one trace per session)")
 
     # Show next steps
     click.echo("\n" + "=" * 30)

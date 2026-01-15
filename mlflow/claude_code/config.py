@@ -20,6 +20,7 @@ ENVIRONMENT_FIELD = "environment"
 # MLflow environment variable constants
 MLFLOW_HOOK_IDENTIFIER = "mlflow.claude_code.hooks"
 MLFLOW_TRACING_ENABLED = "MLFLOW_CLAUDE_TRACING_ENABLED"
+MLFLOW_SESSION_TRACKING = "MLFLOW_CLAUDE_SESSION_TRACKING"
 
 
 @dataclass
@@ -30,6 +31,7 @@ class TracingStatus:
     tracking_uri: str | None = None
     experiment_id: str | None = None
     experiment_name: str | None = None
+    session_tracking: bool = False
     reason: str | None = None
 
 
@@ -78,12 +80,14 @@ def get_tracing_status(settings_path: Path) -> TracingStatus:
     config = load_claude_config(settings_path)
     env_vars = config.get(ENVIRONMENT_FIELD, {})
     enabled = env_vars.get(MLFLOW_TRACING_ENABLED) == "true"
+    session_tracking = env_vars.get(MLFLOW_SESSION_TRACKING, "").lower() in ("true", "1", "yes")
 
     return TracingStatus(
         enabled=enabled,
         tracking_uri=env_vars.get(MLFLOW_TRACKING_URI.name),
         experiment_id=env_vars.get(MLFLOW_EXPERIMENT_ID.name),
         experiment_name=env_vars.get(MLFLOW_EXPERIMENT_NAME.name),
+        session_tracking=session_tracking,
     )
 
 
@@ -120,6 +124,7 @@ def setup_environment_config(
     tracking_uri: str | None = None,
     experiment_id: str | None = None,
     experiment_name: str | None = None,
+    session_tracking: bool = False,
 ) -> None:
     """Set up MLflow environment variables in Claude settings.
 
@@ -128,6 +133,7 @@ def setup_environment_config(
         tracking_uri: MLflow tracking URI, defaults to local file storage
         experiment_id: MLflow experiment ID (takes precedence over name)
         experiment_name: MLflow experiment name
+        session_tracking: If True, create a single trace per session instead of per-prompt
     """
     config = load_claude_config(settings_path)
 
@@ -136,6 +142,9 @@ def setup_environment_config(
 
     # Always enable tracing
     config[ENVIRONMENT_FIELD][MLFLOW_TRACING_ENABLED] = "true"
+
+    # Set session tracking mode
+    config[ENVIRONMENT_FIELD][MLFLOW_SESSION_TRACKING] = "true" if session_tracking else "false"
 
     # Set tracking URI
     if tracking_uri:
