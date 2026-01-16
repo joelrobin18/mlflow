@@ -217,6 +217,66 @@ export const AssistantProvider = ({ children }: { children: ReactNode }) => {
     ],
   );
 
+  const regenerateLastMessage = useCallback(() => {
+    // Find the last user message
+    const lastUserMessageIndex = messages.findLastIndex((msg) => msg.role === 'user');
+    if (lastUserMessageIndex === -1) {
+      return; // No user message to regenerate from
+    }
+
+    const lastUserMessage = messages[lastUserMessageIndex];
+
+    // Remove the last assistant message if it exists after the user message
+    setMessages((prev) => {
+      const lastAssistantIndex = prev.findLastIndex((msg) => msg.role === 'assistant');
+      if (lastAssistantIndex > lastUserMessageIndex) {
+        return prev.slice(0, lastAssistantIndex);
+      }
+      return prev;
+    });
+
+    setError(null);
+    setIsStreaming(true);
+
+    // Add streaming assistant message placeholder
+    streamingMessageRef.current = '';
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: generateMessageId(),
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+        isStreaming: true,
+      },
+    ]);
+
+    // Re-send the last user message
+    const pageContext = getPageContext();
+    sendMessageStream(
+      {
+        session_id: sessionId ?? undefined,
+        message: lastUserMessage.content,
+        experiment_id: pageContext['experimentId'] as string | undefined,
+        context: pageContext,
+      },
+      appendToStreamingMessage,
+      handleStreamError,
+      finalizeStreamingMessage,
+      handleStatus,
+      handleSessionId,
+    );
+  }, [
+    messages,
+    sessionId,
+    getPageContext,
+    appendToStreamingMessage,
+    handleStreamError,
+    finalizeStreamingMessage,
+    handleStatus,
+    handleSessionId,
+  ]);
+
   const value: AssistantAgentContextType = {
     // State
     isPanelOpen,
@@ -229,6 +289,7 @@ export const AssistantProvider = ({ children }: { children: ReactNode }) => {
     openPanel,
     closePanel,
     sendMessage: handleSendMessage,
+    regenerateLastMessage,
     reset,
   };
 
@@ -246,6 +307,7 @@ const disabledAssistantContext: AssistantAgentContextType = {
   openPanel: () => {},
   closePanel: () => {},
   sendMessage: () => {},
+  regenerateLastMessage: () => {},
   reset: () => {},
 };
 
