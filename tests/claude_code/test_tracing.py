@@ -9,6 +9,7 @@ import mlflow
 import mlflow.claude_code.tracing as tracing_module
 from mlflow.claude_code.tracing import (
     CLAUDE_TRACING_LEVEL,
+    extract_session_id_from_transcript,
     get_hook_response,
     parse_timestamp_to_ns,
     process_transcript,
@@ -125,6 +126,44 @@ def test_get_hook_response_with_additional_fields():
 
 
 # ============================================================================
+# SESSION ID EXTRACTION TESTS
+# ============================================================================
+
+
+def test_extract_session_id_from_transcript_returns_session_id():
+    transcript = [
+        {"type": "user", "sessionId": "my-session-abc123"},
+        {"type": "assistant"},
+    ]
+    result = extract_session_id_from_transcript(transcript)
+    assert result == "my-session-abc123"
+
+
+def test_extract_session_id_from_transcript_finds_first_session_id():
+    transcript = [
+        {"type": "system"},  # No sessionId
+        {"type": "user", "sessionId": "first-session"},
+        {"type": "user", "sessionId": "second-session"},
+    ]
+    result = extract_session_id_from_transcript(transcript)
+    assert result == "first-session"
+
+
+def test_extract_session_id_from_transcript_returns_none_when_missing():
+    transcript = [
+        {"type": "user", "message": {"content": "Hello"}},
+        {"type": "assistant", "message": {"content": "Hi!"}},
+    ]
+    result = extract_session_id_from_transcript(transcript)
+    assert result is None
+
+
+def test_extract_session_id_from_transcript_handles_empty_transcript():
+    result = extract_session_id_from_transcript([])
+    assert result is None
+
+
+# ============================================================================
 # INTEGRATION TESTS
 # ============================================================================
 
@@ -228,6 +267,22 @@ def test_process_transcript_creates_spans(mock_transcript_file):
 def test_process_transcript_returns_none_for_nonexistent_file():
     result = process_transcript("/nonexistent/path/transcript.jsonl", "test-session-123")
     assert result is None
+
+
+def test_process_transcript_extracts_session_id_from_transcript(mock_transcript_file):
+    trace = process_transcript(mock_transcript_file)
+
+    assert trace is not None
+
+    assert trace.info.trace_metadata.get("mlflow.trace.session") == "test-session-123"
+
+
+def test_process_transcript_explicit_session_id_takes_precedence(mock_transcript_file):
+    trace = process_transcript(mock_transcript_file, session_id="explicit-session-id")
+
+    assert trace is not None
+
+    assert trace.info.trace_metadata.get("mlflow.trace.session") == "explicit-session-id"
 
 
 def test_process_transcript_links_trace_to_run(mock_transcript_file):

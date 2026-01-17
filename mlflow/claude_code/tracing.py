@@ -241,6 +241,25 @@ def find_last_user_message_index(transcript: list[dict[str, Any]]) -> int | None
     return None
 
 
+def extract_session_id_from_transcript(transcript: list[dict[str, Any]]) -> str | None:
+    """Extract the session ID from Claude Code transcript entries.
+
+    Claude Code stores the session ID in the transcript entries under the 'sessionId' field.
+    This function extracts the session ID from the first entry that has it, ensuring all
+    messages from the same Claude Code session are grouped together.
+
+    Args:
+        transcript: List of conversation entries from Claude Code transcript
+
+    Returns:
+        Session ID string if found, None otherwise
+    """
+    for entry in transcript:
+        if session_id := entry.get("sessionId"):
+            return session_id
+    return None
+
+
 # ============================================================================
 # TRANSCRIPT PROCESSING HELPERS
 # ============================================================================
@@ -570,9 +589,18 @@ def process_transcript(
 ) -> mlflow.entities.Trace | None:
     """Process a Claude conversation transcript and create an MLflow trace with spans.
 
+    Each message in a Claude Code session creates a separate trace, but all traces from
+    the same session share the same session ID in their metadata. This allows traces to
+    be grouped together in the MLflow UI for viewing complete conversation history.
+
+    The session ID is determined in the following order:
+    1. Explicitly provided session_id parameter
+    2. sessionId extracted from the transcript entries (Claude Code's internal session ID)
+    3. Fallback to a timestamp-based ID (for backwards compatibility)
+
     Args:
         transcript_path: Path to the Claude Code transcript.jsonl file
-        session_id: Optional session identifier, defaults to timestamp-based ID
+        session_id: Optional session identifier. If not provided, extracted from transcript.
 
     Returns:
         MLflow trace object if successful, None if processing fails
@@ -593,8 +621,16 @@ def process_transcript(
             MESSAGE_FIELD_CONTENT, ""
         )
 
+        # Determine session ID: use provided, extract from transcript, or generate fallback
         if not session_id:
+            session_id = extract_session_id_from_transcript(transcript)
+        if not session_id:
+            # Fallback to timestamp-based ID for backwards compatibility
             session_id = f"claude-{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            get_logger().debug(
+                "No session ID found in hook data or transcript, using generated ID: %s",
+                session_id,
+            )
 
         get_logger().log(CLAUDE_TRACING_LEVEL, "Creating MLflow trace for session: %s", session_id)
 
