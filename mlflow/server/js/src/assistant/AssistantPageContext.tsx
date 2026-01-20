@@ -98,7 +98,8 @@ export const AssistantRouteContextProvider = () => {
 
   const experimentId = (params as Record<string, string | undefined>)['experimentId'];
   const runId = (params as Record<string, string | undefined>)['runUuid'];
-  const traceId = searchParams.get('selectedEvaluationId');
+  // Check for trace ID in URL - can be 'selectedTraceId' or 'selectedEvaluationId' depending on the page
+  const traceId = searchParams.get('selectedTraceId') || searchParams.get('selectedEvaluationId');
 
   // Build the current page context, including sub-tabs if present
   const currentPage = useMemo(() => {

@@ -26,6 +26,7 @@ import { EvaluationsReviewDetailsHeader } from './EvaluationsReviewDetails';
 import { GenAiEvaluationTracesReview } from './GenAiEvaluationTracesReview';
 import { GenAITracesTableContext } from '../GenAITracesTableContext';
 import { AssistantAwareDrawer } from '../../../../common/components/AssistantAwareDrawer';
+import { useRegisterAssistantContext } from '../../../../assistant';
 import { useGenAITracesTableConfig } from '../hooks/useGenAITracesTableConfig';
 import type { GetTraceFunction } from '../hooks/useGetTrace';
 import { useGetTrace, useGetTraceByFullTraceId } from '../hooks/useGetTrace';
@@ -77,6 +78,9 @@ export const GenAiEvaluationTracesReviewModal = React.memo(
   }) => {
     const { theme } = useDesignSystemTheme();
     const [showAddToEvaluationDatasetModal, setShowAddToEvaluationDatasetModal] = useState(false);
+
+    // Register the currently viewed trace with the Assistant context
+    useRegisterAssistantContext('traceId', selectedEvaluationId);
 
     const handleClose = useCallback(() => {
       onChangeEvaluationId(undefined);
