@@ -15,6 +15,10 @@
     "defaultMessage": "Registered At",
     "description": "Label name for registered timestamp metadata in model version page"
   },
+  "+2J6oE": {
+    "defaultMessage": "Medium",
+    "description": "Issue severity tag label for medium severity"
+  },
   "+33ShX": {
     "defaultMessage": "Cancel",
     "description": "Button label for cancelling the creation of an assessment"
@@ -266,10 +270,6 @@
   "/hP8AG": {
     "defaultMessage": "Models loading",
     "description": "Label for a loading spinner when table containing models is being loaded"
-  },
-  "/j4ziU": {
-    "defaultMessage": "Please select a model in `Advanced settings` below",
-    "description": "Message when provider has no default model"
   },
   "/k6j6v": {
     "defaultMessage": "Confirm",
@@ -1037,10 +1037,6 @@
     "defaultMessage": "Validate the model before deployment",
     "description": "Heading text for validating the model before deploying it for serving"
   },
-  "5FUaKj": {
-    "defaultMessage": "Configure the LLM provider and model to power issue detection",
-    "description": "Description for the model selection step"
-  },
   "5GCYzy": {
     "defaultMessage": "Experiment Runs - Databricks",
     "description": "Title on a page used to manage MLflow experiments runs"
@@ -1132,6 +1128,10 @@
   "5yWkFd": {
     "defaultMessage": "Increase or decrease the confidence level of the language model.",
     "description": "Experiment page > prompt lab > temperature parameter help text"
+  },
+  "5yjgeu": {
+    "defaultMessage": "This key will be saved for reuse.",
+    "description": "Text indicating API key will be saved for reuse"
   },
   "60b0vW": {
     "defaultMessage": "Always show spans with exceptions, regardless of filter conditions",
@@ -2073,6 +2073,10 @@
     "defaultMessage": "Response",
     "description": "Column label for response"
   },
+  "BWH8UR": {
+    "defaultMessage": "API key name:",
+    "description": "Label for API key name input"
+  },
   "BWpQZ7": {
     "defaultMessage": "You have <strong>{unsyncedDataEntriesCount}</strong> unsaved evaluated {unsyncedDataEntriesCount, plural, =1 {value} other {values}}. Click \"Save\" button or press {keyCombination} keys to synchronize the artifact data.",
     "description": "Experiment page > artifact compare view > prompt lab artifact synchronization > pending changes indicator"
@@ -2604,6 +2608,10 @@
     "defaultMessage": "Table view",
     "description": "Label for the table view toggle button in the logged model list page"
   },
+  "FA9oSo": {
+    "defaultMessage": "Judge is running…",
+    "description": "Tooltip shown in assessment cell while a judge is executing on this trace"
+  },
   "FAfPOl": {
     "defaultMessage": "Stop Sequences",
     "description": "Experiment page > prompt lab > stop parameter label"
@@ -2707,6 +2715,10 @@
   "FpjDSq": {
     "defaultMessage": "Compare",
     "description": "Text for compare button to compare versions under details tab\n                       on the model view page"
+  },
+  "Ft2NsS": {
+    "defaultMessage": "High",
+    "description": "Issue severity tag label for high severity"
   },
   "FxQYyX": {
     "defaultMessage": "Select your workflow type. Choose GenAI when working on apps and agents, and select model training when working on classical ML or deep learning problems.",
@@ -3245,6 +3257,10 @@
   "JwhonN": {
     "defaultMessage": "Authentication method",
     "description": "Label for auth mode selector"
+  },
+  "JxakWy": {
+    "defaultMessage": "Judge \"{label}\" failed: {error}",
+    "description": "Banner message shown when a judge run fails"
   },
   "Jxhb2w": {
     "defaultMessage": "We've automatically detected the experiment type to be ''{kindLabel}''. {isEditable, select, true {You can either confirm or change the type.} other {}}",
@@ -4045,6 +4061,10 @@
     "defaultMessage": "Experiments",
     "description": "Issue detection run details > Breadcrumb > Experiments"
   },
+  "PJNUxu": {
+    "defaultMessage": "Run judges",
+    "description": "Run judges on selected traces action"
+  },
   "PKYh23": {
     "defaultMessage": "Additional runs",
     "description": "Experiment page > grouped runs table > label for group with additional, ungrouped runs"
@@ -4136,6 +4156,10 @@
     "defaultMessage": "Graph",
     "description": "Label for the graph toggle button in the trace explorer."
   },
+  "Pts/gW": {
+    "defaultMessage": "Select endpoint",
+    "description": "Placeholder for endpoint selector"
+  },
   "PuXTcZ": {
     "defaultMessage": "Welcome to MLflow",
     "description": "Workspace landing page title"
@@ -4155,6 +4179,10 @@
   "Q0i5xG": {
     "defaultMessage": "Scatter chart",
     "description": "Experiment tracking > runs charts > add chart menu > scatter plot"
+  },
+  "Q0tqO9": {
+    "defaultMessage": "Not an issue",
+    "description": "Issue severity tag label for not an issue"
   },
   "Q5CR/y": {
     "defaultMessage": "Create a new key if a different name is needed.",
@@ -4247,6 +4275,10 @@
   "QcEYpD": {
     "defaultMessage": "Add to evaluation dataset",
     "description": "Add traces to evaluation dataset action"
+  },
+  "QevoXx": {
+    "defaultMessage": "Error details",
+    "description": "Issue detection error details > Title"
   },
   "Qg12xQ": {
     "defaultMessage": "Register prompts",
@@ -5071,6 +5103,10 @@
     "defaultMessage": "Usage example",
     "description": "A title of the modal showing the usage example of the prompt"
   },
+  "Vvs+79": {
+    "defaultMessage": "Low",
+    "description": "Issue severity tag label for low severity"
+  },
   "VwxvII": {
     "defaultMessage": "forecasting",
     "description": "A short label for experiments focused on time series forecasting"
@@ -5594,6 +5630,10 @@
     "defaultMessage": "{count, plural, =1 {1 minute} other {# minutes}} ago",
     "description": "Time duration in minutes"
   },
+  "ZOV936": {
+    "defaultMessage": "Resolved",
+    "description": "Issue status tag label for resolved issues"
+  },
   "ZOsiNc": {
     "defaultMessage": "just now",
     "description": "Indicates a time duration that just passed"
@@ -6057,10 +6097,6 @@
     "defaultMessage": "Compare by",
     "description": "Runs charts > components > charts > DifferenceViewPlot > Compare by column heading"
   },
-  "c8EovS": {
-    "defaultMessage": "Save this key for reuse",
-    "description": "Checkbox to save API key for reuse"
-  },
   "cAKSkQ": {
     "defaultMessage": "Select a cell to display preview",
     "description": "Experiment page > table view > preview sidebar > nothing selected"
@@ -6080,6 +6116,10 @@
   "cBSSLp": {
     "defaultMessage": "String",
     "description": "String select menu option for assessment data type"
+  },
+  "cBlZb0": {
+    "defaultMessage": "Status",
+    "description": "Column header for run status in the evaluation runs table"
   },
   "cEj56l": {
     "defaultMessage": "Step",
@@ -6220,6 +6260,10 @@
   "d1Ou4x": {
     "defaultMessage": "Run",
     "description": "Column title for the column displaying the run names for a metric"
+  },
+  "d34yzQ": {
+    "defaultMessage": "Rejected",
+    "description": "Issue status tag label for rejected issues"
   },
   "d44IPd": {
     "defaultMessage": "Reopen review",
@@ -6525,6 +6569,10 @@
     "defaultMessage": "(edited)",
     "description": "Link text in an edited assessment that allows the user to click to see the previous value"
   },
+  "f6q6EM": {
+    "defaultMessage": "Configure the model to power issue detection",
+    "description": "Description for the model selection step"
+  },
   "fBB0xR": {
     "defaultMessage": "Assistant Not Available",
     "description": "Title shown when Assistant is not available for remote servers"
@@ -6628,6 +6676,10 @@
   "fv7vQf": {
     "defaultMessage": "Rename",
     "description": "Menu item to rename an experiment run"
+  },
+  "fvkoBt": {
+    "defaultMessage": "Running judge \"{label}\"…",
+    "description": "Banner message shown while a judge is running on selected traces"
   },
   "fwp4JP": {
     "defaultMessage": "Datasets used",
@@ -6971,6 +7023,10 @@
   "i/pJvo": {
     "defaultMessage": "Automatically log traces for AutoGen conversations by calling the {code} function. For example:",
     "description": "Description of how to log traces for the AutoGen package using MLflow autologging. This message is followed by a code example."
+  },
+  "i0qHZk": {
+    "defaultMessage": "Configure model directly",
+    "description": "Option to configure model directly instead of using an endpoint"
   },
   "i1Hj20": {
     "defaultMessage": "{count, plural, =1 {1 hour} other {# hours}} ago",
@@ -8679,6 +8735,10 @@
     "defaultMessage": "Start Demo",
     "description": "Demo banner launch button"
   },
+  "svzyNI": {
+    "defaultMessage": "Judge \"{label}\" completed successfully.",
+    "description": "Banner message shown when a judge run completes successfully"
+  },
   "sxlGRc": {
     "defaultMessage": "Inputs ({numInputs})",
     "description": "Input section header for schema table in model version page"
@@ -8910,6 +8970,10 @@
   "ubeHow": {
     "defaultMessage": "Input",
     "description": "Column header for the input in the runs table on the logged model details page"
+  },
+  "ue/dsm": {
+    "defaultMessage": "Pending",
+    "description": "Issue status tag label for pending issues"
   },
   "ufamzi": {
     "defaultMessage": "Comparing {runs} MLflow Runs",
@@ -9562,6 +9626,10 @@
     "defaultMessage": "Source run",
     "description": "Label for the column indicating a run being the source of the logged model's metric (i.e. source run). Displayed in the logged model details metrics table."
   },
+  "z6K3IC": {
+    "defaultMessage": "Create an AI Gateway endpoint in AI Gateway → Endpoints tab to reuse it here",
+    "description": "Tooltip suggesting to create an endpoint for reuse"
+  },
   "z6qX4/": {
     "defaultMessage": "This endpoint may have been deleted",
     "description": "Tooltip for deleted endpoint"
@@ -9617,6 +9685,10 @@
   "zMv2ev": {
     "defaultMessage": "Learn more.",
     "description": "Link text for learning more about expectations"
+  },
+  "zOe0KV": {
+    "defaultMessage": "Run judge on {count} traces",
+    "description": "Title for run judge modal when running on multiple traces"
   },
   "zRKlAL": {
     "defaultMessage": "Metadata",
