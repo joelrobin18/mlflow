@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from mlflow.entities._job_status import JobStatus
+from mlflow.environment_variables import MLFLOW_ENABLE_WORKSPACES, MLFLOW_WORKSPACE
 from mlflow.exceptions import MlflowException
 from mlflow.server.handlers import _get_job_store
 from mlflow.server.jobs import (
@@ -17,11 +18,15 @@ from mlflow.server.jobs import (
     submit_job,
 )
 from mlflow.store.jobs.sqlalchemy_store import SqlAlchemyJobStore
+from mlflow.store.jobs.sqlalchemy_workspace_store import WorkspaceAwareSqlAlchemyJobStore
+from mlflow.utils.workspace_context import WorkspaceContext
+from mlflow.utils.workspace_utils import DEFAULT_WORKSPACE_NAME
 
 from tests.server.jobs.helpers import (
     _get_mlflow_repo_home,
     _launch_job_runner_for_test,
     _setup_job_runner,
+    wait_for_process_exit,
     wait_job_finalize,
 )
 
@@ -29,6 +34,20 @@ from tests.server.jobs.helpers import (
 pytestmark = [
     pytest.mark.skipif(os.name == "nt", reason="MLflow job execution is not supported on Windows"),
 ]
+
+
+@pytest.fixture(autouse=True, params=[False, True], ids=["workspace-disabled", "workspace-enabled"])
+def workspaces_enabled(request, monkeypatch):
+    """
+    Run every test in this module with workspaces disabled and enabled to cover both code paths.
+    """
+    enabled = request.param
+    monkeypatch.setenv(MLFLOW_ENABLE_WORKSPACES.name, "true" if enabled else "false")
+    if enabled:
+        with WorkspaceContext(DEFAULT_WORKSPACE_NAME):
+            yield enabled
+    else:
+        yield enabled
 
 
 @job(name="basic_job_fun", max_workers=1)
@@ -396,8 +415,6 @@ def sleep_fun(sleep_secs, tmp_dir):
 
 
 def test_job_timeout(monkeypatch, tmp_path):
-    from mlflow.server.jobs.utils import is_process_alive
-
     with _setup_job_runner(
         monkeypatch,
         tmp_path,
@@ -416,8 +433,7 @@ def test_job_timeout(monkeypatch, tmp_path):
         ).job_id
         wait_job_finalize(job_id)
         pid = int((job_tmp_path / "pid").read_text())
-        # assert timeout job process is killed.
-        assert not is_process_alive(pid)
+        wait_for_process_exit(pid)
 
         assert_job_result(job_id, JobStatus.TIMEOUT, None)
 
@@ -540,9 +556,10 @@ def test_job_with_python_env(monkeypatch, tmp_path):
         assert job.status == JobStatus.SUCCEEDED
 
 
-def test_start_job_is_atomic(tmp_path: Path):
+def test_start_job_is_atomic(tmp_path: Path, workspaces_enabled):
     backend_store_uri = f"sqlite:///{tmp_path / 'test.db'}"
-    store = SqlAlchemyJobStore(backend_store_uri)
+    store_cls = WorkspaceAwareSqlAlchemyJobStore if workspaces_enabled else SqlAlchemyJobStore
+    store = store_cls(backend_store_uri)
 
     job = store.create_job("test.function", '{"param": "value"}')
     assert job.status == JobStatus.PENDING
@@ -568,8 +585,6 @@ def test_start_job_is_atomic(tmp_path: Path):
 
 
 def test_cancel_job(monkeypatch, tmp_path: Path):
-    from mlflow.server.jobs.utils import is_process_alive
-
     with _setup_job_runner(
         monkeypatch,
         tmp_path,
@@ -586,10 +601,8 @@ def test_cancel_job(monkeypatch, tmp_path: Path):
 
         cancel_job(job_id)
 
-        time.sleep(5)  # wait for job process being actually killed
         pid = int((job_tmp_path / "pid").read_text())
-        # assert canceled job process is killed.
-        assert not is_process_alive(pid)
+        wait_for_process_exit(pid, timeout=10)
 
         assert get_job(job_id).status == JobStatus.CANCELED
 
@@ -706,6 +719,16 @@ def test_delete_jobs_skips_non_finalized_even_with_job_ids(tmp_path: Path):
         store.get_job(succeeded_job.job_id)
 
 
+@job(name="env_var_reader_fun", max_workers=1)
+def env_var_reader_fun(env_var_name: str):
+    return os.environ.get(env_var_name)
+
+
+@job(name="multiple_env_vars_fun", max_workers=1)
+def multiple_env_vars_fun(env_var_names: list[str]):
+    return {name: os.environ.get(name) for name in env_var_names}
+
+
 @job(name="exclusive_sleep_fun", max_workers=2, exclusive=True)
 def exclusive_sleep_fun(sleep_secs: int, experiment_id: str, tmp_dir: str):
     pid_file = Path(tmp_dir) / f"pid_{experiment_id}"
@@ -766,3 +789,64 @@ def test_exclusive_job_allows_different_params(monkeypatch, tmp_path: Path):
         # Both jobs should succeed since they have different params
         assert get_job(job1_id).status == JobStatus.SUCCEEDED
         assert get_job(job2_id).status == JobStatus.SUCCEEDED
+
+
+def test_submit_job_with_extra_envs(monkeypatch, tmp_path):
+    with _setup_job_runner(
+        monkeypatch,
+        tmp_path,
+        supported_job_functions=["tests.server.jobs.test_jobs.multiple_env_vars_fun"],
+        allowed_job_names=["multiple_env_vars_fun"],
+    ):
+        job_id = submit_job(
+            multiple_env_vars_fun,
+            {"env_var_names": ["VAR1", "VAR2", "VAR3"]},
+            extra_envs={"VAR1": "value1", "VAR2": "value2", "VAR3": "value3"},
+        ).job_id
+        wait_job_finalize(job_id)
+
+        job = get_job(job_id)
+        assert job.status == JobStatus.SUCCEEDED
+        assert job.parsed_result == {"VAR1": "value1", "VAR2": "value2", "VAR3": "value3"}
+    for name in ["VAR1", "VAR2", "VAR3"]:
+        assert os.environ.get(name) is None
+
+
+def test_submit_job_without_extra_envs(monkeypatch, tmp_path):
+    with _setup_job_runner(
+        monkeypatch,
+        tmp_path,
+        supported_job_functions=["tests.server.jobs.test_jobs.env_var_reader_fun"],
+        allowed_job_names=["env_var_reader_fun"],
+    ):
+        job_id = submit_job(
+            env_var_reader_fun,
+            {"env_var_name": "NONEXISTENT_VAR"},
+        ).job_id
+        wait_job_finalize(job_id)
+
+        job = get_job(job_id)
+        assert job.status == JobStatus.SUCCEEDED
+        assert job.parsed_result is None
+
+
+@job(name="workspace_env_checker", max_workers=1)
+def workspace_env_checker():
+    return MLFLOW_WORKSPACE.get()
+
+
+def test_submit_job_workspace_propagation(monkeypatch, tmp_path, workspaces_enabled):
+    expected_workspace = DEFAULT_WORKSPACE_NAME if workspaces_enabled else None
+
+    with _setup_job_runner(
+        monkeypatch,
+        tmp_path,
+        supported_job_functions=["tests.server.jobs.test_jobs.workspace_env_checker"],
+        allowed_job_names=["workspace_env_checker"],
+    ):
+        submitted_job = submit_job(workspace_env_checker, {})
+        wait_job_finalize(submitted_job.job_id)
+
+        job = get_job(submitted_job.job_id)
+        assert job.status == JobStatus.SUCCEEDED
+        assert job.parsed_result == expected_workspace

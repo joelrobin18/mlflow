@@ -1,17 +1,26 @@
 import { useEffect, useState, useMemo } from 'react';
 import invariant from 'invariant';
 import { useParams } from '../../../common/utils/RoutingUtils';
-import { Alert, Tabs, useDesignSystemTheme } from '@databricks/design-system';
-import { FormattedMessage } from 'react-intl';
+import { Alert, Button, SparkleIcon, Tabs, useDesignSystemTheme } from '@databricks/design-system';
+import { FormattedMessage, useIntl } from 'react-intl';
+import { shouldEnableIssueDetection } from '../../../common/utils/FeatureUtils';
+import { IssueDetectionModal } from '../../components/experiment-page/components/traces-v3/IssueDetectionModal';
+import { useIssueDetectionNotification } from '../../components/experiment-page/components/traces-v3/hooks/useIssueDetectionNotification';
 import { useIsFileStore } from '../../hooks/useServerInfo';
 import { TracesV3DateSelector } from '../../components/experiment-page/components/traces-v3/TracesV3DateSelector';
-import { useMonitoringFilters, getAbsoluteStartEndTime } from '../../hooks/useMonitoringFilters';
+import {
+  useMonitoringFilters,
+  getAbsoluteStartEndTime,
+  DEFAULT_START_TIME_LABEL,
+} from '../../hooks/useMonitoringFilters';
 import { MonitoringConfigProvider, useMonitoringConfig } from '../../hooks/useMonitoringConfig';
 import { LazyTraceRequestsChart } from './components/LazyTraceRequestsChart';
 import { LazyTraceLatencyChart } from './components/LazyTraceLatencyChart';
 import { LazyTraceErrorsChart } from './components/LazyTraceErrorsChart';
 import { LazyTraceTokenUsageChart } from './components/LazyTraceTokenUsageChart';
 import { LazyTraceTokenStatsChart } from './components/LazyTraceTokenStatsChart';
+import { LazyTraceCostBreakdownChart } from './components/LazyTraceCostBreakdownChart';
+import { LazyTraceCostOverTimeChart } from './components/LazyTraceCostOverTimeChart';
 import { AssessmentChartsSection } from './components/AssessmentChartsSection';
 import { ToolCallStatistics } from './components/ToolCallStatistics';
 import { ToolCallChartsSection } from './components/ToolCallChartsSection';
@@ -20,7 +29,8 @@ import { LazyToolLatencyChart } from './components/LazyToolLatencyChart';
 import { LazyToolPerformanceSummary } from './components/LazyToolPerformanceSummary';
 import { TabContentContainer, ChartGrid } from './components/OverviewLayoutComponents';
 import { TimeUnitSelector } from './components/TimeUnitSelector';
-import { TimeUnit, TIME_UNIT_SECONDS, calculateDefaultTimeUnit, isTimeUnitValid } from './utils/timeUtils';
+import type { TimeUnit } from './utils/timeUtils';
+import { TIME_UNIT_SECONDS, calculateDefaultTimeUnit, isTimeUnitValid } from './utils/timeUtils';
 import { generateTimeBuckets } from './utils/chartUtils';
 import { OverviewChartProvider } from './OverviewChartContext';
 import { useOverviewTab, OverviewTab } from './hooks/useOverviewTab';
@@ -28,15 +38,27 @@ import { useOverviewTab, OverviewTab } from './hooks/useOverviewTab';
 const ExperimentGenAIOverviewPageImpl = () => {
   const { experimentId } = useParams();
   const { theme } = useDesignSystemTheme();
+  const intl = useIntl();
   const [activeTab, setActiveTab] = useOverviewTab();
   const [selectedTimeUnit, setSelectedTimeUnit] = useState<TimeUnit | null>(null);
+  const [isIssueDetectionModalOpen, setIsIssueDetectionModalOpen] = useState(false);
   const isFileStore = useIsFileStore();
+  const { showIssueDetectionNotification, notificationContextHolder } = useIssueDetectionNotification(experimentId);
 
   invariant(experimentId, 'Experiment ID must be defined');
 
   // Get the current time range from monitoring filters
-  const [monitoringFilters] = useMonitoringFilters();
+  const [monitoringFilters, setMonitoringFilters] = useMonitoringFilters();
   const monitoringConfig = useMonitoringConfig();
+
+  // 'ALL' is excluded from the date selector on this page since charts require
+  // start_time_ms and end_time_ms. If the user navigates here with ?startTimeLabel=ALL,
+  // reset to the default time range.
+  useEffect(() => {
+    if (monitoringFilters.startTimeLabel === 'ALL') {
+      setMonitoringFilters({ startTimeLabel: DEFAULT_START_TIME_LABEL }, true);
+    }
+  }, [monitoringFilters.startTimeLabel, setMonitoringFilters]);
 
   // Use getAbsoluteStartEndTime to properly compute time range from labels
   const { startTime, endTime } = useMemo(
@@ -146,10 +168,28 @@ const ExperimentGenAIOverviewPageImpl = () => {
             excludeOptions={['ALL']}
             refreshButtonComponentId="mlflow.experiment.overview.refresh-button"
           />
+
+          {shouldEnableIssueDetection() && (
+            <Button
+              componentId="mlflow.experiment.overview.detect-issues-button"
+              onClick={() => setIsIssueDetectionModalOpen(true)}
+              aria-label={intl.formatMessage({
+                defaultMessage: 'Detect issues in traces',
+                description: 'Aria label for the detect issues button on the experiment overview page',
+              })}
+              type="primary"
+              icon={<SparkleIcon />}
+            >
+              <FormattedMessage
+                defaultMessage="Detect Issues"
+                description="Label for the detect issues button on the experiment overview page"
+              />
+            </Button>
+          )}
         </div>
 
         <OverviewChartProvider
-          experimentId={experimentId}
+          experimentIds={[experimentId]}
           startTimeMs={startTimeMs}
           endTimeMs={endTimeMs}
           timeIntervalSeconds={timeIntervalSeconds}
@@ -170,6 +210,12 @@ const ExperimentGenAIOverviewPageImpl = () => {
               <ChartGrid>
                 <LazyTraceTokenUsageChart />
                 <LazyTraceTokenStatsChart />
+              </ChartGrid>
+
+              {/* Cost Breakdown and Cost Over Time charts - side by side */}
+              <ChartGrid>
+                <LazyTraceCostBreakdownChart />
+                <LazyTraceCostOverTimeChart />
               </ChartGrid>
             </TabContentContainer>
           </Tabs.Content>
@@ -201,6 +247,14 @@ const ExperimentGenAIOverviewPageImpl = () => {
           </Tabs.Content>
         </OverviewChartProvider>
       </Tabs.Root>
+      {isIssueDetectionModalOpen && (
+        <IssueDetectionModal
+          onClose={() => setIsIssueDetectionModalOpen(false)}
+          experimentId={experimentId}
+          onSubmitSuccess={showIssueDetectionNotification}
+        />
+      )}
+      {notificationContextHolder}
     </div>
   );
 };

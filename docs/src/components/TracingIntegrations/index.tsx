@@ -129,6 +129,13 @@ const TRACING_INTEGRATIONS: TracingIntegration[] = [
     category: 'Agent Frameworks (Python)',
   },
   {
+    id: 'livekit',
+    name: 'LiveKit Agents',
+    logoPath: '/images/logos/livekit-logo.png',
+    link: '/genai/tracing/integrations/listing/livekit',
+    category: 'Agent Frameworks (Python)',
+  },
+  {
     id: 'agno',
     name: 'Agno',
     logoPath: '/images/logos/agno-logo.png',
@@ -397,6 +404,34 @@ const TRACING_INTEGRATIONS: TracingIntegration[] = [
     logoPath: '/images/logos/claude-code-logo.png',
     link: '/genai/tracing/integrations/listing/claude_code',
     category: 'Tools',
+  },
+  {
+    id: 'opencode',
+    name: 'Opencode',
+    logoPath: '/images/logos/opencode-logo.png',
+    link: '/genai/tracing/integrations/listing/opencode',
+    category: 'Tools',
+  },
+  {
+    id: 'langfuse',
+    name: 'Langfuse',
+    logoPath: '/images/logos/langfuse-logo.png',
+    link: '/genai/tracing/integrations/listing/langfuse',
+    category: 'Tools',
+  },
+  {
+    id: 'arize-phoenix',
+    name: 'Arize / Phoenix',
+    logoPath: '/images/logos/arize-phoenix-logo.png',
+    link: '/genai/tracing/integrations/listing/arize',
+    category: 'Tools',
+  },
+  {
+    id: 'goose',
+    name: 'Goose',
+    logoPath: '/images/logos/goose-logo.png',
+    link: '/genai/tracing/integrations/listing/goose',
+    category: 'No-Code',
   },
   // Gateways
   {
