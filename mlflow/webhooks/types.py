@@ -476,6 +476,7 @@ class BudgetPolicyExceededPayload(TypedDict):
             "duration_value": 1,
             "target_scope": "WORKSPACE",
             "workspace": "default",
+            "principal": None,
             "window_start": 1704067200000,
         }
 
@@ -489,14 +490,16 @@ class BudgetPolicyExceededPayload(TypedDict):
     """The budget limit amount."""
     current_spend: float
     """The current cumulative spend when the limit was exceeded."""
-    duration_unit: Literal["MINUTES", "HOURS", "DAYS", "MONTHS"]
-    """The duration unit (MINUTES, HOURS, DAYS, MONTHS)."""
+    duration_unit: Literal["MINUTES", "HOURS", "DAYS", "WEEKS", "MONTHS"]
+    """The duration unit (MINUTES, HOURS, DAYS, WEEKS, MONTHS)."""
     duration_value: int
     """The duration value."""
-    target_scope: Literal["GLOBAL", "WORKSPACE"]
-    """The target scope (GLOBAL or WORKSPACE)."""
+    target_scope: Literal["GLOBAL", "WORKSPACE", "USER"]
+    """The target scope (GLOBAL, WORKSPACE, or USER)."""
     workspace: str
     """The workspace this budget applies to."""
+    principal: str | None
+    """The user identity this budget applies to (set for USER-scoped budgets)."""
     window_start: int
     """The start timestamp (milliseconds) of the current budget window."""
 
@@ -511,6 +514,7 @@ class BudgetPolicyExceededPayload(TypedDict):
             duration_value=1,
             target_scope="WORKSPACE",
             workspace="default",
+            principal=None,
             window_start=1704067200000,
         )
 

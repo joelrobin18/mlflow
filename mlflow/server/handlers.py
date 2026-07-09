@@ -6,6 +6,7 @@ import os
 import pathlib
 import posixpath
 import re
+import sys
 import tempfile
 import threading
 import time
@@ -6197,6 +6198,35 @@ def _delete_gateway_endpoint_tag():
 # =============================================================================
 
 
+def _is_server_auth_enabled() -> bool:
+    """Whether MLflow server authentication is active.
+
+    Checked without importing the auth app (mirrors ``gateway_api``): the gateway
+    only populates ``request.state.username`` when auth is initialized, so USER-scoped
+    budgets cannot attribute spend to a user unless this is True.
+    """
+    auth_mod = sys.modules.get("mlflow.server.auth")
+    return bool(auth_mod and auth_mod.is_auth_enabled())
+
+
+def _assert_user_scope_enforceable(target_scope: BudgetTargetScope) -> None:
+    """Reject USER-scoped budgets when auth is off, since they would never match.
+
+    Without authentication the gateway has no request principal, so a USER-scoped
+    policy is silently inert (a REJECT cap never rejects, an ALERT never fires).
+    Fail loudly at write time rather than let an admin create a non-functional cap.
+    """
+    if target_scope == BudgetTargetScope.USER and not _is_server_auth_enabled():
+        raise MlflowException(
+            message=(
+                "USER-scoped budget policies require server authentication to be enabled. "
+                "Without auth the gateway cannot attribute requests to a user, so the "
+                "policy would never take effect."
+            ),
+            error_code=INVALID_PARAMETER_VALUE,
+        )
+
+
 @catch_mlflow_exception
 @_disable_if_artifacts_only
 def _create_budget_policy():
@@ -6209,6 +6239,7 @@ def _create_budget_policy():
             "target_scope": [_assert_required],
             "budget_action": [_assert_required],
             "created_by": [_assert_string],
+            "principal": [_assert_string],
         },
     )
     budget_unit = BudgetUnit.from_proto(request_message.budget_unit)
@@ -6241,6 +6272,18 @@ def _create_budget_policy():
             message=f"Invalid budget_action: {request_message.budget_action}",
             error_code=INVALID_PARAMETER_VALUE,
         )
+    principal = request_message.principal or None
+    if target_scope == BudgetTargetScope.USER and not principal:
+        raise MlflowException(
+            message="principal is required when target_scope is USER",
+            error_code=INVALID_PARAMETER_VALUE,
+        )
+    if target_scope != BudgetTargetScope.USER and principal:
+        raise MlflowException(
+            message="principal can only be set when target_scope is USER",
+            error_code=INVALID_PARAMETER_VALUE,
+        )
+    _assert_user_scope_enforceable(target_scope)
     store = _get_tracking_store()
     policy = store.create_budget_policy(
         budget_unit=budget_unit,
@@ -6249,6 +6292,7 @@ def _create_budget_policy():
         target_scope=target_scope,
         budget_action=budget_action,
         created_by=request_message.created_by or None,
+        principal=principal,
     )
     get_budget_tracker().invalidate()
     maybe_refresh_budget_policies(store)
@@ -6282,6 +6326,7 @@ def _update_budget_policy():
         schema={
             "budget_policy_id": [_assert_required, _assert_string],
             "updated_by": [_assert_string],
+            "principal": [_assert_string],
         },
     )
     budget_unit = None
@@ -6323,7 +6368,28 @@ def _update_budget_policy():
                 message=f"Invalid budget_action: {request_message.budget_action}",
                 error_code=INVALID_PARAMETER_VALUE,
             )
+    principal_provided = request_message.HasField("principal")
+    principal = (request_message.principal or None) if principal_provided else None
     store = _get_tracking_store()
+    # Validate the *effective* scope/principal after the partial update is applied,
+    # mirroring the create-handler guards. Only the update path can change scope, so
+    # skipping this is how a USER policy ends up with no principal (never matches ->
+    # budget bypass) or a non-USER policy keeps a stale principal.
+    if target_scope is not None or principal_provided:
+        existing = store.get_budget_policy(budget_policy_id=request_message.budget_policy_id)
+        effective_scope = target_scope if target_scope is not None else existing.target_scope
+        effective_principal = principal if principal_provided else existing.principal
+        if effective_scope == BudgetTargetScope.USER and not effective_principal:
+            raise MlflowException(
+                message="principal is required when target_scope is USER",
+                error_code=INVALID_PARAMETER_VALUE,
+            )
+        if effective_scope != BudgetTargetScope.USER and principal:
+            raise MlflowException(
+                message="principal can only be set when target_scope is USER",
+                error_code=INVALID_PARAMETER_VALUE,
+            )
+        _assert_user_scope_enforceable(effective_scope)
     policy = store.update_budget_policy(
         budget_policy_id=request_message.budget_policy_id,
         budget_unit=budget_unit,
@@ -6334,6 +6400,7 @@ def _update_budget_policy():
         target_scope=target_scope,
         budget_action=budget_action,
         updated_by=request_message.updated_by or None,
+        principal=principal,
     )
     get_budget_tracker().invalidate()
     maybe_refresh_budget_policies(store)
@@ -6403,7 +6470,14 @@ def _list_budget_windows():
     maybe_refresh_budget_policies(store)
     windows = get_budget_tracker().get_all_windows()
     if workspace is not None:
-        windows = [w for w in windows if _policy_applies(w.policy, workspace)]
+        # USER-scoped windows aren't workspace-bound, so keep them visible in the
+        # listing regardless of the request workspace filter.
+        windows = [
+            w
+            for w in windows
+            if w.policy.target_scope == BudgetTargetScope.USER
+            or _policy_applies(w.policy, workspace)
+        ]
     response_message = ListGatewayBudgetWindows.Response()
     for w in windows:
         window_msg = ListGatewayBudgetWindows.BudgetWindow(

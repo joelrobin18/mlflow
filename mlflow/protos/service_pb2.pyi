@@ -100,6 +100,7 @@ class BudgetTargetScope(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TARGET_SCOPE_UNSPECIFIED: _ClassVar[BudgetTargetScope]
     GLOBAL: _ClassVar[BudgetTargetScope]
     WORKSPACE: _ClassVar[BudgetTargetScope]
+    USER: _ClassVar[BudgetTargetScope]
 
 class BudgetAction(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
@@ -169,6 +170,7 @@ MONTHS: BudgetDurationUnit
 TARGET_SCOPE_UNSPECIFIED: BudgetTargetScope
 GLOBAL: BudgetTargetScope
 WORKSPACE: BudgetTargetScope
+USER: BudgetTargetScope
 BUDGET_ACTION_UNSPECIFIED: BudgetAction
 ALERT: BudgetAction
 REJECT: BudgetAction
@@ -2372,7 +2374,7 @@ class DeleteGatewayEndpointTag(_message.Message):
     def __init__(self, endpoint_id: _Optional[str] = ..., key: _Optional[str] = ...) -> None: ...
 
 class GatewayBudgetPolicy(_message.Message):
-    __slots__ = ("budget_policy_id", "budget_unit", "budget_amount", "duration", "target_scope", "budget_action", "created_by", "created_at", "last_updated_by", "last_updated_at")
+    __slots__ = ("budget_policy_id", "budget_unit", "budget_amount", "duration", "target_scope", "budget_action", "created_by", "created_at", "last_updated_by", "last_updated_at", "principal")
     BUDGET_POLICY_ID_FIELD_NUMBER: _ClassVar[int]
     BUDGET_UNIT_FIELD_NUMBER: _ClassVar[int]
     BUDGET_AMOUNT_FIELD_NUMBER: _ClassVar[int]
@@ -2383,6 +2385,7 @@ class GatewayBudgetPolicy(_message.Message):
     CREATED_AT_FIELD_NUMBER: _ClassVar[int]
     LAST_UPDATED_BY_FIELD_NUMBER: _ClassVar[int]
     LAST_UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
+    PRINCIPAL_FIELD_NUMBER: _ClassVar[int]
     budget_policy_id: str
     budget_unit: BudgetUnit
     budget_amount: float
@@ -2393,10 +2396,11 @@ class GatewayBudgetPolicy(_message.Message):
     created_at: int
     last_updated_by: str
     last_updated_at: int
-    def __init__(self, budget_policy_id: _Optional[str] = ..., budget_unit: _Optional[_Union[BudgetUnit, str]] = ..., budget_amount: _Optional[float] = ..., duration: _Optional[_Union[BudgetDuration, _Mapping]] = ..., target_scope: _Optional[_Union[BudgetTargetScope, str]] = ..., budget_action: _Optional[_Union[BudgetAction, str]] = ..., created_by: _Optional[str] = ..., created_at: _Optional[int] = ..., last_updated_by: _Optional[str] = ..., last_updated_at: _Optional[int] = ...) -> None: ...
+    principal: str
+    def __init__(self, budget_policy_id: _Optional[str] = ..., budget_unit: _Optional[_Union[BudgetUnit, str]] = ..., budget_amount: _Optional[float] = ..., duration: _Optional[_Union[BudgetDuration, _Mapping]] = ..., target_scope: _Optional[_Union[BudgetTargetScope, str]] = ..., budget_action: _Optional[_Union[BudgetAction, str]] = ..., created_by: _Optional[str] = ..., created_at: _Optional[int] = ..., last_updated_by: _Optional[str] = ..., last_updated_at: _Optional[int] = ..., principal: _Optional[str] = ...) -> None: ...
 
 class CreateGatewayBudgetPolicy(_message.Message):
-    __slots__ = ("budget_unit", "budget_amount", "duration", "target_scope", "budget_action", "created_by")
+    __slots__ = ("budget_unit", "budget_amount", "duration", "target_scope", "budget_action", "created_by", "principal")
     class Response(_message.Message):
         __slots__ = ("budget_policy",)
         BUDGET_POLICY_FIELD_NUMBER: _ClassVar[int]
@@ -2408,13 +2412,15 @@ class CreateGatewayBudgetPolicy(_message.Message):
     TARGET_SCOPE_FIELD_NUMBER: _ClassVar[int]
     BUDGET_ACTION_FIELD_NUMBER: _ClassVar[int]
     CREATED_BY_FIELD_NUMBER: _ClassVar[int]
+    PRINCIPAL_FIELD_NUMBER: _ClassVar[int]
     budget_unit: BudgetUnit
     budget_amount: float
     duration: BudgetDuration
     target_scope: BudgetTargetScope
     budget_action: BudgetAction
     created_by: str
-    def __init__(self, budget_unit: _Optional[_Union[BudgetUnit, str]] = ..., budget_amount: _Optional[float] = ..., duration: _Optional[_Union[BudgetDuration, _Mapping]] = ..., target_scope: _Optional[_Union[BudgetTargetScope, str]] = ..., budget_action: _Optional[_Union[BudgetAction, str]] = ..., created_by: _Optional[str] = ...) -> None: ...
+    principal: str
+    def __init__(self, budget_unit: _Optional[_Union[BudgetUnit, str]] = ..., budget_amount: _Optional[float] = ..., duration: _Optional[_Union[BudgetDuration, _Mapping]] = ..., target_scope: _Optional[_Union[BudgetTargetScope, str]] = ..., budget_action: _Optional[_Union[BudgetAction, str]] = ..., created_by: _Optional[str] = ..., principal: _Optional[str] = ...) -> None: ...
 
 class GetGatewayBudgetPolicy(_message.Message):
     __slots__ = ("budget_policy_id",)
@@ -2428,7 +2434,7 @@ class GetGatewayBudgetPolicy(_message.Message):
     def __init__(self, budget_policy_id: _Optional[str] = ...) -> None: ...
 
 class UpdateGatewayBudgetPolicy(_message.Message):
-    __slots__ = ("budget_policy_id", "budget_unit", "budget_amount", "duration", "target_scope", "budget_action", "updated_by")
+    __slots__ = ("budget_policy_id", "budget_unit", "budget_amount", "duration", "target_scope", "budget_action", "updated_by", "principal")
     class Response(_message.Message):
         __slots__ = ("budget_policy",)
         BUDGET_POLICY_FIELD_NUMBER: _ClassVar[int]
@@ -2441,6 +2447,7 @@ class UpdateGatewayBudgetPolicy(_message.Message):
     TARGET_SCOPE_FIELD_NUMBER: _ClassVar[int]
     BUDGET_ACTION_FIELD_NUMBER: _ClassVar[int]
     UPDATED_BY_FIELD_NUMBER: _ClassVar[int]
+    PRINCIPAL_FIELD_NUMBER: _ClassVar[int]
     budget_policy_id: str
     budget_unit: BudgetUnit
     budget_amount: float
@@ -2448,7 +2455,8 @@ class UpdateGatewayBudgetPolicy(_message.Message):
     target_scope: BudgetTargetScope
     budget_action: BudgetAction
     updated_by: str
-    def __init__(self, budget_policy_id: _Optional[str] = ..., budget_unit: _Optional[_Union[BudgetUnit, str]] = ..., budget_amount: _Optional[float] = ..., duration: _Optional[_Union[BudgetDuration, _Mapping]] = ..., target_scope: _Optional[_Union[BudgetTargetScope, str]] = ..., budget_action: _Optional[_Union[BudgetAction, str]] = ..., updated_by: _Optional[str] = ...) -> None: ...
+    principal: str
+    def __init__(self, budget_policy_id: _Optional[str] = ..., budget_unit: _Optional[_Union[BudgetUnit, str]] = ..., budget_amount: _Optional[float] = ..., duration: _Optional[_Union[BudgetDuration, _Mapping]] = ..., target_scope: _Optional[_Union[BudgetTargetScope, str]] = ..., budget_action: _Optional[_Union[BudgetAction, str]] = ..., updated_by: _Optional[str] = ..., principal: _Optional[str] = ...) -> None: ...
 
 class DeleteGatewayBudgetPolicy(_message.Message):
     __slots__ = ("budget_policy_id",)
