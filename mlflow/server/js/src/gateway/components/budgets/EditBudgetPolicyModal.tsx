@@ -13,7 +13,6 @@ import {
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useUpdateBudgetPolicy } from '../../hooks/useUpdateBudgetPolicy';
 import type { BudgetPolicy, DurationUnit, BudgetAction } from '../../types';
-import { getWorkspacesEnabledSync } from '../../../experiment-tracking/hooks/useServerInfo';
 
 type DurationPreset = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 
@@ -41,6 +40,7 @@ interface FormData {
   budgetAmount: string;
   duration: DurationPreset;
   budgetAction: BudgetAction;
+  principal: string;
 }
 
 export const EditBudgetPolicyModal = ({ open, policy, onClose, onSuccess }: EditBudgetPolicyModalProps) => {
@@ -50,6 +50,7 @@ export const EditBudgetPolicyModal = ({ open, policy, onClose, onSuccess }: Edit
     budgetAmount: '',
     duration: 'MONTHLY',
     budgetAction: 'REJECT',
+    principal: '',
   });
   const {
     mutateAsync: updateBudgetPolicy,
@@ -64,6 +65,7 @@ export const EditBudgetPolicyModal = ({ open, policy, onClose, onSuccess }: Edit
         budgetAmount: String(policy.budget_amount),
         duration: toDurationPreset(policy.duration.unit, policy.duration.value),
         budgetAction: policy.budget_action,
+        principal: policy.principal ?? '',
       });
       resetMutation();
     }
@@ -82,10 +84,13 @@ export const EditBudgetPolicyModal = ({ open, policy, onClose, onSuccess }: Edit
     [resetMutation],
   );
 
+  const isUserScope = policy?.target_scope === 'USER';
+
   const isFormValid = useMemo(() => {
     const amount = parseFloat(formData.budgetAmount);
-    return !isNaN(amount) && amount > 0;
-  }, [formData.budgetAmount]);
+    if (isNaN(amount) || amount <= 0) return false;
+    return !isUserScope || formData.principal.trim().length > 0;
+  }, [formData.budgetAmount, formData.principal, isUserScope]);
 
   const handleSubmit = useCallback(async () => {
     if (!isFormValid || !policy) return;
@@ -97,13 +102,16 @@ export const EditBudgetPolicyModal = ({ open, policy, onClose, onSuccess }: Edit
       budget_unit: 'USD',
       budget_amount: parseFloat(formData.budgetAmount),
       duration: { unit, value },
-      target_scope: getWorkspacesEnabledSync() ? 'WORKSPACE' : 'GLOBAL',
+      // Preserve the policy's scope: recomputing it here would silently switch a
+      // USER-scoped policy to WORKSPACE/GLOBAL and drop its principal.
+      target_scope: policy.target_scope,
       budget_action: formData.budgetAction,
+      ...(isUserScope && { principal: formData.principal.trim() }),
     }).then(() => {
       handleClose();
       onSuccess?.();
     });
-  }, [isFormValid, policy, formData, updateBudgetPolicy, handleClose, onSuccess]);
+  }, [isFormValid, policy, formData, isUserScope, updateBudgetPolicy, handleClose, onSuccess]);
 
   const errorMessage = useMemo((): string | null => {
     if (!mutationError) return null;
@@ -151,6 +159,29 @@ export const EditBudgetPolicyModal = ({ open, policy, onClose, onSuccess }: Edit
             message={errorMessage}
             closable={false}
           />
+        )}
+
+        {isUserScope && (
+          <div css={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+            <Typography.Text bold>
+              <FormattedMessage defaultMessage="Applies to user" description="Budget principal label" />
+            </Typography.Text>
+            <Input
+              componentId="mlflow.gateway.edit-budget-policy-modal.principal"
+              value={formData.principal}
+              onChange={(e) => handleFieldChange('principal', e.target.value)}
+              placeholder={intl.formatMessage({
+                defaultMessage: 'Username, e.g., alice',
+                description: 'Budget principal (username) placeholder',
+              })}
+            />
+            <Typography.Text color="secondary" size="sm">
+              <FormattedMessage
+                defaultMessage="The budget applies only to requests made by this authenticated user."
+                description="Helper text for per-user budget principal in edit modal"
+              />
+            </Typography.Text>
+          </div>
         )}
 
         <div css={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>

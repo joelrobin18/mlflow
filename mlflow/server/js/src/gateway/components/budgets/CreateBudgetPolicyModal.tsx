@@ -17,6 +17,9 @@ import { getWorkspacesEnabledSync } from '../../../experiment-tracking/hooks/use
 
 type DurationPreset = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 
+// 'ALL' maps to WORKSPACE when workspaces are enabled, GLOBAL otherwise.
+type ScopeChoice = 'ALL' | 'USER';
+
 const DURATION_MAP: Record<DurationPreset, { unit: DurationUnit; value: number }> = {
   DAILY: { unit: 'DAYS', value: 1 },
   WEEKLY: { unit: 'WEEKS', value: 1 },
@@ -33,12 +36,16 @@ interface FormData {
   budgetAmount: string;
   duration: DurationPreset;
   budgetAction: BudgetAction;
+  scope: ScopeChoice;
+  principal: string;
 }
 
 const INITIAL_FORM_DATA: FormData = {
   budgetAmount: '',
   duration: 'MONTHLY',
   budgetAction: 'REJECT',
+  scope: 'ALL',
+  principal: '',
 };
 
 export const CreateBudgetPolicyModal = ({ open, onClose, onSuccess }: CreateBudgetPolicyModalProps) => {
@@ -68,21 +75,24 @@ export const CreateBudgetPolicyModal = ({ open, onClose, onSuccess }: CreateBudg
 
   const isFormValid = useMemo(() => {
     const amount = parseFloat(formData.budgetAmount);
-    return !isNaN(amount) && amount > 0;
-  }, [formData.budgetAmount]);
+    if (isNaN(amount) || amount <= 0) return false;
+    return formData.scope !== 'USER' || formData.principal.trim().length > 0;
+  }, [formData.budgetAmount, formData.scope, formData.principal]);
 
   const handleSubmit = useCallback(async () => {
     if (!isFormValid) return;
 
     const { unit, value } = DURATION_MAP[formData.duration];
+    const isUserScope = formData.scope === 'USER';
 
     try {
       await createBudgetPolicy({
         budget_unit: 'USD',
         budget_amount: parseFloat(formData.budgetAmount),
         duration: { unit, value },
-        target_scope: getWorkspacesEnabledSync() ? 'WORKSPACE' : 'GLOBAL',
+        target_scope: isUserScope ? 'USER' : getWorkspacesEnabledSync() ? 'WORKSPACE' : 'GLOBAL',
         budget_action: formData.budgetAction,
+        ...(isUserScope && { principal: formData.principal.trim() }),
       });
     } catch {
       // `mutationError` is populated by `useCreateBudgetPolicy` and rendered
@@ -139,6 +149,40 @@ export const CreateBudgetPolicyModal = ({ open, onClose, onSuccess }: CreateBudg
             closable={false}
           />
         )}
+
+        <div css={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+          <Typography.Text bold>
+            <FormattedMessage defaultMessage="Applies to" description="Budget scope label" />
+          </Typography.Text>
+          <SimpleSelect
+            id="create-budget-policy-scope"
+            componentId="mlflow.gateway.create-budget-policy-modal.scope"
+            value={formData.scope}
+            onChange={({ target }) => handleFieldChange('scope', target.value as ScopeChoice)}
+          >
+            <SimpleSelectOption value="ALL">All users</SimpleSelectOption>
+            <SimpleSelectOption value="USER">Specific user</SimpleSelectOption>
+          </SimpleSelect>
+          {formData.scope === 'USER' && (
+            <>
+              <Input
+                componentId="mlflow.gateway.create-budget-policy-modal.principal"
+                value={formData.principal}
+                onChange={(e) => handleFieldChange('principal', e.target.value)}
+                placeholder={intl.formatMessage({
+                  defaultMessage: 'Username, e.g., alice',
+                  description: 'Budget principal (username) placeholder',
+                })}
+              />
+              <Typography.Text color="secondary" size="sm">
+                <FormattedMessage
+                  defaultMessage="The budget applies only to requests made by this authenticated user. Requires server authentication to be enabled."
+                  description="Helper text for per-user budget scope"
+                />
+              </Typography.Text>
+            </>
+          )}
+        </div>
 
         <div css={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
           <Typography.Text bold>

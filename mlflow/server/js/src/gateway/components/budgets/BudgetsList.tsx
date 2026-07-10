@@ -128,6 +128,9 @@ export const BudgetsList = ({ onEditClick, onDeleteClick }: BudgetsListProps) =>
           <TableHeader componentId="mlflow.gateway.budgets-list.limit-header" css={{ flex: 1 }}>
             <FormattedMessage defaultMessage="Budget" description="Budget amount column header" />
           </TableHeader>
+          <TableHeader componentId="mlflow.gateway.budgets-list.applies-to-header" css={{ flex: 1 }}>
+            <FormattedMessage defaultMessage="Applies to" description="Budget scope column header" />
+          </TableHeader>
           <TableHeader componentId="mlflow.gateway.budgets-list.duration-header" css={{ flex: 1 }}>
             <FormattedMessage defaultMessage="Reset period" description="Budget reset period column header" />
           </TableHeader>
@@ -164,6 +167,15 @@ export const BudgetsList = ({ onEditClick, onDeleteClick }: BudgetsListProps) =>
                     <Typography.Text>{formatBudgetAmount(policy.budget_amount, policy.budget_unit)}</Typography.Text>
                   </span>
                 </Tooltip>
+              </TableCell>
+              <TableCell css={{ flex: 1 }}>
+                {policy.target_scope === 'USER' ? (
+                  <Typography.Text>{policy.principal}</Typography.Text>
+                ) : (
+                  <Typography.Text color="secondary">
+                    <FormattedMessage defaultMessage="All users" description="Budget scope covering all users" />
+                  </Typography.Text>
+                )}
               </TableCell>
               <TableCell css={{ flex: 1 }}>
                 <Typography.Text>{formatDuration(policy.duration.value, policy.duration.unit)}</Typography.Text>

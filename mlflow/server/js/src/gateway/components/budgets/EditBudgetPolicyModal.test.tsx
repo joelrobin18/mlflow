@@ -23,6 +23,14 @@ const mockPolicy: BudgetPolicy = {
   last_updated_at: Date.now() / 1000,
 };
 
+const mockUserPolicy: BudgetPolicy = {
+  ...mockPolicy,
+  budget_policy_id: 'bp-user',
+  target_scope: 'USER',
+  budget_action: 'REJECT',
+  principal: 'alice',
+};
+
 describe('EditBudgetPolicyModal', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -67,6 +75,48 @@ describe('EditBudgetPolicyModal', () => {
       target_scope: 'GLOBAL',
       budget_action: 'ALERT',
     });
+  });
+
+  test('renders principal field populated for a USER-scoped policy', () => {
+    renderWithDesignSystem(<EditBudgetPolicyModal open policy={mockUserPolicy} onClose={jest.fn()} />);
+
+    expect(screen.getByText('Applies to user')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('alice')).toBeInTheDocument();
+  });
+
+  test('does not render principal field for a non-USER policy', () => {
+    renderWithDesignSystem(<EditBudgetPolicyModal open policy={mockPolicy} onClose={jest.fn()} />);
+
+    expect(screen.queryByText('Applies to user')).not.toBeInTheDocument();
+  });
+
+  test('preserves USER scope and submits edited principal', async () => {
+    renderWithDesignSystem(<EditBudgetPolicyModal open policy={mockUserPolicy} onClose={jest.fn()} />);
+
+    const principalInput = screen.getByDisplayValue('alice');
+    await userEvent.clear(principalInput);
+    await userEvent.type(principalInput, 'bob');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      budget_policy_id: 'bp-user',
+      budget_unit: 'USD',
+      budget_amount: 200,
+      duration: { unit: 'WEEKS', value: 1 },
+      target_scope: 'USER',
+      budget_action: 'REJECT',
+      principal: 'bob',
+    });
+  });
+
+  test('disables save when the principal of a USER policy is cleared', async () => {
+    renderWithDesignSystem(<EditBudgetPolicyModal open policy={mockUserPolicy} onClose={jest.fn()} />);
+
+    await userEvent.clear(screen.getByDisplayValue('alice'));
+
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
+    expect(mockMutateAsync).not.toHaveBeenCalled();
   });
 
   test('displays error message on mutation failure', () => {

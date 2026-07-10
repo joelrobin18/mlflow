@@ -3539,6 +3539,10 @@
     "defaultMessage": "Type a value",
     "description": "Key-value tag editor modal > Value input placeholder"
   },
+  "FGnPTW": {
+    "defaultMessage": "Applies to",
+    "description": "Budget scope label"
+  },
   "FHJ1NN": {
     "defaultMessage": "Endpoint Name",
     "description": "Label for endpoint name input"
@@ -3590,6 +3594,10 @@
   "FbFEvH": {
     "defaultMessage": "Comparing {count} traces",
     "description": "Comparing traces title"
+  },
+  "FbhstH": {
+    "defaultMessage": "Applies to",
+    "description": "Budget scope column header"
   },
   "FcddG+": {
     "defaultMessage": "Zoom Out",
@@ -3718,6 +3726,10 @@
   "GDzD7I": {
     "defaultMessage": "Prompt Template",
     "description": "Experiment page > new run modal > prompt examples > prompt template title"
+  },
+  "GIyPki": {
+    "defaultMessage": "All users",
+    "description": "Budget scope covering all users"
   },
   "GJWVBA": {
     "defaultMessage": "Inputs",
@@ -5067,6 +5079,10 @@
     "defaultMessage": "Machine learning",
     "description": "Label for custom experiments automatically identified as being focused on machine learning"
   },
+  "NV01JJ": {
+    "defaultMessage": "The budget applies only to requests made by this authenticated user.",
+    "description": "Helper text for per-user budget principal in edit modal"
+  },
   "NV0G2k": {
     "defaultMessage": "Delete question",
     "description": "Manage review questions: delete button aria label"
@@ -5830,6 +5846,10 @@
   "RCjxf0": {
     "defaultMessage": "Compare runs",
     "description": "Experiment tracking > runs charts > cards > RunsChartsDifferenceChartCard > chart not configured warning > title"
+  },
+  "RDXmoF": {
+    "defaultMessage": "The budget applies only to requests made by this authenticated user. Requires server authentication to be enabled.",
+    "description": "Helper text for per-user budget scope"
   },
   "RDg+Pl": {
     "defaultMessage": "Time",
@@ -9511,6 +9531,10 @@
     "defaultMessage": "Adheres to guidelines",
     "description": "Evaluation results > conversational guidelines assessment > positive value label. Displayed if the assistant adheres to guidelines throughout the conversation."
   },
+  "iCiZbd": {
+    "defaultMessage": "Username, e.g., alice",
+    "description": "Budget principal (username) placeholder"
+  },
   "iDpAK8": {
     "defaultMessage": "Add tags",
     "description": "Label for the add tags button in the registered prompts table"
@@ -11638,6 +11662,10 @@
   "sEheG0": {
     "defaultMessage": "Key Name",
     "description": "Key name label"
+  },
+  "sEreRp": {
+    "defaultMessage": "Applies to user",
+    "description": "Budget principal label"
   },
   "sGXhV4": {
     "defaultMessage": "Welcome to MLflow",

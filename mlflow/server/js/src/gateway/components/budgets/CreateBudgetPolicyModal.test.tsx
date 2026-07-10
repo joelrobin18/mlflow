@@ -26,6 +26,7 @@ describe('CreateBudgetPolicyModal', () => {
     renderWithDesignSystem(<CreateBudgetPolicyModal open onClose={jest.fn()} />);
 
     expect(screen.getByText('Create Budget Policy')).toBeInTheDocument();
+    expect(screen.getByText('Applies to')).toBeInTheDocument();
     expect(screen.getByText('Budget amount (USD)')).toBeInTheDocument();
     expect(screen.getByText('Reset period')).toBeInTheDocument();
     expect(screen.getByText('On exceeded')).toBeInTheDocument();
@@ -68,6 +69,52 @@ describe('CreateBudgetPolicyModal', () => {
       duration: { unit: 'MONTHS', value: 1 },
       target_scope: 'GLOBAL',
       budget_action: 'REJECT',
+    });
+  });
+
+  test('requires a username when Specific user scope is selected', async () => {
+    renderWithDesignSystem(<CreateBudgetPolicyModal open onClose={jest.fn()} />);
+
+    const amountInput = screen.getByPlaceholderText('e.g., 100.00');
+    await userEvent.type(amountInput, '50');
+    expect(screen.getByRole('button', { name: 'Create' })).not.toBeDisabled();
+
+    // The scope select is the first combobox in the modal
+    const scopeSelect = screen.getAllByRole('combobox')[0];
+    await userEvent.click(scopeSelect);
+    await userEvent.click(screen.getByRole('option', { name: 'Specific user' }));
+
+    // Without a username, Create is disabled
+    expect(screen.getByRole('button', { name: 'Create' })).toBeDisabled();
+
+    await userEvent.type(screen.getByPlaceholderText('Username, e.g., alice'), 'alice');
+    expect(screen.getByRole('button', { name: 'Create' })).not.toBeDisabled();
+  });
+
+  test('submits USER-scoped payload with principal', async () => {
+    const onClose = jest.fn();
+    const onSuccess = jest.fn();
+
+    mockMutateAsync.mockReturnValue(Promise.resolve());
+
+    renderWithDesignSystem(<CreateBudgetPolicyModal open onClose={onClose} onSuccess={onSuccess} />);
+
+    await userEvent.type(screen.getByPlaceholderText('e.g., 100.00'), '25');
+
+    const scopeSelect = screen.getAllByRole('combobox')[0];
+    await userEvent.click(scopeSelect);
+    await userEvent.click(screen.getByRole('option', { name: 'Specific user' }));
+    await userEvent.type(screen.getByPlaceholderText('Username, e.g., alice'), '  alice  ');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      budget_unit: 'USD',
+      budget_amount: 25,
+      duration: { unit: 'MONTHS', value: 1 },
+      target_scope: 'USER',
+      budget_action: 'REJECT',
+      principal: 'alice',
     });
   });
 
