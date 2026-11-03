@@ -55,7 +55,7 @@ export const EditBudgetPolicyModal = ({ open, policy, onClose, onSuccess }: Edit
     budgetAmount: '',
     duration: 'MONTHLY',
     budgetAction: 'REJECT',
-    scope: 'ALL',
+    scope: 'GLOBAL',
     endpointId: '',
     username: '',
   });
@@ -73,7 +73,7 @@ export const EditBudgetPolicyModal = ({ open, policy, onClose, onSuccess }: Edit
         budgetAmount: String(policy.budget_amount),
         duration: toDurationPreset(policy.duration.unit, policy.duration.value),
         budgetAction: policy.budget_action,
-        scope: policy.target_scope === 'ENDPOINT' ? 'ENDPOINT' : policy.target_scope === 'USER' ? 'USER' : 'ALL',
+        scope: policy.target_scope,
         endpointId: policy.target_scope === 'ENDPOINT' ? (policy.target_value ?? '') : '',
         username: policy.target_scope === 'USER' ? (policy.target_value ?? '') : '',
       });
@@ -110,7 +110,7 @@ export const EditBudgetPolicyModal = ({ open, policy, onClose, onSuccess }: Edit
         budget_unit: 'USD',
         budget_amount: parseFloat(formData.budgetAmount),
         duration: { unit, value },
-        ...getBudgetScopePayload(formData, policy.target_scope),
+        ...getBudgetScopePayload(formData),
         budget_action: formData.budgetAction,
       });
     } catch {

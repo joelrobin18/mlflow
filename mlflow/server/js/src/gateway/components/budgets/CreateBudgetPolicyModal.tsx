@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Alert,
   InfoSmallIcon,
@@ -16,6 +16,7 @@ import type { BudgetAction, DurationUnit } from '../../types';
 import {
   BudgetScopeField,
   getBudgetScopePayload,
+  getDefaultUnscopedTargetScope,
   useBudgetScopeField,
   type BudgetScopeFormValue,
 } from './BudgetScopeField';
@@ -40,19 +41,19 @@ interface FormData extends BudgetScopeFormValue {
   budgetAction: BudgetAction;
 }
 
-const INITIAL_FORM_DATA: FormData = {
+const getInitialFormData = (): FormData => ({
   budgetAmount: '',
   duration: 'MONTHLY',
   budgetAction: 'REJECT',
-  scope: 'ALL',
+  scope: getDefaultUnscopedTargetScope(),
   endpointId: '',
   username: '',
-};
+});
 
 export const CreateBudgetPolicyModal = ({ open, onClose, onSuccess }: CreateBudgetPolicyModalProps) => {
   const { theme } = useDesignSystemTheme();
   const intl = useIntl();
-  const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
+  const [formData, setFormData] = useState<FormData>(getInitialFormData);
   const {
     mutateAsync: createBudgetPolicy,
     isLoading,
@@ -61,8 +62,15 @@ export const CreateBudgetPolicyModal = ({ open, onClose, onSuccess }: CreateBudg
   } = useCreateBudgetPolicy();
   const scopeField = useBudgetScopeField(formData);
 
+  // The modal stays mounted while closed, and whether workspaces are enabled is known only after server info loads,
+  // so the default scope is chosen each time the modal opens.
+  useEffect(() => {
+    if (open) {
+      setFormData(getInitialFormData());
+    }
+  }, [open]);
+
   const handleClose = useCallback(() => {
-    setFormData(INITIAL_FORM_DATA);
     resetMutation();
     onClose();
   }, [onClose, resetMutation]);

@@ -12,38 +12,46 @@ import type { TargetScope } from '../../types';
 import { getWorkspacesEnabledSync } from '../../../experiment-tracking/hooks/useServerInfo';
 import { useBudgetScopeLabels, type UnscopedTargetScope } from './useBudgetScopeLabels';
 
-type BudgetScopeChoice = 'ALL' | 'ENDPOINT' | 'USER';
-
 export interface BudgetScopeFormValue {
-  scope: BudgetScopeChoice;
+  scope: TargetScope;
   endpointId: string;
   username: string;
 }
 
+const isUnscopedTargetScope = (scope?: TargetScope): scope is UnscopedTargetScope =>
+  scope === 'GLOBAL' || scope === 'WORKSPACE';
+
 /**
- * The scope that the "All" choice saves as. The selector shows GLOBAL and
- * WORKSPACE as one choice, so a policy that already has one of them keeps it:
- * re-deriving it would silently narrow a GLOBAL policy to a single workspace on
- * a workspace-enabled server.
+ * The scope a new policy covering every endpoint and user gets. With workspaces enabled it stays in the current
+ * workspace unless the admin chooses all workspaces.
  */
-const getUnscopedTargetScope = (existingScope?: TargetScope): UnscopedTargetScope => {
-  if (existingScope === 'GLOBAL' || existingScope === 'WORKSPACE') {
-    return existingScope;
+export const getDefaultUnscopedTargetScope = (): UnscopedTargetScope =>
+  getWorkspacesEnabledSync() ? 'WORKSPACE' : 'GLOBAL';
+
+/**
+ * The choices that cover every endpoint and user. Without workspaces GLOBAL and WORKSPACE behave the same, so the
+ * selector shows one choice. A policy that already has one of them keeps it, because a WORKSPACE policy from
+ * another workspace would start to apply if it were saved as GLOBAL.
+ */
+const getUnscopedChoices = (existingScope?: TargetScope): UnscopedTargetScope[] => {
+  if (getWorkspacesEnabledSync()) {
+    return ['WORKSPACE', 'GLOBAL'];
   }
-  return getWorkspacesEnabledSync() ? 'WORKSPACE' : 'GLOBAL';
+  return [isUnscopedTargetScope(existingScope) ? existingScope : 'GLOBAL'];
 };
 
-export const getBudgetScopePayload = (
-  { scope, endpointId, username }: BudgetScopeFormValue,
-  existingScope?: TargetScope,
-): { target_scope: TargetScope; target_value?: string } => {
+export const getBudgetScopePayload = ({
+  scope,
+  endpointId,
+  username,
+}: BudgetScopeFormValue): { target_scope: TargetScope; target_value?: string } => {
   if (scope === 'ENDPOINT') {
     return { target_scope: 'ENDPOINT', target_value: endpointId };
   }
   if (scope === 'USER') {
     return { target_scope: 'USER', target_value: username.trim() };
   }
-  return { target_scope: getUnscopedTargetScope(existingScope) };
+  return { target_scope: scope };
 };
 
 export const useBudgetScopeField = ({ scope, endpointId, username }: BudgetScopeFormValue) => {
@@ -81,7 +89,9 @@ export const BudgetScopeField = ({ componentId, value, onChange, field, existing
   const { theme } = useDesignSystemTheme();
   const intl = useIntl();
   const scopeLabels = useBudgetScopeLabels();
-  const allLabel = scopeLabels.all[getUnscopedTargetScope(existingScope)];
+  const unscopedChoices = getUnscopedChoices(existingScope);
+  // The choice named when the selected endpoint is missing.
+  const allLabel = scopeLabels.all[unscopedChoices[0]];
   const { endpoints, hasEndpointList, isEndpointMissing } = field;
   const hasNoEndpoints = hasEndpointList && !endpoints.length;
   const scopeLabel = intl.formatMessage({ defaultMessage: 'Applies to', description: 'Budget scope label' });
@@ -94,12 +104,24 @@ export const BudgetScopeField = ({ componentId, value, onChange, field, existing
         componentId={`${componentId}.scope`}
         label={scopeLabel}
         value={value.scope}
-        onChange={({ target }) => onChange({ scope: target.value as BudgetScopeChoice })}
+        onChange={({ target }) => onChange({ scope: target.value as TargetScope })}
       >
-        <SimpleSelectOption value="ALL">{allLabel}</SimpleSelectOption>
+        {unscopedChoices.map((choice) => (
+          <SimpleSelectOption key={choice} value={choice}>
+            {scopeLabels.all[choice]}
+          </SimpleSelectOption>
+        ))}
         <SimpleSelectOption value="ENDPOINT">{scopeLabels.endpoint}</SimpleSelectOption>
         <SimpleSelectOption value="USER">{scopeLabels.user}</SimpleSelectOption>
       </SimpleSelect>
+      {value.scope === 'GLOBAL' && getWorkspacesEnabledSync() && (
+        <Typography.Text color="secondary" size="sm">
+          <FormattedMessage
+            defaultMessage="Applies to every workspace. It is shown and managed only in this workspace."
+            description="Helper text for a budget policy that applies to all workspaces"
+          />
+        </Typography.Text>
+      )}
       {value.scope === 'ENDPOINT' && (
         <>
           <SimpleSelect

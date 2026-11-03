@@ -113,6 +113,77 @@ describe('CreateBudgetPolicyModal', () => {
     });
   });
 
+  test('offers a single all-endpoints choice when workspaces are disabled', async () => {
+    renderWithDesignSystem(<CreateBudgetPolicyModal open onClose={jest.fn()} />);
+
+    await userEvent.click(screen.getAllByRole('combobox')[0]);
+
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'All endpoints and users',
+      'Specific endpoint',
+      'Specific user',
+    ]);
+  });
+
+  describe('with workspaces enabled', () => {
+    beforeEach(() => {
+      jest.mocked(getWorkspacesEnabledSync).mockReturnValue(true);
+    });
+
+    test('offers this workspace and all workspaces as separate choices', async () => {
+      renderWithDesignSystem(<CreateBudgetPolicyModal open onClose={jest.fn()} />);
+
+      await userEvent.click(screen.getAllByRole('combobox')[0]);
+
+      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+        'All endpoints and users in this workspace',
+        'All endpoints and users in all workspaces',
+        'Specific endpoint',
+        'Specific user',
+      ]);
+    });
+
+    test('creates a GLOBAL policy when all workspaces is chosen', async () => {
+      renderWithDesignSystem(<CreateBudgetPolicyModal open onClose={jest.fn()} />);
+
+      expect(
+        screen.queryByText('Applies to every workspace. It is shown and managed only in this workspace.'),
+      ).not.toBeInTheDocument();
+
+      await userEvent.type(screen.getByPlaceholderText('e.g., 100.00'), '50');
+      await userEvent.click(screen.getAllByRole('combobox')[0]);
+      await userEvent.click(screen.getByRole('option', { name: 'All endpoints and users in all workspaces' }));
+
+      expect(
+        screen.getByText('Applies to every workspace. It is shown and managed only in this workspace.'),
+      ).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        budget_unit: 'USD',
+        budget_amount: 50,
+        duration: { unit: 'MONTHS', value: 1 },
+        target_scope: 'GLOBAL',
+        budget_action: 'REJECT',
+      });
+    });
+
+    test('defaults to this workspace when workspaces are detected after the modal mounts', async () => {
+      // The page mounts the modal closed, possibly before server info has loaded.
+      jest.mocked(getWorkspacesEnabledSync).mockReturnValue(false);
+      const { rerender } = renderWithDesignSystem(<CreateBudgetPolicyModal open={false} onClose={jest.fn()} />);
+
+      jest.mocked(getWorkspacesEnabledSync).mockReturnValue(true);
+      rerender(<CreateBudgetPolicyModal open onClose={jest.fn()} />);
+
+      await userEvent.type(screen.getByPlaceholderText('e.g., 100.00'), '50');
+      await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+      expect(mockMutateAsync).toHaveBeenCalledWith(expect.objectContaining({ target_scope: 'WORKSPACE' }));
+    });
+  });
+
   test('gives the scope and endpoint selects accessible names', async () => {
     renderWithDesignSystem(<CreateBudgetPolicyModal open onClose={jest.fn()} />);
 

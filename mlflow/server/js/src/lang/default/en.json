@@ -8651,6 +8651,10 @@
     "defaultMessage": "Experiment ID",
     "description": "Label for displaying the current experiment in view"
   },
+  "PbDv1z": {
+    "defaultMessage": "Applies to every workspace. It is shown and managed only in this workspace.",
+    "description": "Helper text for a budget policy that applies to all workspaces"
+  },
   "PbhoUk": {
     "defaultMessage": "Track every version of your model to understand how quality changes over time. {learnMoreLink}",
     "description": "Empty state description displayed when no models are logged in the machine learning logged models list page"

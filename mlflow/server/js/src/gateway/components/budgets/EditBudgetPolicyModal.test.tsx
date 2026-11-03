@@ -231,13 +231,32 @@ describe('EditBudgetPolicyModal', () => {
     }
   });
 
+  test('keeps a WORKSPACE policy at its scope behind the single choice when workspaces are disabled', async () => {
+    renderWithDesignSystem(
+      <EditBudgetPolicyModal open policy={{ ...mockPolicy, target_scope: 'WORKSPACE' }} onClose={jest.fn()} />,
+    );
+
+    await userEvent.click(screen.getAllByRole('combobox')[0]);
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'All endpoints and users',
+      'Specific endpoint',
+      'Specific user',
+    ]);
+    await userEvent.click(screen.getByRole('option', { name: 'Specific endpoint' }));
+    await userEvent.click(screen.getAllByRole('combobox')[0]);
+    await userEvent.click(screen.getByRole('option', { name: 'All endpoints and users' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    expect(mockMutateAsync).toHaveBeenCalledWith(expect.objectContaining({ target_scope: 'WORKSPACE' }));
+  });
+
   describe('with workspaces enabled', () => {
     beforeEach(() => {
       jest.mocked(getWorkspacesEnabledSync).mockReturnValue(true);
     });
 
-    // GLOBAL and WORKSPACE share the form's single "all" choice, but the backend
-    // enforces them differently, so saving must not re-derive the scope.
+    // The backend enforces GLOBAL and WORKSPACE differently, so saving another
+    // field must keep the scope the policy already has.
     test.each([
       ['GLOBAL' as const, 'All endpoints and users in all workspaces'],
       ['WORKSPACE' as const, 'All endpoints and users in this workspace'],
@@ -259,6 +278,28 @@ describe('EditBudgetPolicyModal', () => {
         budget_amount: 300,
         duration: { unit: 'WEEKS', value: 1 },
         target_scope: targetScope,
+        budget_action: 'ALERT',
+      });
+    });
+
+    test.each([
+      ['WORKSPACE' as const, 'All endpoints and users in all workspaces', 'GLOBAL' as const],
+      ['GLOBAL' as const, 'All endpoints and users in this workspace', 'WORKSPACE' as const],
+    ])('changes a %s policy to the %s choice', async (targetScope, choice, expectedScope) => {
+      renderWithDesignSystem(
+        <EditBudgetPolicyModal open policy={{ ...mockPolicy, target_scope: targetScope }} onClose={jest.fn()} />,
+      );
+
+      await userEvent.click(screen.getAllByRole('combobox')[0]);
+      await userEvent.click(screen.getByRole('option', { name: choice }));
+      await userEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        budget_policy_id: 'bp-1',
+        budget_unit: 'USD',
+        budget_amount: 200,
+        duration: { unit: 'WEEKS', value: 1 },
+        target_scope: expectedScope,
         budget_action: 'ALERT',
       });
     });
