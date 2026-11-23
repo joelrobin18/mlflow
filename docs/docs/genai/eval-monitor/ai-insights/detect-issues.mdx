@@ -135,7 +135,7 @@ To hear about new issues without opening the Issues tab, create a [webhook](/sel
 
 The payload carries the issue's ID, experiment, title, status, severity, and categories. It leaves out the description and root causes, which detection writes from trace content.
 
-To post them to a Slack channel, [send the webhook to Slack](/self-hosting/webhooks#sending-notifications-to-slack). To hear only about some experiments, [limit the webhook to them](/self-hosting/webhooks#limiting-a-webhook-to-experiments). To get one message per run instead of one per issue, subscribe to `issue_detection_run.completed`. MLflow sends it when a manual or scheduled run finishes, with the run's status, the IDs of the issues it filed, the number of traces it analyzed, and its cost. A failed run carries the reason it failed, and a scheduled run that found no traces still sends it, so you can tell a quiet window from a schedule that stopped running.
+To post them to a Slack channel, [send the webhook to Slack](/self-hosting/webhooks#sending-notifications-to-slack). To track them in Jira, [file a Jira ticket for each one](/self-hosting/webhooks#filing-jira-tickets-for-new-issues). To hear only about some experiments, [limit the webhook to them](/self-hosting/webhooks#limiting-a-webhook-to-experiments). To get one message per run instead of one per issue, subscribe to `issue_detection_run.completed`. MLflow sends it when a manual or scheduled run finishes, with the run's status, the IDs of the issues it filed, the number of traces it analyzed, and its cost. A failed run carries the reason it failed, and a scheduled run that found no traces still sends it, so you can tell a quiet window from a schedule that stopped running.
 
 ## Customize detection criteria
 

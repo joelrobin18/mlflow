@@ -73,6 +73,15 @@ const WebhookListItem = ({
               <FormattedMessage defaultMessage="Slack" description="Badge for a webhook that posts to Slack" />
             </Typography.Text>
           )}
+          {webhook.destination_type === 'JIRA' && (
+            <Typography.Text size="sm" color="secondary">
+              <FormattedMessage
+                defaultMessage="Jira: {projectKey}"
+                description="Badge for a webhook that files Jira tickets, naming its Jira project"
+                values={{ projectKey: webhook.jira_config?.project_key ?? '' }}
+              />
+            </Typography.Text>
+          )}
         </div>
         <Typography.Text size="sm" color="secondary" css={{ display: 'block', marginTop: theme.spacing.xs }}>
           {webhook.url}

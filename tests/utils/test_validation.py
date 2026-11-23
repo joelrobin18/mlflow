@@ -8,7 +8,13 @@ from unittest.mock import patch
 import pytest
 
 from mlflow.entities import Metric, Param, RunTag
-from mlflow.entities.webhook import WebhookAction, WebhookEntity, WebhookEvent
+from mlflow.entities.webhook import (
+    JiraDestinationConfig,
+    WebhookAction,
+    WebhookDestinationType,
+    WebhookEntity,
+    WebhookEvent,
+)
 from mlflow.environment_variables import MLFLOW_ARTIFACT_LOCATION_MAX_LENGTH
 from mlflow.exceptions import MlflowException
 from mlflow.protos.databricks_pb2 import INVALID_PARAMETER_VALUE, ErrorCode
@@ -43,6 +49,7 @@ from mlflow.utils.validation import (
     _validate_tag_name,
     _validate_text_field,
     _validate_third_party_scorer_data,
+    _validate_webhook_destination,
     _validate_webhook_experiment_ids,
     _validate_webhook_url,
     path_not_unique,
@@ -1467,3 +1474,47 @@ def test_validate_webhook_experiment_ids_rejects_events_outside_an_experiment():
 
     with pytest.raises(MlflowException, match="these events don't: prompt.created"):
         _validate_webhook_experiment_ids(["7"], [_ISSUE_CREATED, prompt_created])
+
+
+_JIRA = JiraDestinationConfig(project_key="OPS", issue_type="Bug")
+
+
+def test_validate_webhook_destination_accepts_a_complete_jira_webhook():
+    _validate_webhook_destination(WebhookDestinationType.JIRA, _JIRA, [_ISSUE_CREATED], True)
+
+
+@pytest.mark.parametrize(
+    ("jira_config", "events", "has_secret", "match"),
+    [
+        (None, [_ISSUE_CREATED], True, "needs a jira_config"),
+        (
+            JiraDestinationConfig(project_key=" ", issue_type="Bug"),
+            [_ISSUE_CREATED],
+            True,
+            "needs a jira_config",
+        ),
+        (
+            JiraDestinationConfig(project_key="OPS", issue_type="x" * 255),
+            [_ISSUE_CREATED],
+            True,
+            "at most 254",
+        ),
+        (_JIRA, [_ISSUE_CREATED], False, "needs a secret"),
+        (
+            _JIRA,
+            [WebhookEvent(WebhookEntity.ISSUE_DETECTION_RUN, WebhookAction.COMPLETED)],
+            True,
+            "only subscribe to issue.created",
+        ),
+    ],
+)
+def test_validate_webhook_destination_rejects_an_incomplete_jira_webhook(
+    jira_config, events, has_secret, match
+):
+    with pytest.raises(MlflowException, match=match):
+        _validate_webhook_destination(WebhookDestinationType.JIRA, jira_config, events, has_secret)
+
+
+def test_validate_webhook_destination_rejects_jira_settings_on_another_destination():
+    with pytest.raises(MlflowException, match="only for a webhook whose destination_type is JIRA"):
+        _validate_webhook_destination(WebhookDestinationType.SLACK, _JIRA, [_ISSUE_CREATED], False)

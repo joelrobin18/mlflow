@@ -18,6 +18,7 @@ from mlflow.entities.model_registry.prompt_version import (
     PromptVersion,
 )
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     Webhook,
     WebhookDestinationType,
     WebhookEvent,
@@ -1202,6 +1203,7 @@ class AbstractStore:
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: WebhookDestinationType | None = None,
+        jira_config: JiraDestinationConfig | None = None,
     ) -> Webhook:
         """
         Create a new webhook in the backend store.
@@ -1216,6 +1218,7 @@ class AbstractStore:
             experiment_ids: Experiments to limit the webhook to. Only events that belong to an
                 experiment can be limited. None or empty means every experiment.
             destination_type: How deliveries are formatted (defaults to GENERIC).
+            jira_config: Where tickets are filed. Required for a JIRA destination.
 
         Returns:
             A single :py:class:`mlflow.entities.model_registry.Webhook` object
@@ -1285,6 +1288,7 @@ class AbstractStore:
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: WebhookDestinationType | None = None,
+        jira_config: JiraDestinationConfig | None = None,
     ) -> Webhook:
         """
         Update an existing webhook.
@@ -1300,6 +1304,7 @@ class AbstractStore:
             experiment_ids: Experiments to limit the webhook to, replacing the current ones.
                 ``[]`` removes the limit and None leaves it unchanged.
             destination_type: New delivery format.
+            jira_config: New ticket settings for a JIRA destination.
 
         Returns:
             A single updated :py:class:`mlflow.entities.model_registry.Webhook` object.

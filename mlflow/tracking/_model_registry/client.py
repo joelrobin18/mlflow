@@ -18,6 +18,7 @@ from mlflow.entities.model_registry import (
 from mlflow.entities.model_registry.prompt import Prompt
 from mlflow.entities.model_registry.prompt_version import PromptModelConfig
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     Webhook,
     WebhookDestinationType,
     WebhookEvent,
@@ -821,6 +822,7 @@ class ModelRegistryClient:
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: WebhookDestinationType | None = None,
+        jira_config: JiraDestinationConfig | None = None,
     ) -> Webhook:
         """
         Create a new webhook.
@@ -834,6 +836,7 @@ class ModelRegistryClient:
             status: Webhook status (defaults to ACTIVE).
             experiment_ids: Experiments to limit the webhook to. None means every experiment.
             destination_type: How deliveries are formatted (defaults to GENERIC).
+            jira_config: Where tickets are filed. Required for a JIRA destination.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the created webhook.
@@ -847,6 +850,7 @@ class ModelRegistryClient:
             status,
             experiment_ids=experiment_ids,
             destination_type=destination_type,
+            jira_config=jira_config,
         )
 
     def get_webhook(self, webhook_id: str) -> Webhook:
@@ -889,6 +893,7 @@ class ModelRegistryClient:
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: WebhookDestinationType | None = None,
+        jira_config: JiraDestinationConfig | None = None,
     ) -> Webhook:
         """
         Update an existing webhook.
@@ -904,6 +909,7 @@ class ModelRegistryClient:
             experiment_ids: Experiments to limit the webhook to, replacing the current ones.
                 ``[]`` removes the limit and None leaves it unchanged.
             destination_type: New delivery format.
+            jira_config: New ticket settings for a JIRA destination.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the updated webhook.
@@ -918,6 +924,7 @@ class ModelRegistryClient:
             status,
             experiment_ids=experiment_ids,
             destination_type=destination_type,
+            jira_config=jira_config,
         )
 
     def delete_webhook(self, webhook_id: str) -> None:

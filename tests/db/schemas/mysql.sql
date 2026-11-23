@@ -242,6 +242,7 @@ CREATE TABLE webhooks (
 	deleted_timestamp BIGINT,
 	workspace VARCHAR(63) DEFAULT 'default' NOT NULL,
 	destination_type VARCHAR(20) DEFAULT 'GENERIC' NOT NULL,
+	destination_config VARCHAR(1000),
 	PRIMARY KEY (webhook_id)
 )
 

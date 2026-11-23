@@ -14,7 +14,12 @@ from cryptography.fernet import Fernet
 
 from mlflow import MlflowClient
 from mlflow.entities.issue import IssueSeverity
-from mlflow.entities.webhook import WebhookAction, WebhookEntity, WebhookEvent
+from mlflow.entities.webhook import (
+    JiraDestinationConfig,
+    WebhookAction,
+    WebhookEntity,
+    WebhookEvent,
+)
 from mlflow.tracing.client import TracingClient
 from mlflow.webhooks.types import IssueCreatedPayload, IssueDetectionRunCompletedPayload
 
@@ -1077,3 +1082,60 @@ def test_issue_created_reaches_a_slack_webhook_as_a_slack_message(
     assert log.payload["blocks"][0]["text"]["text"] == (
         "*New high severity issue*: Refund policy is invented"
     )
+
+
+def test_issue_created_files_one_jira_ticket_and_records_it_on_the_issue(
+    mlflow_client: MlflowClient, mlflow_server: str, app_client: AppClient
+) -> None:
+    webhook = mlflow_client.create_webhook(
+        name="jira_issues",
+        url=app_client.get_url("/jira"),
+        events=["issue.created"],
+        secret="api-token",
+        destination_type="JIRA",
+        jira_config=JiraDestinationConfig(project_key="OPS", issue_type="Bug"),
+    )
+    experiment_id = mlflow_client.create_experiment("jira_issues")
+    tracing_client = TracingClient(tracking_uri=mlflow_server)
+    issue = tracing_client._create_issue(
+        experiment_id=experiment_id,
+        name="Refund policy is invented",
+        description="Quoted from a trace and kept out of the ticket",
+        severity=IssueSeverity.HIGH,
+    )
+
+    (log,) = app_client.wait_for_logs(expected_count=1)
+    assert log.endpoint == "/jira/rest/api/2/issue"
+    assert log.headers["authorization"] == "Bearer api-token"
+    fields = log.payload["fields"]
+    assert fields["project"] == {"key": "OPS"}
+    assert fields["issuetype"] == {"name": "Bug"}
+    assert fields["summary"] == "[MLflow] Refund policy is invented"
+    assert "Quoted from a trace" not in fields["description"]
+
+    key = f"mlflow.webhook.jiraTicket.{webhook.webhook_id}"
+    for _ in range(50):
+        if tracing_client._get_issue(issue.issue_id).metadata.get(key):
+            break
+        time.sleep(0.1)
+    assert tracing_client._get_issue(issue.issue_id).metadata[key] == "OPS-1"
+
+
+def test_testing_a_jira_webhook_checks_its_project(
+    mlflow_client: MlflowClient, app_client: AppClient
+) -> None:
+    def jira_webhook(name, project_key):
+        return mlflow_client.create_webhook(
+            name=name,
+            url=app_client.get_url("/jira"),
+            events=["issue.created"],
+            secret="api-token",
+            destination_type="JIRA",
+            jira_config=JiraDestinationConfig(project_key=project_key, issue_type="Bug"),
+        )
+
+    assert mlflow_client.test_webhook(jira_webhook("jira_ok", "OPS").webhook_id).success is True
+    missing = mlflow_client.test_webhook(jira_webhook("jira_missing", "NOPE").webhook_id)
+    assert missing.success is False
+    assert missing.response_status == 404
+    assert app_client.get_logs() == []

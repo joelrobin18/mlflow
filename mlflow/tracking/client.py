@@ -61,6 +61,7 @@ from mlflow.entities.skill_version import SkillVersion
 from mlflow.entities.span import NO_OP_SPAN_TRACE_ID, NoOpSpan
 from mlflow.entities.trace_status import TraceStatus
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     Webhook,
     WebhookDestinationType,
     WebhookEvent,
@@ -6748,6 +6749,7 @@ class MlflowClient:
         status: str | WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: str | WebhookDestinationType | None = None,
+        jira_config: JiraDestinationConfig | None = None,
     ) -> Webhook:
         """
         Create a new webhook.
@@ -6765,8 +6767,11 @@ class MlflowClient:
                 events all belong to an experiment, such as ``"issue.created"``, can be limited.
                 By default the webhook receives its events from every experiment.
             destination_type: How deliveries are formatted: ``"GENERIC"`` (the default) sends a
-                signed JSON envelope, and ``"SLACK"`` sends a Slack message to a Slack incoming
-                webhook URL.
+                signed JSON envelope, ``"SLACK"`` sends a Slack message to a Slack incoming
+                webhook URL, and ``"JIRA"`` files a Jira ticket for each new issue. A Jira webhook
+                takes the Jira site as ``url``, its API token as ``secret``, and ``jira_config``,
+                and subscribes to ``"issue.created"`` only.
+            jira_config: Where a ``"JIRA"`` webhook files tickets.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the created webhook.
@@ -6786,6 +6791,7 @@ class MlflowClient:
             status=status,
             experiment_ids=experiment_ids,
             destination_type=destination_type,
+            jira_config=jira_config,
         )
 
     def get_webhook(self, webhook_id: str) -> Webhook:
@@ -6828,6 +6834,7 @@ class MlflowClient:
         status: str | WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: str | WebhookDestinationType | None = None,
+        jira_config: JiraDestinationConfig | None = None,
     ) -> Webhook:
         """
         Update an existing webhook.
@@ -6844,7 +6851,8 @@ class MlflowClient:
             experiment_ids: IDs of the experiments to limit the webhook to, replacing the current
                 ones. Pass ``[]`` to receive events from every experiment again. By default the
                 current experiments are kept.
-            destination_type: New delivery format, ``"GENERIC"`` or ``"SLACK"``.
+            destination_type: New delivery format, ``"GENERIC"``, ``"SLACK"`` or ``"JIRA"``.
+            jira_config: New ticket settings for a ``"JIRA"`` webhook.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the updated webhook.
@@ -6867,6 +6875,7 @@ class MlflowClient:
             status=status,
             experiment_ids=experiment_ids,
             destination_type=destination_type,
+            jira_config=jira_config,
         )
 
     def delete_webhook(self, webhook_id: str) -> None:

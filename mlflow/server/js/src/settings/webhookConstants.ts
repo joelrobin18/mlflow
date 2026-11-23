@@ -56,13 +56,17 @@ export const WEBHOOK_NAME_REGEX = /^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/i;
 
 export const eventKey = (entity: string, action: string) => `${entity}.${action}`;
 
-export type WebhookDestinationType = 'GENERIC' | 'SLACK';
+export type WebhookDestinationType = 'GENERIC' | 'SLACK' | 'JIRA';
 
-export const DESTINATION_TYPES: WebhookDestinationType[] = ['GENERIC', 'SLACK'];
+export const DESTINATION_TYPES: WebhookDestinationType[] = ['GENERIC', 'SLACK', 'JIRA'];
+
+/** The only event a Jira webhook subscribes to: it files one ticket per new issue. */
+export const JIRA_EVENT_KEY = 'ISSUE.CREATED';
 
 export const destinationTypeLabels = defineMessages({
   GENERIC: { defaultMessage: 'HTTP endpoint (signed JSON)', description: 'Webhook destination type label' },
   SLACK: { defaultMessage: 'Slack incoming webhook', description: 'Webhook destination type label' },
+  JIRA: { defaultMessage: 'Jira (a ticket for each new issue)', description: 'Webhook destination type label' },
 });
 
 /** Entities whose events happen inside an experiment, so a webhook can be limited to some experiments. */

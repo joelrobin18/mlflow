@@ -24,6 +24,7 @@ from mlflow.entities.model_registry import (
 from mlflow.entities.model_registry.model_version_stages import STAGE_DELETED_INTERNAL, STAGE_NONE
 from mlflow.entities.model_registry.model_version_status import ModelVersionStatus
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     Webhook,
     WebhookAction,
     WebhookDestinationType,
@@ -336,6 +337,9 @@ class SqlWebhook(Base):
         default=WebhookDestinationType.GENERIC.value,
         server_default=WebhookDestinationType.GENERIC.value,
     )
+    # Settings of a destination that needs more than a URL and a secret, as JSON. A Jira
+    # destination keeps its project and issue type here; its credential stays in ``secret``.
+    destination_config = Column(String(1000), nullable=True)
 
     __table_args__ = (
         PrimaryKeyConstraint("webhook_id", name="webhook_pk"),
@@ -364,6 +368,12 @@ class SqlWebhook(Base):
             secret=self.secret,
             experiment_ids=sorted(we.experiment_id for we in self.webhook_experiments),
             destination_type=WebhookDestinationType(self.destination_type),
+            jira_config=(
+                JiraDestinationConfig.from_json(self.destination_config)
+                if self.destination_type == WebhookDestinationType.JIRA.value
+                and self.destination_config
+                else None
+            ),
         )
 
 

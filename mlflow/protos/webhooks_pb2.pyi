@@ -51,6 +51,8 @@ class _WebhookDestinationTypeEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper
     """Signed JSON envelope carrying the event's payload"""
     SLACK: _WebhookDestinationType.ValueType  # 2
     """Slack message, for a Slack incoming webhook URL"""
+    JIRA: _WebhookDestinationType.ValueType  # 3
+    """Jira ticket for each new issue, filed through Jira's REST API"""
 
 class WebhookDestinationType(_WebhookDestinationType, metaclass=_WebhookDestinationTypeEnumTypeWrapper):
     """How a webhook's deliveries are formatted"""
@@ -61,6 +63,8 @@ GENERIC: WebhookDestinationType.ValueType  # 1
 """Signed JSON envelope carrying the event's payload"""
 SLACK: WebhookDestinationType.ValueType  # 2
 """Slack message, for a Slack incoming webhook URL"""
+JIRA: WebhookDestinationType.ValueType  # 3
+"""Jira ticket for each new issue, filed through Jira's REST API"""
 Global___WebhookDestinationType: _TypeAlias = WebhookDestinationType  # noqa: Y015
 
 class _WebhookEntity:
@@ -168,6 +172,40 @@ COMPLETED: WebhookAction.ValueType  # 6
 Global___WebhookAction: _TypeAlias = WebhookAction  # noqa: Y015
 
 @_typing.final
+class JiraDestinationConfig(_message.Message):
+    """Where a JIRA destination files its tickets. The webhook's url is the Jira site, such as
+    https://example.atlassian.net, and its secret is the credential tickets are filed with.
+    """
+
+    DESCRIPTOR: _descriptor.Descriptor
+
+    PROJECT_KEY_FIELD_NUMBER: _builtins.int
+    ISSUE_TYPE_FIELD_NUMBER: _builtins.int
+    USER_EMAIL_FIELD_NUMBER: _builtins.int
+    project_key: _builtins.str
+    """Key of the Jira project to file tickets in, such as OPS"""
+    issue_type: _builtins.str
+    """Name of the issue type to file tickets as, such as Bug"""
+    user_email: _builtins.str
+    """Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+    the secret as a bearer token, as a Jira Data Center personal access token is sent.
+    """
+    def __init__(
+        self,
+        *,
+        project_key: _builtins.str | None = ...,
+        issue_type: _builtins.str | None = ...,
+        user_email: _builtins.str | None = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _typing.Literal["issue_type", b"issue_type", "project_key", b"project_key", "user_email", b"user_email"]  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["issue_type", b"issue_type", "project_key", b"project_key", "user_email", b"user_email"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___JiraDestinationConfig: _TypeAlias = JiraDestinationConfig  # noqa: Y015
+
+@_typing.final
 class WebhookEvent(_message.Message):
     """Webhook event definition"""
 
@@ -209,6 +247,7 @@ class Webhook(_message.Message):
     LAST_UPDATED_TIMESTAMP_FIELD_NUMBER: _builtins.int
     EXPERIMENT_IDS_FIELD_NUMBER: _builtins.int
     DESTINATION_TYPE_FIELD_NUMBER: _builtins.int
+    JIRA_CONFIG_FIELD_NUMBER: _builtins.int
     webhook_id: _builtins.str
     """Unique identifier for the webhook"""
     name: _builtins.str
@@ -236,6 +275,10 @@ class Webhook(_message.Message):
         belong to an experiment.
         """
 
+    @_builtins.property
+    def jira_config(self) -> Global___JiraDestinationConfig:
+        """Where tickets are filed, for a JIRA destination"""
+
     def __init__(
         self,
         *,
@@ -249,10 +292,11 @@ class Webhook(_message.Message):
         last_updated_timestamp: _builtins.int | None = ...,
         experiment_ids: _abc.Iterable[_builtins.str] | None = ...,
         destination_type: Global___WebhookDestinationType.ValueType | None = ...,
+        jira_config: Global___JiraDestinationConfig | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "destination_type", b"destination_type", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "destination_type", b"destination_type", "jira_config", b"jira_config", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "destination_type", b"destination_type", "events", b"events", "experiment_ids", b"experiment_ids", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "destination_type", b"destination_type", "events", b"events", "experiment_ids", b"experiment_ids", "jira_config", b"jira_config", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -324,6 +368,7 @@ class CreateWebhook(_message.Message):
     STATUS_FIELD_NUMBER: _builtins.int
     EXPERIMENT_IDS_FIELD_NUMBER: _builtins.int
     DESTINATION_TYPE_FIELD_NUMBER: _builtins.int
+    JIRA_CONFIG_FIELD_NUMBER: _builtins.int
     name: _builtins.str
     """Name of the webhook"""
     description: _builtins.str
@@ -347,6 +392,10 @@ class CreateWebhook(_message.Message):
         experiment.
         """
 
+    @_builtins.property
+    def jira_config(self) -> Global___JiraDestinationConfig:
+        """Where tickets are filed. Required for a JIRA destination, which also requires a secret."""
+
     def __init__(
         self,
         *,
@@ -358,10 +407,11 @@ class CreateWebhook(_message.Message):
         status: Global___WebhookStatus.ValueType | None = ...,
         experiment_ids: _abc.Iterable[_builtins.str] | None = ...,
         destination_type: Global___WebhookDestinationType.ValueType | None = ...,
+        jira_config: Global___JiraDestinationConfig | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "jira_config", b"jira_config", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "events", b"events", "experiment_ids", b"experiment_ids", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "events", b"events", "experiment_ids", b"experiment_ids", "jira_config", b"jira_config", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -490,6 +540,7 @@ class UpdateWebhook(_message.Message):
     STATUS_FIELD_NUMBER: _builtins.int
     EXPERIMENT_IDS_FIELD_NUMBER: _builtins.int
     DESTINATION_TYPE_FIELD_NUMBER: _builtins.int
+    JIRA_CONFIG_FIELD_NUMBER: _builtins.int
     webhook_id: _builtins.str
     """ID of the webhook to update"""
     name: _builtins.str
@@ -515,6 +566,10 @@ class UpdateWebhook(_message.Message):
         experiments.
         """
 
+    @_builtins.property
+    def jira_config(self) -> Global___JiraDestinationConfig:
+        """New ticket settings, replacing the current ones, for a JIRA destination"""
+
     def __init__(
         self,
         *,
@@ -527,10 +582,11 @@ class UpdateWebhook(_message.Message):
         status: Global___WebhookStatus.ValueType | None = ...,
         experiment_ids: _abc.Iterable[_builtins.str] | None = ...,
         destination_type: Global___WebhookDestinationType.ValueType | None = ...,
+        jira_config: Global___JiraDestinationConfig | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "jira_config", b"jira_config", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "events", b"events", "experiment_ids", b"experiment_ids", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "events", b"events", "experiment_ids", b"experiment_ids", "jira_config", b"jira_config", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 

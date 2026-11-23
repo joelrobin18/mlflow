@@ -8,6 +8,7 @@ import pytest
 from urllib3.util.retry import Retry
 
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     Webhook,
     WebhookAction,
     WebhookDestinationType,
@@ -297,3 +298,42 @@ def test_send_webhook_request_posts_a_slack_message_to_a_slack_webhook(
     body = json.loads(session.post.call_args.kwargs["data"].decode("utf-8"))
     assert body == format_slack_message(webhook_event, webhook_payload)
     assert "data" not in body
+
+
+def _jira_webhook(event):
+    return Webhook(
+        webhook_id="wh-jira",
+        name="jira",
+        url="https://example.atlassian.net",
+        events=[event],
+        creation_timestamp=0,
+        last_updated_timestamp=0,
+        secret="api-token",
+        destination_type=WebhookDestinationType.JIRA,
+        jira_config=JiraDestinationConfig(project_key="OPS", issue_type="Bug"),
+    )
+
+
+def test_send_webhook_request_files_a_ticket_for_a_jira_webhook() -> None:
+    event = WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)
+    webhook = _jira_webhook(event)
+    session = Mock()
+
+    with patch("mlflow.webhooks.delivery.file_jira_ticket") as file_ticket:
+        _send_webhook_request(webhook, {"issue_id": "iss-1"}, event, session)
+
+    file_ticket.assert_called_once_with(webhook, event, {"issue_id": "iss-1"}, session)
+    session.post.assert_not_called()
+
+
+def test_testing_a_jira_webhook_checks_its_project_instead_of_filing() -> None:
+    webhook = _jira_webhook(WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED))
+
+    with (
+        patch("mlflow.webhooks.delivery.check_jira_destination") as check,
+        patch("mlflow.webhooks.delivery.file_jira_ticket") as file_ticket,
+    ):
+        result = send_test_webhook(webhook)
+
+    assert result is check.return_value
+    file_ticket.assert_not_called()

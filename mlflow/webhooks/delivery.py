@@ -46,6 +46,7 @@ from mlflow.webhooks.constants import (
     WEBHOOK_TIMESTAMP_HEADER,
 )
 from mlflow.webhooks.formatters import format_slack_message
+from mlflow.webhooks.jira import check_jira_destination, file_jira_ticket
 from mlflow.webhooks.ssrf import SSRFProtectedHTTPAdapter
 from mlflow.webhooks.types import (
     WebhookPayload,
@@ -151,7 +152,7 @@ def _send_webhook_request(
     payload: WebhookPayload,
     event: WebhookEvent,
     session: requests.Session,
-) -> requests.Response:
+) -> requests.Response | None:
     """Send a webhook request to the specified URL with retry logic.
 
     Args:
@@ -161,8 +162,13 @@ def _send_webhook_request(
         session: Configured requests session with retry logic
 
     Returns:
-        requests.Response object from the webhook request
+        requests.Response object from the webhook request, or None when a Jira webhook had
+        nothing to file
     """
+    # A Jira webhook calls Jira's REST API rather than posting the event to a URL.
+    if webhook.destination_type == WebhookDestinationType.JIRA:
+        return file_jira_ticket(webhook, event, payload, session)
+
     _validate_webhook_url(webhook.url)
 
     # A destination with a message format of its own gets that instead of MLflow's envelope.
@@ -374,9 +380,14 @@ def test_webhook(webhook: Webhook, event: WebhookEvent | None = None) -> Webhook
     Returns:
         WebhookTestResult indicating success/failure and response details
     """
+    session = _get_or_create_webhook_session()
+    # A test must not file a ticket for an issue that doesn't exist, so a Jira webhook is checked
+    # against its project instead.
+    if webhook.destination_type == WebhookDestinationType.JIRA:
+        return check_jira_destination(webhook, session)
+
     # Use provided event or the first event type for testing
     test_event = event or webhook.events[0]
-    session = _get_or_create_webhook_session()
     try:
         test_payload = get_example_payload_for_event(test_event)
         response = _send_webhook_request(

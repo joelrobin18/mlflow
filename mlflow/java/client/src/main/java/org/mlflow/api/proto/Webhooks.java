@@ -163,6 +163,14 @@ public final class Webhooks {
      * <code>SLACK = 2;</code>
      */
     SLACK(2),
+    /**
+     * <pre>
+     * Jira ticket for each new issue, filed through Jira's REST API
+     * </pre>
+     *
+     * <code>JIRA = 3;</code>
+     */
+    JIRA(3),
     ;
 
     /**
@@ -189,6 +197,14 @@ public final class Webhooks {
      * <code>SLACK = 2;</code>
      */
     public static final int SLACK_VALUE = 2;
+    /**
+     * <pre>
+     * Jira ticket for each new issue, filed through Jira's REST API
+     * </pre>
+     *
+     * <code>JIRA = 3;</code>
+     */
+    public static final int JIRA_VALUE = 3;
 
 
     public final int getNumber() {
@@ -214,6 +230,7 @@ public final class Webhooks {
         case 0: return DESTINATION_TYPE_UNSPECIFIED;
         case 1: return GENERIC;
         case 2: return SLACK;
+        case 3: return JIRA;
         default: return null;
       }
     }
@@ -765,6 +782,1142 @@ public final class Webhooks {
     }
 
     // @@protoc_insertion_point(enum_scope:mlflow.WebhookAction)
+  }
+
+  public interface JiraDestinationConfigOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:mlflow.JiraDestinationConfig)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Key of the Jira project to file tickets in, such as OPS
+     * </pre>
+     *
+     * <code>optional string project_key = 1;</code>
+     * @return Whether the projectKey field is set.
+     */
+    boolean hasProjectKey();
+    /**
+     * <pre>
+     * Key of the Jira project to file tickets in, such as OPS
+     * </pre>
+     *
+     * <code>optional string project_key = 1;</code>
+     * @return The projectKey.
+     */
+    java.lang.String getProjectKey();
+    /**
+     * <pre>
+     * Key of the Jira project to file tickets in, such as OPS
+     * </pre>
+     *
+     * <code>optional string project_key = 1;</code>
+     * @return The bytes for projectKey.
+     */
+    com.google.protobuf.ByteString
+        getProjectKeyBytes();
+
+    /**
+     * <pre>
+     * Name of the issue type to file tickets as, such as Bug
+     * </pre>
+     *
+     * <code>optional string issue_type = 2;</code>
+     * @return Whether the issueType field is set.
+     */
+    boolean hasIssueType();
+    /**
+     * <pre>
+     * Name of the issue type to file tickets as, such as Bug
+     * </pre>
+     *
+     * <code>optional string issue_type = 2;</code>
+     * @return The issueType.
+     */
+    java.lang.String getIssueType();
+    /**
+     * <pre>
+     * Name of the issue type to file tickets as, such as Bug
+     * </pre>
+     *
+     * <code>optional string issue_type = 2;</code>
+     * @return The bytes for issueType.
+     */
+    com.google.protobuf.ByteString
+        getIssueTypeBytes();
+
+    /**
+     * <pre>
+     * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+     * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+     * </pre>
+     *
+     * <code>optional string user_email = 3;</code>
+     * @return Whether the userEmail field is set.
+     */
+    boolean hasUserEmail();
+    /**
+     * <pre>
+     * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+     * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+     * </pre>
+     *
+     * <code>optional string user_email = 3;</code>
+     * @return The userEmail.
+     */
+    java.lang.String getUserEmail();
+    /**
+     * <pre>
+     * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+     * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+     * </pre>
+     *
+     * <code>optional string user_email = 3;</code>
+     * @return The bytes for userEmail.
+     */
+    com.google.protobuf.ByteString
+        getUserEmailBytes();
+  }
+  /**
+   * <pre>
+   * Where a JIRA destination files its tickets. The webhook's url is the Jira site, such as
+   * https://example.atlassian.net, and its secret is the credential tickets are filed with.
+   * </pre>
+   *
+   * Protobuf type {@code mlflow.JiraDestinationConfig}
+   */
+  public static final class JiraDestinationConfig extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:mlflow.JiraDestinationConfig)
+      JiraDestinationConfigOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use JiraDestinationConfig.newBuilder() to construct.
+    private JiraDestinationConfig(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private JiraDestinationConfig() {
+      projectKey_ = "";
+      issueType_ = "";
+      userEmail_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new JiraDestinationConfig();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private JiraDestinationConfig(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              projectKey_ = bs;
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              issueType_ = bs;
+              break;
+            }
+            case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000004;
+              userEmail_ = bs;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.mlflow.api.proto.Webhooks.internal_static_mlflow_JiraDestinationConfig_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.mlflow.api.proto.Webhooks.internal_static_mlflow_JiraDestinationConfig_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig.class, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PROJECT_KEY_FIELD_NUMBER = 1;
+    private volatile java.lang.Object projectKey_;
+    /**
+     * <pre>
+     * Key of the Jira project to file tickets in, such as OPS
+     * </pre>
+     *
+     * <code>optional string project_key = 1;</code>
+     * @return Whether the projectKey field is set.
+     */
+    @java.lang.Override
+    public boolean hasProjectKey() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <pre>
+     * Key of the Jira project to file tickets in, such as OPS
+     * </pre>
+     *
+     * <code>optional string project_key = 1;</code>
+     * @return The projectKey.
+     */
+    @java.lang.Override
+    public java.lang.String getProjectKey() {
+      java.lang.Object ref = projectKey_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          projectKey_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Key of the Jira project to file tickets in, such as OPS
+     * </pre>
+     *
+     * <code>optional string project_key = 1;</code>
+     * @return The bytes for projectKey.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getProjectKeyBytes() {
+      java.lang.Object ref = projectKey_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        projectKey_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int ISSUE_TYPE_FIELD_NUMBER = 2;
+    private volatile java.lang.Object issueType_;
+    /**
+     * <pre>
+     * Name of the issue type to file tickets as, such as Bug
+     * </pre>
+     *
+     * <code>optional string issue_type = 2;</code>
+     * @return Whether the issueType field is set.
+     */
+    @java.lang.Override
+    public boolean hasIssueType() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <pre>
+     * Name of the issue type to file tickets as, such as Bug
+     * </pre>
+     *
+     * <code>optional string issue_type = 2;</code>
+     * @return The issueType.
+     */
+    @java.lang.Override
+    public java.lang.String getIssueType() {
+      java.lang.Object ref = issueType_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          issueType_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Name of the issue type to file tickets as, such as Bug
+     * </pre>
+     *
+     * <code>optional string issue_type = 2;</code>
+     * @return The bytes for issueType.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getIssueTypeBytes() {
+      java.lang.Object ref = issueType_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        issueType_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int USER_EMAIL_FIELD_NUMBER = 3;
+    private volatile java.lang.Object userEmail_;
+    /**
+     * <pre>
+     * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+     * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+     * </pre>
+     *
+     * <code>optional string user_email = 3;</code>
+     * @return Whether the userEmail field is set.
+     */
+    @java.lang.Override
+    public boolean hasUserEmail() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <pre>
+     * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+     * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+     * </pre>
+     *
+     * <code>optional string user_email = 3;</code>
+     * @return The userEmail.
+     */
+    @java.lang.Override
+    public java.lang.String getUserEmail() {
+      java.lang.Object ref = userEmail_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          userEmail_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+     * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+     * </pre>
+     *
+     * <code>optional string user_email = 3;</code>
+     * @return The bytes for userEmail.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getUserEmailBytes() {
+      java.lang.Object ref = userEmail_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        userEmail_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, projectKey_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, issueType_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, userEmail_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, projectKey_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, issueType_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, userEmail_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.mlflow.api.proto.Webhooks.JiraDestinationConfig)) {
+        return super.equals(obj);
+      }
+      org.mlflow.api.proto.Webhooks.JiraDestinationConfig other = (org.mlflow.api.proto.Webhooks.JiraDestinationConfig) obj;
+
+      if (hasProjectKey() != other.hasProjectKey()) return false;
+      if (hasProjectKey()) {
+        if (!getProjectKey()
+            .equals(other.getProjectKey())) return false;
+      }
+      if (hasIssueType() != other.hasIssueType()) return false;
+      if (hasIssueType()) {
+        if (!getIssueType()
+            .equals(other.getIssueType())) return false;
+      }
+      if (hasUserEmail() != other.hasUserEmail()) return false;
+      if (hasUserEmail()) {
+        if (!getUserEmail()
+            .equals(other.getUserEmail())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasProjectKey()) {
+        hash = (37 * hash) + PROJECT_KEY_FIELD_NUMBER;
+        hash = (53 * hash) + getProjectKey().hashCode();
+      }
+      if (hasIssueType()) {
+        hash = (37 * hash) + ISSUE_TYPE_FIELD_NUMBER;
+        hash = (53 * hash) + getIssueType().hashCode();
+      }
+      if (hasUserEmail()) {
+        hash = (37 * hash) + USER_EMAIL_FIELD_NUMBER;
+        hash = (53 * hash) + getUserEmail().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.mlflow.api.proto.Webhooks.JiraDestinationConfig prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Where a JIRA destination files its tickets. The webhook's url is the Jira site, such as
+     * https://example.atlassian.net, and its secret is the credential tickets are filed with.
+     * </pre>
+     *
+     * Protobuf type {@code mlflow.JiraDestinationConfig}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:mlflow.JiraDestinationConfig)
+        org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.mlflow.api.proto.Webhooks.internal_static_mlflow_JiraDestinationConfig_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.mlflow.api.proto.Webhooks.internal_static_mlflow_JiraDestinationConfig_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.mlflow.api.proto.Webhooks.JiraDestinationConfig.class, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder.class);
+      }
+
+      // Construct using org.mlflow.api.proto.Webhooks.JiraDestinationConfig.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        projectKey_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        issueType_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        userEmail_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.mlflow.api.proto.Webhooks.internal_static_mlflow_JiraDestinationConfig_descriptor;
+      }
+
+      @java.lang.Override
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfig getDefaultInstanceForType() {
+        return org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfig build() {
+        org.mlflow.api.proto.Webhooks.JiraDestinationConfig result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfig buildPartial() {
+        org.mlflow.api.proto.Webhooks.JiraDestinationConfig result = new org.mlflow.api.proto.Webhooks.JiraDestinationConfig(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.projectKey_ = projectKey_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.issueType_ = issueType_;
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.userEmail_ = userEmail_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.mlflow.api.proto.Webhooks.JiraDestinationConfig) {
+          return mergeFrom((org.mlflow.api.proto.Webhooks.JiraDestinationConfig)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.mlflow.api.proto.Webhooks.JiraDestinationConfig other) {
+        if (other == org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance()) return this;
+        if (other.hasProjectKey()) {
+          bitField0_ |= 0x00000001;
+          projectKey_ = other.projectKey_;
+          onChanged();
+        }
+        if (other.hasIssueType()) {
+          bitField0_ |= 0x00000002;
+          issueType_ = other.issueType_;
+          onChanged();
+        }
+        if (other.hasUserEmail()) {
+          bitField0_ |= 0x00000004;
+          userEmail_ = other.userEmail_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.mlflow.api.proto.Webhooks.JiraDestinationConfig parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.mlflow.api.proto.Webhooks.JiraDestinationConfig) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object projectKey_ = "";
+      /**
+       * <pre>
+       * Key of the Jira project to file tickets in, such as OPS
+       * </pre>
+       *
+       * <code>optional string project_key = 1;</code>
+       * @return Whether the projectKey field is set.
+       */
+      public boolean hasProjectKey() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <pre>
+       * Key of the Jira project to file tickets in, such as OPS
+       * </pre>
+       *
+       * <code>optional string project_key = 1;</code>
+       * @return The projectKey.
+       */
+      public java.lang.String getProjectKey() {
+        java.lang.Object ref = projectKey_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            projectKey_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Key of the Jira project to file tickets in, such as OPS
+       * </pre>
+       *
+       * <code>optional string project_key = 1;</code>
+       * @return The bytes for projectKey.
+       */
+      public com.google.protobuf.ByteString
+          getProjectKeyBytes() {
+        java.lang.Object ref = projectKey_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          projectKey_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Key of the Jira project to file tickets in, such as OPS
+       * </pre>
+       *
+       * <code>optional string project_key = 1;</code>
+       * @param value The projectKey to set.
+       * @return This builder for chaining.
+       */
+      public Builder setProjectKey(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        projectKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Key of the Jira project to file tickets in, such as OPS
+       * </pre>
+       *
+       * <code>optional string project_key = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearProjectKey() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        projectKey_ = getDefaultInstance().getProjectKey();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Key of the Jira project to file tickets in, such as OPS
+       * </pre>
+       *
+       * <code>optional string project_key = 1;</code>
+       * @param value The bytes for projectKey to set.
+       * @return This builder for chaining.
+       */
+      public Builder setProjectKeyBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        projectKey_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object issueType_ = "";
+      /**
+       * <pre>
+       * Name of the issue type to file tickets as, such as Bug
+       * </pre>
+       *
+       * <code>optional string issue_type = 2;</code>
+       * @return Whether the issueType field is set.
+       */
+      public boolean hasIssueType() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <pre>
+       * Name of the issue type to file tickets as, such as Bug
+       * </pre>
+       *
+       * <code>optional string issue_type = 2;</code>
+       * @return The issueType.
+       */
+      public java.lang.String getIssueType() {
+        java.lang.Object ref = issueType_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            issueType_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Name of the issue type to file tickets as, such as Bug
+       * </pre>
+       *
+       * <code>optional string issue_type = 2;</code>
+       * @return The bytes for issueType.
+       */
+      public com.google.protobuf.ByteString
+          getIssueTypeBytes() {
+        java.lang.Object ref = issueType_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          issueType_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Name of the issue type to file tickets as, such as Bug
+       * </pre>
+       *
+       * <code>optional string issue_type = 2;</code>
+       * @param value The issueType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setIssueType(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        issueType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Name of the issue type to file tickets as, such as Bug
+       * </pre>
+       *
+       * <code>optional string issue_type = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearIssueType() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        issueType_ = getDefaultInstance().getIssueType();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Name of the issue type to file tickets as, such as Bug
+       * </pre>
+       *
+       * <code>optional string issue_type = 2;</code>
+       * @param value The bytes for issueType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setIssueTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        issueType_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object userEmail_ = "";
+      /**
+       * <pre>
+       * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+       * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+       * </pre>
+       *
+       * <code>optional string user_email = 3;</code>
+       * @return Whether the userEmail field is set.
+       */
+      public boolean hasUserEmail() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <pre>
+       * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+       * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+       * </pre>
+       *
+       * <code>optional string user_email = 3;</code>
+       * @return The userEmail.
+       */
+      public java.lang.String getUserEmail() {
+        java.lang.Object ref = userEmail_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            userEmail_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+       * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+       * </pre>
+       *
+       * <code>optional string user_email = 3;</code>
+       * @return The bytes for userEmail.
+       */
+      public com.google.protobuf.ByteString
+          getUserEmailBytes() {
+        java.lang.Object ref = userEmail_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          userEmail_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+       * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+       * </pre>
+       *
+       * <code>optional string user_email = 3;</code>
+       * @param value The userEmail to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUserEmail(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        userEmail_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+       * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+       * </pre>
+       *
+       * <code>optional string user_email = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearUserEmail() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        userEmail_ = getDefaultInstance().getUserEmail();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+       * the secret as a bearer token, as a Jira Data Center personal access token is sent.
+       * </pre>
+       *
+       * <code>optional string user_email = 3;</code>
+       * @param value The bytes for userEmail to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUserEmailBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        userEmail_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:mlflow.JiraDestinationConfig)
+    }
+
+    // @@protoc_insertion_point(class_scope:mlflow.JiraDestinationConfig)
+    private static final org.mlflow.api.proto.Webhooks.JiraDestinationConfig DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.mlflow.api.proto.Webhooks.JiraDestinationConfig();
+    }
+
+    public static org.mlflow.api.proto.Webhooks.JiraDestinationConfig getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<JiraDestinationConfig>
+        PARSER = new com.google.protobuf.AbstractParser<JiraDestinationConfig>() {
+      @java.lang.Override
+      public JiraDestinationConfig parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new JiraDestinationConfig(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<JiraDestinationConfig> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<JiraDestinationConfig> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.mlflow.api.proto.Webhooks.JiraDestinationConfig getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
   }
 
   public interface WebhookEventOrBuilder extends
@@ -1771,6 +2924,33 @@ public final class Webhooks {
      * @return The destinationType.
      */
     org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType();
+
+    /**
+     * <pre>
+     * Where tickets are filed, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+     * @return Whether the jiraConfig field is set.
+     */
+    boolean hasJiraConfig();
+    /**
+     * <pre>
+     * Where tickets are filed, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+     * @return The jiraConfig.
+     */
+    org.mlflow.api.proto.Webhooks.JiraDestinationConfig getJiraConfig();
+    /**
+     * <pre>
+     * Where tickets are filed, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+     */
+    org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder getJiraConfigOrBuilder();
   }
   /**
    * <pre>
@@ -1904,6 +3084,19 @@ public final class Webhooks {
                 bitField0_ |= 0x00000080;
                 destinationType_ = rawValue;
               }
+              break;
+            }
+            case 90: {
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000100) != 0)) {
+                subBuilder = jiraConfig_.toBuilder();
+              }
+              jiraConfig_ = input.readMessage(org.mlflow.api.proto.Webhooks.JiraDestinationConfig.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(jiraConfig_);
+                jiraConfig_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000100;
               break;
             }
             default: {
@@ -2412,6 +3605,44 @@ public final class Webhooks {
       return result == null ? org.mlflow.api.proto.Webhooks.WebhookDestinationType.DESTINATION_TYPE_UNSPECIFIED : result;
     }
 
+    public static final int JIRA_CONFIG_FIELD_NUMBER = 11;
+    private org.mlflow.api.proto.Webhooks.JiraDestinationConfig jiraConfig_;
+    /**
+     * <pre>
+     * Where tickets are filed, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+     * @return Whether the jiraConfig field is set.
+     */
+    @java.lang.Override
+    public boolean hasJiraConfig() {
+      return ((bitField0_ & 0x00000100) != 0);
+    }
+    /**
+     * <pre>
+     * Where tickets are filed, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+     * @return The jiraConfig.
+     */
+    @java.lang.Override
+    public org.mlflow.api.proto.Webhooks.JiraDestinationConfig getJiraConfig() {
+      return jiraConfig_ == null ? org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+    }
+    /**
+     * <pre>
+     * Where tickets are filed, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+     */
+    @java.lang.Override
+    public org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder getJiraConfigOrBuilder() {
+      return jiraConfig_ == null ? org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2455,6 +3686,9 @@ public final class Webhooks {
       }
       if (((bitField0_ & 0x00000080) != 0)) {
         output.writeEnum(10, destinationType_);
+      }
+      if (((bitField0_ & 0x00000100) != 0)) {
+        output.writeMessage(11, getJiraConfig());
       }
       unknownFields.writeTo(output);
     }
@@ -2504,6 +3738,10 @@ public final class Webhooks {
       if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(10, destinationType_);
+      }
+      if (((bitField0_ & 0x00000100) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(11, getJiraConfig());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2562,6 +3800,11 @@ public final class Webhooks {
       if (hasDestinationType()) {
         if (destinationType_ != other.destinationType_) return false;
       }
+      if (hasJiraConfig() != other.hasJiraConfig()) return false;
+      if (hasJiraConfig()) {
+        if (!getJiraConfig()
+            .equals(other.getJiraConfig())) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2614,6 +3857,10 @@ public final class Webhooks {
       if (hasDestinationType()) {
         hash = (37 * hash) + DESTINATION_TYPE_FIELD_NUMBER;
         hash = (53 * hash) + destinationType_;
+      }
+      if (hasJiraConfig()) {
+        hash = (37 * hash) + JIRA_CONFIG_FIELD_NUMBER;
+        hash = (53 * hash) + getJiraConfig().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2748,6 +3995,7 @@ public final class Webhooks {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getEventsFieldBuilder();
+          getJiraConfigFieldBuilder();
         }
       }
       @java.lang.Override
@@ -2777,6 +4025,12 @@ public final class Webhooks {
         bitField0_ = (bitField0_ & ~0x00000100);
         destinationType_ = 0;
         bitField0_ = (bitField0_ & ~0x00000200);
+        if (jiraConfigBuilder_ == null) {
+          jiraConfig_ = null;
+        } else {
+          jiraConfigBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000400);
         return this;
       }
 
@@ -2851,6 +4105,14 @@ public final class Webhooks {
           to_bitField0_ |= 0x00000080;
         }
         result.destinationType_ = destinationType_;
+        if (((from_bitField0_ & 0x00000400) != 0)) {
+          if (jiraConfigBuilder_ == null) {
+            result.jiraConfig_ = jiraConfig_;
+          } else {
+            result.jiraConfig_ = jiraConfigBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000100;
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2967,6 +4229,9 @@ public final class Webhooks {
         }
         if (other.hasDestinationType()) {
           setDestinationType(other.getDestinationType());
+        }
+        if (other.hasJiraConfig()) {
+          mergeJiraConfig(other.getJiraConfig());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -4131,6 +5396,162 @@ public final class Webhooks {
         destinationType_ = 0;
         onChanged();
         return this;
+      }
+
+      private org.mlflow.api.proto.Webhooks.JiraDestinationConfig jiraConfig_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.mlflow.api.proto.Webhooks.JiraDestinationConfig, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder, org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder> jiraConfigBuilder_;
+      /**
+       * <pre>
+       * Where tickets are filed, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+       * @return Whether the jiraConfig field is set.
+       */
+      public boolean hasJiraConfig() {
+        return ((bitField0_ & 0x00000400) != 0);
+      }
+      /**
+       * <pre>
+       * Where tickets are filed, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+       * @return The jiraConfig.
+       */
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfig getJiraConfig() {
+        if (jiraConfigBuilder_ == null) {
+          return jiraConfig_ == null ? org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+        } else {
+          return jiraConfigBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Where tickets are filed, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+       */
+      public Builder setJiraConfig(org.mlflow.api.proto.Webhooks.JiraDestinationConfig value) {
+        if (jiraConfigBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          jiraConfig_ = value;
+          onChanged();
+        } else {
+          jiraConfigBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000400;
+        return this;
+      }
+      /**
+       * <pre>
+       * Where tickets are filed, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+       */
+      public Builder setJiraConfig(
+          org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder builderForValue) {
+        if (jiraConfigBuilder_ == null) {
+          jiraConfig_ = builderForValue.build();
+          onChanged();
+        } else {
+          jiraConfigBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000400;
+        return this;
+      }
+      /**
+       * <pre>
+       * Where tickets are filed, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+       */
+      public Builder mergeJiraConfig(org.mlflow.api.proto.Webhooks.JiraDestinationConfig value) {
+        if (jiraConfigBuilder_ == null) {
+          if (((bitField0_ & 0x00000400) != 0) &&
+              jiraConfig_ != null &&
+              jiraConfig_ != org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance()) {
+            jiraConfig_ =
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig.newBuilder(jiraConfig_).mergeFrom(value).buildPartial();
+          } else {
+            jiraConfig_ = value;
+          }
+          onChanged();
+        } else {
+          jiraConfigBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000400;
+        return this;
+      }
+      /**
+       * <pre>
+       * Where tickets are filed, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+       */
+      public Builder clearJiraConfig() {
+        if (jiraConfigBuilder_ == null) {
+          jiraConfig_ = null;
+          onChanged();
+        } else {
+          jiraConfigBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000400);
+        return this;
+      }
+      /**
+       * <pre>
+       * Where tickets are filed, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+       */
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder getJiraConfigBuilder() {
+        bitField0_ |= 0x00000400;
+        onChanged();
+        return getJiraConfigFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Where tickets are filed, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+       */
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder getJiraConfigOrBuilder() {
+        if (jiraConfigBuilder_ != null) {
+          return jiraConfigBuilder_.getMessageOrBuilder();
+        } else {
+          return jiraConfig_ == null ?
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+        }
+      }
+      /**
+       * <pre>
+       * Where tickets are filed, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 11;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.mlflow.api.proto.Webhooks.JiraDestinationConfig, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder, org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder> 
+          getJiraConfigFieldBuilder() {
+        if (jiraConfigBuilder_ == null) {
+          jiraConfigBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder, org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder>(
+                  getJiraConfig(),
+                  getParentForChildren(),
+                  isClean());
+          jiraConfig_ = null;
+        }
+        return jiraConfigBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -5590,6 +7011,33 @@ public final class Webhooks {
      * @return The destinationType.
      */
     org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType();
+
+    /**
+     * <pre>
+     * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+     * @return Whether the jiraConfig field is set.
+     */
+    boolean hasJiraConfig();
+    /**
+     * <pre>
+     * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+     * @return The jiraConfig.
+     */
+    org.mlflow.api.proto.Webhooks.JiraDestinationConfig getJiraConfig();
+    /**
+     * <pre>
+     * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+     */
+    org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder getJiraConfigOrBuilder();
   }
   /**
    * <pre>
@@ -5713,6 +7161,19 @@ public final class Webhooks {
                 bitField0_ |= 0x00000020;
                 destinationType_ = rawValue;
               }
+              break;
+            }
+            case 74: {
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000040) != 0)) {
+                subBuilder = jiraConfig_.toBuilder();
+              }
+              jiraConfig_ = input.readMessage(org.mlflow.api.proto.Webhooks.JiraDestinationConfig.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(jiraConfig_);
+                jiraConfig_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000040;
               break;
             }
             default: {
@@ -6799,6 +8260,44 @@ public final class Webhooks {
       return result == null ? org.mlflow.api.proto.Webhooks.WebhookDestinationType.DESTINATION_TYPE_UNSPECIFIED : result;
     }
 
+    public static final int JIRA_CONFIG_FIELD_NUMBER = 9;
+    private org.mlflow.api.proto.Webhooks.JiraDestinationConfig jiraConfig_;
+    /**
+     * <pre>
+     * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+     * @return Whether the jiraConfig field is set.
+     */
+    @java.lang.Override
+    public boolean hasJiraConfig() {
+      return ((bitField0_ & 0x00000040) != 0);
+    }
+    /**
+     * <pre>
+     * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+     * @return The jiraConfig.
+     */
+    @java.lang.Override
+    public org.mlflow.api.proto.Webhooks.JiraDestinationConfig getJiraConfig() {
+      return jiraConfig_ == null ? org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+    }
+    /**
+     * <pre>
+     * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+     */
+    @java.lang.Override
+    public org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder getJiraConfigOrBuilder() {
+      return jiraConfig_ == null ? org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -6836,6 +8335,9 @@ public final class Webhooks {
       }
       if (((bitField0_ & 0x00000020) != 0)) {
         output.writeEnum(8, destinationType_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        output.writeMessage(9, getJiraConfig());
       }
       unknownFields.writeTo(output);
     }
@@ -6877,6 +8379,10 @@ public final class Webhooks {
       if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(8, destinationType_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(9, getJiraConfig());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -6925,6 +8431,11 @@ public final class Webhooks {
       if (hasDestinationType()) {
         if (destinationType_ != other.destinationType_) return false;
       }
+      if (hasJiraConfig() != other.hasJiraConfig()) return false;
+      if (hasJiraConfig()) {
+        if (!getJiraConfig()
+            .equals(other.getJiraConfig())) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -6967,6 +8478,10 @@ public final class Webhooks {
       if (hasDestinationType()) {
         hash = (37 * hash) + DESTINATION_TYPE_FIELD_NUMBER;
         hash = (53 * hash) + destinationType_;
+      }
+      if (hasJiraConfig()) {
+        hash = (37 * hash) + JIRA_CONFIG_FIELD_NUMBER;
+        hash = (53 * hash) + getJiraConfig().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -7101,6 +8616,7 @@ public final class Webhooks {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getEventsFieldBuilder();
+          getJiraConfigFieldBuilder();
         }
       }
       @java.lang.Override
@@ -7126,6 +8642,12 @@ public final class Webhooks {
         bitField0_ = (bitField0_ & ~0x00000040);
         destinationType_ = 0;
         bitField0_ = (bitField0_ & ~0x00000080);
+        if (jiraConfigBuilder_ == null) {
+          jiraConfig_ = null;
+        } else {
+          jiraConfigBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -7192,6 +8714,14 @@ public final class Webhooks {
           to_bitField0_ |= 0x00000020;
         }
         result.destinationType_ = destinationType_;
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          if (jiraConfigBuilder_ == null) {
+            result.jiraConfig_ = jiraConfig_;
+          } else {
+            result.jiraConfig_ = jiraConfigBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000040;
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -7302,6 +8832,9 @@ public final class Webhooks {
         }
         if (other.hasDestinationType()) {
           setDestinationType(other.getDestinationType());
+        }
+        if (other.hasJiraConfig()) {
+          mergeJiraConfig(other.getJiraConfig());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -8356,6 +9889,162 @@ public final class Webhooks {
         destinationType_ = 0;
         onChanged();
         return this;
+      }
+
+      private org.mlflow.api.proto.Webhooks.JiraDestinationConfig jiraConfig_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.mlflow.api.proto.Webhooks.JiraDestinationConfig, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder, org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder> jiraConfigBuilder_;
+      /**
+       * <pre>
+       * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+       * @return Whether the jiraConfig field is set.
+       */
+      public boolean hasJiraConfig() {
+        return ((bitField0_ & 0x00000100) != 0);
+      }
+      /**
+       * <pre>
+       * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+       * @return The jiraConfig.
+       */
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfig getJiraConfig() {
+        if (jiraConfigBuilder_ == null) {
+          return jiraConfig_ == null ? org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+        } else {
+          return jiraConfigBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+       */
+      public Builder setJiraConfig(org.mlflow.api.proto.Webhooks.JiraDestinationConfig value) {
+        if (jiraConfigBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          jiraConfig_ = value;
+          onChanged();
+        } else {
+          jiraConfigBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <pre>
+       * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+       */
+      public Builder setJiraConfig(
+          org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder builderForValue) {
+        if (jiraConfigBuilder_ == null) {
+          jiraConfig_ = builderForValue.build();
+          onChanged();
+        } else {
+          jiraConfigBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <pre>
+       * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+       */
+      public Builder mergeJiraConfig(org.mlflow.api.proto.Webhooks.JiraDestinationConfig value) {
+        if (jiraConfigBuilder_ == null) {
+          if (((bitField0_ & 0x00000100) != 0) &&
+              jiraConfig_ != null &&
+              jiraConfig_ != org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance()) {
+            jiraConfig_ =
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig.newBuilder(jiraConfig_).mergeFrom(value).buildPartial();
+          } else {
+            jiraConfig_ = value;
+          }
+          onChanged();
+        } else {
+          jiraConfigBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <pre>
+       * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+       */
+      public Builder clearJiraConfig() {
+        if (jiraConfigBuilder_ == null) {
+          jiraConfig_ = null;
+          onChanged();
+        } else {
+          jiraConfigBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
+        return this;
+      }
+      /**
+       * <pre>
+       * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+       */
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder getJiraConfigBuilder() {
+        bitField0_ |= 0x00000100;
+        onChanged();
+        return getJiraConfigFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+       */
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder getJiraConfigOrBuilder() {
+        if (jiraConfigBuilder_ != null) {
+          return jiraConfigBuilder_.getMessageOrBuilder();
+        } else {
+          return jiraConfig_ == null ?
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+        }
+      }
+      /**
+       * <pre>
+       * Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 9;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.mlflow.api.proto.Webhooks.JiraDestinationConfig, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder, org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder> 
+          getJiraConfigFieldBuilder() {
+        if (jiraConfigBuilder_ == null) {
+          jiraConfigBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder, org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder>(
+                  getJiraConfig(),
+                  getParentForChildren(),
+                  isClean());
+          jiraConfig_ = null;
+        }
+        return jiraConfigBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -11915,6 +13604,33 @@ public final class Webhooks {
      * @return The destinationType.
      */
     org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType();
+
+    /**
+     * <pre>
+     * New ticket settings, replacing the current ones, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+     * @return Whether the jiraConfig field is set.
+     */
+    boolean hasJiraConfig();
+    /**
+     * <pre>
+     * New ticket settings, replacing the current ones, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+     * @return The jiraConfig.
+     */
+    org.mlflow.api.proto.Webhooks.JiraDestinationConfig getJiraConfig();
+    /**
+     * <pre>
+     * New ticket settings, replacing the current ones, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+     */
+    org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder getJiraConfigOrBuilder();
   }
   /**
    * <pre>
@@ -12045,6 +13761,19 @@ public final class Webhooks {
                 bitField0_ |= 0x00000040;
                 destinationType_ = rawValue;
               }
+              break;
+            }
+            case 82: {
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000080) != 0)) {
+                subBuilder = jiraConfig_.toBuilder();
+              }
+              jiraConfig_ = input.readMessage(org.mlflow.api.proto.Webhooks.JiraDestinationConfig.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(jiraConfig_);
+                jiraConfig_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000080;
               break;
             }
             default: {
@@ -13191,6 +14920,44 @@ public final class Webhooks {
       return result == null ? org.mlflow.api.proto.Webhooks.WebhookDestinationType.DESTINATION_TYPE_UNSPECIFIED : result;
     }
 
+    public static final int JIRA_CONFIG_FIELD_NUMBER = 10;
+    private org.mlflow.api.proto.Webhooks.JiraDestinationConfig jiraConfig_;
+    /**
+     * <pre>
+     * New ticket settings, replacing the current ones, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+     * @return Whether the jiraConfig field is set.
+     */
+    @java.lang.Override
+    public boolean hasJiraConfig() {
+      return ((bitField0_ & 0x00000080) != 0);
+    }
+    /**
+     * <pre>
+     * New ticket settings, replacing the current ones, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+     * @return The jiraConfig.
+     */
+    @java.lang.Override
+    public org.mlflow.api.proto.Webhooks.JiraDestinationConfig getJiraConfig() {
+      return jiraConfig_ == null ? org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+    }
+    /**
+     * <pre>
+     * New ticket settings, replacing the current ones, for a JIRA destination
+     * </pre>
+     *
+     * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+     */
+    @java.lang.Override
+    public org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder getJiraConfigOrBuilder() {
+      return jiraConfig_ == null ? org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -13231,6 +14998,9 @@ public final class Webhooks {
       }
       if (((bitField0_ & 0x00000040) != 0)) {
         output.writeEnum(9, destinationType_);
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        output.writeMessage(10, getJiraConfig());
       }
       unknownFields.writeTo(output);
     }
@@ -13275,6 +15045,10 @@ public final class Webhooks {
       if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(9, destinationType_);
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(10, getJiraConfig());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -13328,6 +15102,11 @@ public final class Webhooks {
       if (hasDestinationType()) {
         if (destinationType_ != other.destinationType_) return false;
       }
+      if (hasJiraConfig() != other.hasJiraConfig()) return false;
+      if (hasJiraConfig()) {
+        if (!getJiraConfig()
+            .equals(other.getJiraConfig())) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -13374,6 +15153,10 @@ public final class Webhooks {
       if (hasDestinationType()) {
         hash = (37 * hash) + DESTINATION_TYPE_FIELD_NUMBER;
         hash = (53 * hash) + destinationType_;
+      }
+      if (hasJiraConfig()) {
+        hash = (37 * hash) + JIRA_CONFIG_FIELD_NUMBER;
+        hash = (53 * hash) + getJiraConfig().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -13508,6 +15291,7 @@ public final class Webhooks {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getEventsFieldBuilder();
+          getJiraConfigFieldBuilder();
         }
       }
       @java.lang.Override
@@ -13535,6 +15319,12 @@ public final class Webhooks {
         bitField0_ = (bitField0_ & ~0x00000080);
         destinationType_ = 0;
         bitField0_ = (bitField0_ & ~0x00000100);
+        if (jiraConfigBuilder_ == null) {
+          jiraConfig_ = null;
+        } else {
+          jiraConfigBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -13605,6 +15395,14 @@ public final class Webhooks {
           to_bitField0_ |= 0x00000040;
         }
         result.destinationType_ = destinationType_;
+        if (((from_bitField0_ & 0x00000200) != 0)) {
+          if (jiraConfigBuilder_ == null) {
+            result.jiraConfig_ = jiraConfig_;
+          } else {
+            result.jiraConfig_ = jiraConfigBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000080;
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -13720,6 +15518,9 @@ public final class Webhooks {
         }
         if (other.hasDestinationType()) {
           setDestinationType(other.getDestinationType());
+        }
+        if (other.hasJiraConfig()) {
+          mergeJiraConfig(other.getJiraConfig());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -14882,6 +16683,162 @@ public final class Webhooks {
         destinationType_ = 0;
         onChanged();
         return this;
+      }
+
+      private org.mlflow.api.proto.Webhooks.JiraDestinationConfig jiraConfig_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.mlflow.api.proto.Webhooks.JiraDestinationConfig, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder, org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder> jiraConfigBuilder_;
+      /**
+       * <pre>
+       * New ticket settings, replacing the current ones, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+       * @return Whether the jiraConfig field is set.
+       */
+      public boolean hasJiraConfig() {
+        return ((bitField0_ & 0x00000200) != 0);
+      }
+      /**
+       * <pre>
+       * New ticket settings, replacing the current ones, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+       * @return The jiraConfig.
+       */
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfig getJiraConfig() {
+        if (jiraConfigBuilder_ == null) {
+          return jiraConfig_ == null ? org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+        } else {
+          return jiraConfigBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * New ticket settings, replacing the current ones, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+       */
+      public Builder setJiraConfig(org.mlflow.api.proto.Webhooks.JiraDestinationConfig value) {
+        if (jiraConfigBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          jiraConfig_ = value;
+          onChanged();
+        } else {
+          jiraConfigBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <pre>
+       * New ticket settings, replacing the current ones, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+       */
+      public Builder setJiraConfig(
+          org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder builderForValue) {
+        if (jiraConfigBuilder_ == null) {
+          jiraConfig_ = builderForValue.build();
+          onChanged();
+        } else {
+          jiraConfigBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <pre>
+       * New ticket settings, replacing the current ones, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+       */
+      public Builder mergeJiraConfig(org.mlflow.api.proto.Webhooks.JiraDestinationConfig value) {
+        if (jiraConfigBuilder_ == null) {
+          if (((bitField0_ & 0x00000200) != 0) &&
+              jiraConfig_ != null &&
+              jiraConfig_ != org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance()) {
+            jiraConfig_ =
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig.newBuilder(jiraConfig_).mergeFrom(value).buildPartial();
+          } else {
+            jiraConfig_ = value;
+          }
+          onChanged();
+        } else {
+          jiraConfigBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <pre>
+       * New ticket settings, replacing the current ones, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+       */
+      public Builder clearJiraConfig() {
+        if (jiraConfigBuilder_ == null) {
+          jiraConfig_ = null;
+          onChanged();
+        } else {
+          jiraConfigBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
+        return this;
+      }
+      /**
+       * <pre>
+       * New ticket settings, replacing the current ones, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+       */
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder getJiraConfigBuilder() {
+        bitField0_ |= 0x00000200;
+        onChanged();
+        return getJiraConfigFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * New ticket settings, replacing the current ones, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+       */
+      public org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder getJiraConfigOrBuilder() {
+        if (jiraConfigBuilder_ != null) {
+          return jiraConfigBuilder_.getMessageOrBuilder();
+        } else {
+          return jiraConfig_ == null ?
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig.getDefaultInstance() : jiraConfig_;
+        }
+      }
+      /**
+       * <pre>
+       * New ticket settings, replacing the current ones, for a JIRA destination
+       * </pre>
+       *
+       * <code>optional .mlflow.JiraDestinationConfig jira_config = 10;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.mlflow.api.proto.Webhooks.JiraDestinationConfig, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder, org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder> 
+          getJiraConfigFieldBuilder() {
+        if (jiraConfigBuilder_ == null) {
+          jiraConfigBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              org.mlflow.api.proto.Webhooks.JiraDestinationConfig, org.mlflow.api.proto.Webhooks.JiraDestinationConfig.Builder, org.mlflow.api.proto.Webhooks.JiraDestinationConfigOrBuilder>(
+                  getJiraConfig(),
+                  getParentForChildren(),
+                  isClean());
+          jiraConfig_ = null;
+        }
+        return jiraConfigBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -17602,6 +19559,11 @@ public final class Webhooks {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_mlflow_JiraDestinationConfig_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_mlflow_JiraDestinationConfig_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_mlflow_WebhookEvent_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -17686,87 +19648,93 @@ public final class Webhooks {
   static {
     java.lang.String[] descriptorData = {
       "\n\016webhooks.proto\022\006mlflow\032\020databricks.pro" +
-      "to\032\025scalapb/scalapb.proto\"h\n\014WebhookEven" +
-      "t\022+\n\006entity\030\001 \001(\0162\025.mlflow.WebhookEntity" +
-      "B\004\370\206\031\001\022+\n\006action\030\002 \001(\0162\025.mlflow.WebhookA" +
-      "ctionB\004\370\206\031\001\"\250\002\n\007Webhook\022\022\n\nwebhook_id\030\001 " +
-      "\001(\t\022\014\n\004name\030\002 \001(\t\022\023\n\013description\030\003 \001(\t\022\013" +
-      "\n\003url\030\004 \001(\t\022$\n\006events\030\005 \003(\0132\024.mlflow.Web" +
-      "hookEvent\022%\n\006status\030\006 \001(\0162\025.mlflow.Webho" +
-      "okStatus\022\032\n\022creation_timestamp\030\007 \001(\003\022\036\n\026" +
-      "last_updated_timestamp\030\010 \001(\003\022\026\n\016experime" +
-      "nt_ids\030\t \003(\t\0228\n\020destination_type\030\n \001(\0162\036" +
-      ".mlflow.WebhookDestinationType\"k\n\021Webhoo" +
-      "kTestResult\022\017\n\007success\030\001 \001(\010\022\027\n\017response" +
-      "_status\030\002 \001(\005\022\025\n\rresponse_body\030\003 \001(\t\022\025\n\r" +
-      "error_message\030\004 \001(\t\"\333\002\n\rCreateWebhook\022\022\n" +
-      "\004name\030\001 \001(\tB\004\370\206\031\001\022\023\n\013description\030\002 \001(\t\022\021" +
-      "\n\003url\030\003 \001(\tB\004\370\206\031\001\022*\n\006events\030\004 \003(\0132\024.mlfl" +
-      "ow.WebhookEventB\004\370\206\031\001\022\016\n\006secret\030\005 \001(\t\022%\n" +
-      "\006status\030\006 \001(\0162\025.mlflow.WebhookStatus\022\026\n\016" +
-      "experiment_ids\030\007 \003(\t\0228\n\020destination_type" +
-      "\030\010 \001(\0162\036.mlflow.WebhookDestinationType\032," +
-      "\n\010Response\022 \n\007webhook\030\001 \001(\0132\017.mlflow.Web" +
-      "hook:+\342?(\n&com.databricks.rpc.RPC[$this." +
-      "Response]\"\261\001\n\014ListWebhooks\022\030\n\013max_result" +
-      "s\030\001 \001(\005:\003100\022\022\n\npage_token\030\002 \001(\t\032F\n\010Resp" +
-      "onse\022!\n\010webhooks\030\001 \003(\0132\017.mlflow.Webhook\022" +
-      "\027\n\017next_page_token\030\002 \001(\t:+\342?(\n&com.datab" +
-      "ricks.rpc.RPC[$this.Response]\"\201\001\n\nGetWeb" +
-      "hook\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206\031\001\032,\n\010Respon" +
-      "se\022 \n\007webhook\030\001 \001(\0132\017.mlflow.Webhook:+\342?" +
-      "(\n&com.databricks.rpc.RPC[$this.Response" +
-      "]\"\343\002\n\rUpdateWebhook\022\030\n\nwebhook_id\030\001 \001(\tB" +
-      "\004\370\206\031\001\022\014\n\004name\030\002 \001(\t\022\023\n\013description\030\003 \001(\t" +
-      "\022\013\n\003url\030\004 \001(\t\022$\n\006events\030\005 \003(\0132\024.mlflow.W" +
-      "ebhookEvent\022\016\n\006secret\030\006 \001(\t\022%\n\006status\030\007 " +
-      "\001(\0162\025.mlflow.WebhookStatus\022\026\n\016experiment" +
-      "_ids\030\010 \003(\t\0228\n\020destination_type\030\t \001(\0162\036.m" +
-      "lflow.WebhookDestinationType\032,\n\010Response" +
+      "to\032\025scalapb/scalapb.proto\"T\n\025JiraDestina" +
+      "tionConfig\022\023\n\013project_key\030\001 \001(\t\022\022\n\nissue" +
+      "_type\030\002 \001(\t\022\022\n\nuser_email\030\003 \001(\t\"h\n\014Webho" +
+      "okEvent\022+\n\006entity\030\001 \001(\0162\025.mlflow.Webhook" +
+      "EntityB\004\370\206\031\001\022+\n\006action\030\002 \001(\0162\025.mlflow.We" +
+      "bhookActionB\004\370\206\031\001\"\334\002\n\007Webhook\022\022\n\nwebhook" +
+      "_id\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\022\023\n\013description\030\003" +
+      " \001(\t\022\013\n\003url\030\004 \001(\t\022$\n\006events\030\005 \003(\0132\024.mlfl" +
+      "ow.WebhookEvent\022%\n\006status\030\006 \001(\0162\025.mlflow" +
+      ".WebhookStatus\022\032\n\022creation_timestamp\030\007 \001" +
+      "(\003\022\036\n\026last_updated_timestamp\030\010 \001(\003\022\026\n\016ex" +
+      "periment_ids\030\t \003(\t\0228\n\020destination_type\030\n" +
+      " \001(\0162\036.mlflow.WebhookDestinationType\0222\n\013" +
+      "jira_config\030\013 \001(\0132\035.mlflow.JiraDestinati" +
+      "onConfig\"k\n\021WebhookTestResult\022\017\n\007success" +
+      "\030\001 \001(\010\022\027\n\017response_status\030\002 \001(\005\022\025\n\rrespo" +
+      "nse_body\030\003 \001(\t\022\025\n\rerror_message\030\004 \001(\t\"\217\003" +
+      "\n\rCreateWebhook\022\022\n\004name\030\001 \001(\tB\004\370\206\031\001\022\023\n\013d" +
+      "escription\030\002 \001(\t\022\021\n\003url\030\003 \001(\tB\004\370\206\031\001\022*\n\006e" +
+      "vents\030\004 \003(\0132\024.mlflow.WebhookEventB\004\370\206\031\001\022" +
+      "\016\n\006secret\030\005 \001(\t\022%\n\006status\030\006 \001(\0162\025.mlflow" +
+      ".WebhookStatus\022\026\n\016experiment_ids\030\007 \003(\t\0228" +
+      "\n\020destination_type\030\010 \001(\0162\036.mlflow.Webhoo" +
+      "kDestinationType\0222\n\013jira_config\030\t \001(\0132\035." +
+      "mlflow.JiraDestinationConfig\032,\n\010Response" +
       "\022 \n\007webhook\030\001 \001(\0132\017.mlflow.Webhook:+\342?(\n" +
       "&com.databricks.rpc.RPC[$this.Response]\"" +
-      "b\n\rDeleteWebhook\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206" +
-      "\031\001\032\n\n\010Response:+\342?(\n&com.databricks.rpc." +
-      "RPC[$this.Response]\"\260\001\n\013TestWebhook\022\030\n\nw" +
-      "ebhook_id\030\001 \001(\tB\004\370\206\031\001\022#\n\005event\030\002 \001(\0132\024.m" +
-      "lflow.WebhookEvent\0325\n\010Response\022)\n\006result" +
-      "\030\001 \001(\0132\031.mlflow.WebhookTestResult:+\342?(\n&" +
-      "com.databricks.rpc.RPC[$this.Response]*)" +
-      "\n\rWebhookStatus\022\n\n\006ACTIVE\020\001\022\014\n\010DISABLED\020" +
-      "\002*R\n\026WebhookDestinationType\022 \n\034DESTINATI" +
-      "ON_TYPE_UNSPECIFIED\020\000\022\013\n\007GENERIC\020\001\022\t\n\005SL" +
-      "ACK\020\002*\221\002\n\rWebhookEntity\022\026\n\022ENTITY_UNSPEC" +
-      "IFIED\020\000\022\024\n\020REGISTERED_MODEL\020\001\022\021\n\rMODEL_V" +
-      "ERSION\020\002\022\025\n\021MODEL_VERSION_TAG\020\003\022\027\n\023MODEL" +
-      "_VERSION_ALIAS\020\004\022\n\n\006PROMPT\020\005\022\022\n\016PROMPT_V" +
-      "ERSION\020\006\022\016\n\nPROMPT_TAG\020\007\022\026\n\022PROMPT_VERSI" +
-      "ON_TAG\020\010\022\020\n\014PROMPT_ALIAS\020\t\022\021\n\rBUDGET_POL" +
-      "ICY\020\n\022\t\n\005ISSUE\020\013\022\027\n\023ISSUE_DETECTION_RUN\020" +
-      "\014*t\n\rWebhookAction\022\026\n\022ACTION_UNSPECIFIED" +
-      "\020\000\022\013\n\007CREATED\020\001\022\013\n\007UPDATED\020\002\022\013\n\007DELETED\020" +
-      "\003\022\007\n\003SET\020\004\022\014\n\010EXCEEDED\020\005\022\r\n\tCOMPLETED\020\0062" +
-      "\265\006\n\016WebhookService\022~\n\rcreateWebhook\022\025.ml" +
-      "flow.CreateWebhook\032\036.mlflow.CreateWebhoo" +
-      "k.Response\"6\362\206\0312\n\036\n\004POST\022\020/mlflow/webhoo" +
-      "ks\032\004\010\002\020\000\020\001*\016Create Webhook\022y\n\014listWebhoo" +
-      "ks\022\024.mlflow.ListWebhooks\032\035.mlflow.ListWe" +
-      "bhooks.Response\"4\362\206\0310\n\035\n\003GET\022\020/mlflow/we" +
-      "bhooks\032\004\010\002\020\000\020\001*\rList Webhooks\022~\n\ngetWebh" +
-      "ook\022\022.mlflow.GetWebhook\032\033.mlflow.GetWebh" +
-      "ook.Response\"?\362\206\031;\n*\n\003GET\022\035/mlflow/webho" +
-      "oks/{webhook_id}\032\004\010\002\020\000\020\001*\013Get Webhook\022\214\001" +
-      "\n\rupdateWebhook\022\025.mlflow.UpdateWebhook\032\036" +
-      ".mlflow.UpdateWebhook.Response\"D\362\206\031@\n,\n\005" +
-      "PATCH\022\035/mlflow/webhooks/{webhook_id}\032\004\010\002" +
-      "\020\000\020\001*\016Update Webhook\022\215\001\n\rdeleteWebhook\022\025" +
-      ".mlflow.DeleteWebhook\032\036.mlflow.DeleteWeb" +
-      "hook.Response\"E\362\206\031A\n-\n\006DELETE\022\035/mlflow/w" +
-      "ebhooks/{webhook_id}\032\004\010\002\020\000\020\001*\016Delete Web" +
-      "hook\022\210\001\n\013testWebhook\022\023.mlflow.TestWebhoo" +
-      "k\032\034.mlflow.TestWebhook.Response\"F\362\206\031B\n0\n" +
-      "\004POST\022\"/mlflow/webhooks/{webhook_id}/tes" +
-      "t\032\004\010\002\020\000\020\001*\014Test WebhookB!\n\024org.mlflow.ap" +
-      "i.proto\220\001\001\240\001\001\342?\002\020\001"
+      "\261\001\n\014ListWebhooks\022\030\n\013max_results\030\001 \001(\005:\0031" +
+      "00\022\022\n\npage_token\030\002 \001(\t\032F\n\010Response\022!\n\010we" +
+      "bhooks\030\001 \003(\0132\017.mlflow.Webhook\022\027\n\017next_pa" +
+      "ge_token\030\002 \001(\t:+\342?(\n&com.databricks.rpc." +
+      "RPC[$this.Response]\"\201\001\n\nGetWebhook\022\030\n\nwe" +
+      "bhook_id\030\001 \001(\tB\004\370\206\031\001\032,\n\010Response\022 \n\007webh" +
+      "ook\030\001 \001(\0132\017.mlflow.Webhook:+\342?(\n&com.dat" +
+      "abricks.rpc.RPC[$this.Response]\"\227\003\n\rUpda" +
+      "teWebhook\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206\031\001\022\014\n\004n" +
+      "ame\030\002 \001(\t\022\023\n\013description\030\003 \001(\t\022\013\n\003url\030\004 " +
+      "\001(\t\022$\n\006events\030\005 \003(\0132\024.mlflow.WebhookEven" +
+      "t\022\016\n\006secret\030\006 \001(\t\022%\n\006status\030\007 \001(\0162\025.mlfl" +
+      "ow.WebhookStatus\022\026\n\016experiment_ids\030\010 \003(\t" +
+      "\0228\n\020destination_type\030\t \001(\0162\036.mlflow.Webh" +
+      "ookDestinationType\0222\n\013jira_config\030\n \001(\0132" +
+      "\035.mlflow.JiraDestinationConfig\032,\n\010Respon" +
+      "se\022 \n\007webhook\030\001 \001(\0132\017.mlflow.Webhook:+\342?" +
+      "(\n&com.databricks.rpc.RPC[$this.Response" +
+      "]\"b\n\rDeleteWebhook\022\030\n\nwebhook_id\030\001 \001(\tB\004" +
+      "\370\206\031\001\032\n\n\010Response:+\342?(\n&com.databricks.rp" +
+      "c.RPC[$this.Response]\"\260\001\n\013TestWebhook\022\030\n" +
+      "\nwebhook_id\030\001 \001(\tB\004\370\206\031\001\022#\n\005event\030\002 \001(\0132\024" +
+      ".mlflow.WebhookEvent\0325\n\010Response\022)\n\006resu" +
+      "lt\030\001 \001(\0132\031.mlflow.WebhookTestResult:+\342?(" +
+      "\n&com.databricks.rpc.RPC[$this.Response]" +
+      "*)\n\rWebhookStatus\022\n\n\006ACTIVE\020\001\022\014\n\010DISABLE" +
+      "D\020\002*\\\n\026WebhookDestinationType\022 \n\034DESTINA" +
+      "TION_TYPE_UNSPECIFIED\020\000\022\013\n\007GENERIC\020\001\022\t\n\005" +
+      "SLACK\020\002\022\010\n\004JIRA\020\003*\221\002\n\rWebhookEntity\022\026\n\022E" +
+      "NTITY_UNSPECIFIED\020\000\022\024\n\020REGISTERED_MODEL\020" +
+      "\001\022\021\n\rMODEL_VERSION\020\002\022\025\n\021MODEL_VERSION_TA" +
+      "G\020\003\022\027\n\023MODEL_VERSION_ALIAS\020\004\022\n\n\006PROMPT\020\005" +
+      "\022\022\n\016PROMPT_VERSION\020\006\022\016\n\nPROMPT_TAG\020\007\022\026\n\022" +
+      "PROMPT_VERSION_TAG\020\010\022\020\n\014PROMPT_ALIAS\020\t\022\021" +
+      "\n\rBUDGET_POLICY\020\n\022\t\n\005ISSUE\020\013\022\027\n\023ISSUE_DE" +
+      "TECTION_RUN\020\014*t\n\rWebhookAction\022\026\n\022ACTION" +
+      "_UNSPECIFIED\020\000\022\013\n\007CREATED\020\001\022\013\n\007UPDATED\020\002" +
+      "\022\013\n\007DELETED\020\003\022\007\n\003SET\020\004\022\014\n\010EXCEEDED\020\005\022\r\n\t" +
+      "COMPLETED\020\0062\265\006\n\016WebhookService\022~\n\rcreate" +
+      "Webhook\022\025.mlflow.CreateWebhook\032\036.mlflow." +
+      "CreateWebhook.Response\"6\362\206\0312\n\036\n\004POST\022\020/m" +
+      "lflow/webhooks\032\004\010\002\020\000\020\001*\016Create Webhook\022y" +
+      "\n\014listWebhooks\022\024.mlflow.ListWebhooks\032\035.m" +
+      "lflow.ListWebhooks.Response\"4\362\206\0310\n\035\n\003GET" +
+      "\022\020/mlflow/webhooks\032\004\010\002\020\000\020\001*\rList Webhook" +
+      "s\022~\n\ngetWebhook\022\022.mlflow.GetWebhook\032\033.ml" +
+      "flow.GetWebhook.Response\"?\362\206\031;\n*\n\003GET\022\035/" +
+      "mlflow/webhooks/{webhook_id}\032\004\010\002\020\000\020\001*\013Ge" +
+      "t Webhook\022\214\001\n\rupdateWebhook\022\025.mlflow.Upd" +
+      "ateWebhook\032\036.mlflow.UpdateWebhook.Respon" +
+      "se\"D\362\206\031@\n,\n\005PATCH\022\035/mlflow/webhooks/{web" +
+      "hook_id}\032\004\010\002\020\000\020\001*\016Update Webhook\022\215\001\n\rdel" +
+      "eteWebhook\022\025.mlflow.DeleteWebhook\032\036.mlfl" +
+      "ow.DeleteWebhook.Response\"E\362\206\031A\n-\n\006DELET" +
+      "E\022\035/mlflow/webhooks/{webhook_id}\032\004\010\002\020\000\020\001" +
+      "*\016Delete Webhook\022\210\001\n\013testWebhook\022\023.mlflo" +
+      "w.TestWebhook\032\034.mlflow.TestWebhook.Respo" +
+      "nse\"F\362\206\031B\n0\n\004POST\022\"/mlflow/webhooks/{web" +
+      "hook_id}/test\032\004\010\002\020\000\020\001*\014Test WebhookB!\n\024o" +
+      "rg.mlflow.api.proto\220\001\001\240\001\001\342?\002\020\001"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -17774,30 +19742,36 @@ public final class Webhooks {
           com.databricks.api.proto.databricks.Databricks.getDescriptor(),
           org.mlflow.scalapb_interface.Scalapb.getDescriptor(),
         });
-    internal_static_mlflow_WebhookEvent_descriptor =
+    internal_static_mlflow_JiraDestinationConfig_descriptor =
       getDescriptor().getMessageTypes().get(0);
+    internal_static_mlflow_JiraDestinationConfig_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_mlflow_JiraDestinationConfig_descriptor,
+        new java.lang.String[] { "ProjectKey", "IssueType", "UserEmail", });
+    internal_static_mlflow_WebhookEvent_descriptor =
+      getDescriptor().getMessageTypes().get(1);
     internal_static_mlflow_WebhookEvent_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_WebhookEvent_descriptor,
         new java.lang.String[] { "Entity", "Action", });
     internal_static_mlflow_Webhook_descriptor =
-      getDescriptor().getMessageTypes().get(1);
+      getDescriptor().getMessageTypes().get(2);
     internal_static_mlflow_Webhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_Webhook_descriptor,
-        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Status", "CreationTimestamp", "LastUpdatedTimestamp", "ExperimentIds", "DestinationType", });
+        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Status", "CreationTimestamp", "LastUpdatedTimestamp", "ExperimentIds", "DestinationType", "JiraConfig", });
     internal_static_mlflow_WebhookTestResult_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_mlflow_WebhookTestResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_WebhookTestResult_descriptor,
         new java.lang.String[] { "Success", "ResponseStatus", "ResponseBody", "ErrorMessage", });
     internal_static_mlflow_CreateWebhook_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_mlflow_CreateWebhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_CreateWebhook_descriptor,
-        new java.lang.String[] { "Name", "Description", "Url", "Events", "Secret", "Status", "ExperimentIds", "DestinationType", });
+        new java.lang.String[] { "Name", "Description", "Url", "Events", "Secret", "Status", "ExperimentIds", "DestinationType", "JiraConfig", });
     internal_static_mlflow_CreateWebhook_Response_descriptor =
       internal_static_mlflow_CreateWebhook_descriptor.getNestedTypes().get(0);
     internal_static_mlflow_CreateWebhook_Response_fieldAccessorTable = new
@@ -17805,7 +19779,7 @@ public final class Webhooks {
         internal_static_mlflow_CreateWebhook_Response_descriptor,
         new java.lang.String[] { "Webhook", });
     internal_static_mlflow_ListWebhooks_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_mlflow_ListWebhooks_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_ListWebhooks_descriptor,
@@ -17817,7 +19791,7 @@ public final class Webhooks {
         internal_static_mlflow_ListWebhooks_Response_descriptor,
         new java.lang.String[] { "Webhooks", "NextPageToken", });
     internal_static_mlflow_GetWebhook_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_mlflow_GetWebhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_GetWebhook_descriptor,
@@ -17829,11 +19803,11 @@ public final class Webhooks {
         internal_static_mlflow_GetWebhook_Response_descriptor,
         new java.lang.String[] { "Webhook", });
     internal_static_mlflow_UpdateWebhook_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_mlflow_UpdateWebhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_UpdateWebhook_descriptor,
-        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Secret", "Status", "ExperimentIds", "DestinationType", });
+        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Secret", "Status", "ExperimentIds", "DestinationType", "JiraConfig", });
     internal_static_mlflow_UpdateWebhook_Response_descriptor =
       internal_static_mlflow_UpdateWebhook_descriptor.getNestedTypes().get(0);
     internal_static_mlflow_UpdateWebhook_Response_fieldAccessorTable = new
@@ -17841,7 +19815,7 @@ public final class Webhooks {
         internal_static_mlflow_UpdateWebhook_Response_descriptor,
         new java.lang.String[] { "Webhook", });
     internal_static_mlflow_DeleteWebhook_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_mlflow_DeleteWebhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_DeleteWebhook_descriptor,
@@ -17853,7 +19827,7 @@ public final class Webhooks {
         internal_static_mlflow_DeleteWebhook_Response_descriptor,
         new java.lang.String[] { });
     internal_static_mlflow_TestWebhook_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_mlflow_TestWebhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_TestWebhook_descriptor,

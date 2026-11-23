@@ -1,6 +1,7 @@
 import pytest
 
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     Webhook,
     WebhookAction,
     WebhookDestinationType,
@@ -295,3 +296,33 @@ def test_an_unspecified_proto_destination_reads_as_generic():
     proto.ClearField("destination_type")
 
     assert Webhook.from_proto(proto).destination_type == WebhookDestinationType.GENERIC
+
+
+def test_jira_destination_config_round_trips_through_proto_and_json():
+    config = JiraDestinationConfig(project_key="OPS", issue_type="Bug", user_email="bot@x.com")
+    without_email = JiraDestinationConfig(project_key="OPS", issue_type="Task")
+
+    assert JiraDestinationConfig.from_proto(config.to_proto()) == config
+    assert JiraDestinationConfig.from_json(config.to_json()) == config
+    assert JiraDestinationConfig.from_proto(without_email.to_proto()) == without_email
+    assert JiraDestinationConfig.from_json(without_email.to_json()) == without_email
+
+
+def test_webhook_jira_config_round_trips_through_proto():
+    config = JiraDestinationConfig(project_key="OPS", issue_type="Bug")
+    webhook = Webhook(
+        webhook_id="wh-1",
+        name="jira",
+        url="https://example.atlassian.net",
+        events=[WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)],
+        creation_timestamp=0,
+        last_updated_timestamp=0,
+        destination_type="JIRA",
+        jira_config=config,
+    )
+
+    restored = Webhook.from_proto(webhook.to_proto())
+
+    assert restored.destination_type == WebhookDestinationType.JIRA
+    assert restored.jira_config == config
+    assert Webhook.from_proto(_issue_webhook(None).to_proto()).jira_config is None

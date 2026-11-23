@@ -315,6 +315,36 @@ MLflow then sends a Slack message for each event. New issues and detection runs 
 
 A Slack webhook carries no HMAC signature check, since Slack does not verify one, so treat its URL as a secret. In the UI, choose **Slack incoming webhook** under **Destination**.
 
+### Filing Jira Tickets for New Issues
+
+A webhook with `destination_type="JIRA"` files a Jira ticket for each new issue, through Jira's REST API. Give it your Jira site as the URL, the credential to file with as the secret, and the project and issue type in `jira_config`:
+
+```python
+from mlflow.entities import JiraDestinationConfig
+
+client.create_webhook(
+    name="checkout-agent-jira",
+    url="https://your-site.atlassian.net",
+    events=["issue.created"],
+    secret="<Jira API token>",
+    destination_type="JIRA",
+    jira_config=JiraDestinationConfig(
+        project_key="OPS",
+        issue_type="Bug",
+        # For Jira Cloud, the account the API token belongs to. Leave it out to send the secret
+        # as a bearer token, as a Jira Data Center personal access token is sent.
+        user_email="mlflow-bot@example.com",
+    ),
+    experiment_ids=["7"],
+)
+```
+
+Each ticket's summary is the issue's title, and its description gives the issue's ID, severity, categories, and detection run, with links back to MLflow when `MLFLOW_WEBHOOK_LINK_BASE_URL` is set. Like the `issue.created` payload, it leaves out the issue's description and root causes, which detection writes from trace content. Every ticket carries the `mlflow-issue` label, so a Jira filter or automation can find them.
+
+A Jira webhook subscribes to `issue.created` only. It files one ticket per issue: MLflow records the ticket's key in the issue's metadata, under `mlflow.webhook.jiraTicket.<webhook_id>`, and never files a second one for that issue, even if a delivery is retried. An issue that detection finds again is refreshed rather than filed, so it does not open another ticket either.
+
+Testing a Jira webhook checks that MLflow can reach the site, that the credential is accepted, and that it can see the project. It files nothing.
+
 ### Deleting a Webhook
 
 Use <APILink fn="mlflow.client.MlflowClient.delete_webhook" >`MlflowClient.delete_webhook()`</APILink> to remove a webhook:

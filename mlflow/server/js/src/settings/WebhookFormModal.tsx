@@ -15,6 +15,7 @@ import { WebhooksApi } from './webhooksApi';
 import type { Webhook, WebhookEvent } from './webhooksApi';
 import {
   DESTINATION_TYPES,
+  JIRA_EVENT_KEY,
   VALID_EVENTS,
   WEBHOOK_NAME_REGEX,
   destinationTypeLabels,
@@ -34,6 +35,9 @@ interface WebhookFormData {
   events: string[];
   experimentIds: string;
   destinationType: WebhookDestinationType;
+  jiraProjectKey: string;
+  jiraIssueType: string;
+  jiraUserEmail: string;
 }
 
 interface WebhookFormModalProps {
@@ -51,12 +55,12 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const displayedEvents = eventFilter ? VALID_EVENTS.filter((e) => e.entity === eventFilter) : VALID_EVENTS;
+  const filteredEvents = eventFilter ? VALID_EVENTS.filter((e) => e.entity === eventFilter) : VALID_EVENTS;
 
   // When filtered to a single event (e.g. budget page), pre-select it for new webhooks
   const defaultEvents =
-    !editingWebhook && eventFilter && displayedEvents.length === 1
-      ? displayedEvents.map((e) => eventKey(e.entity, e.action))
+    !editingWebhook && eventFilter && filteredEvents.length === 1
+      ? filteredEvents.map((e) => eventKey(e.entity, e.action))
       : (editingWebhook?.events.map((e) => eventKey(e.entity, e.action)) ?? []);
 
   const form = useForm<WebhookFormData>({
@@ -69,8 +73,17 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
       events: defaultEvents,
       experimentIds: editingWebhook?.experiment_ids?.join(', ') ?? '',
       destinationType: editingWebhook?.destination_type ?? 'GENERIC',
+      jiraProjectKey: editingWebhook?.jira_config?.project_key ?? '',
+      jiraIssueType: editingWebhook?.jira_config?.issue_type ?? 'Bug',
+      jiraUserEmail: editingWebhook?.jira_config?.user_email ?? '',
     },
   });
+
+  // A Jira webhook files one ticket per new issue, so it subscribes to that event alone.
+  const isJira = form.watch('destinationType') === 'JIRA';
+  const displayedEvents = isJira
+    ? filteredEvents.filter((e) => eventKey(e.entity, e.action) === JIRA_EVENT_KEY)
+    : filteredEvents;
 
   // Only a webhook whose events all happen in an experiment can be limited to experiments: any other
   // event carries no experiment to match, so the server rejects the combination.
@@ -103,6 +116,14 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
       // that cannot be limited, removes the limit instead of keeping it.
       experiment_ids: canLimitToExperiments ? parseExperimentIds(values.experimentIds) : [],
       destination_type: values.destinationType,
+      jira_config:
+        values.destinationType === 'JIRA'
+          ? {
+              project_key: values.jiraProjectKey.trim(),
+              issue_type: values.jiraIssueType.trim(),
+              user_email: values.jiraUserEmail.trim() || undefined,
+            }
+          : undefined,
     };
 
     try {
@@ -230,7 +251,13 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
                   id="mlflow.settings.webhooks.destination-type-select"
                   componentId="mlflow.settings.webhooks.destination-type-select"
                   value={field.value}
-                  onChange={({ target }) => field.onChange(target.value as WebhookDestinationType)}
+                  onChange={({ target }) => {
+                    const destinationType = target.value as WebhookDestinationType;
+                    field.onChange(destinationType);
+                    if (destinationType === 'JIRA') {
+                      form.setValue('events', [JIRA_EVENT_KEY]);
+                    }
+                  }}
                 >
                   {DESTINATION_TYPES.map((destinationType) => (
                     <SimpleSelectOption key={destinationType} value={destinationType}>
@@ -241,6 +268,84 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
               )}
             />
           </div>
+
+          {isJira && (
+            <div css={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+              <FormUI.Hint>
+                <FormattedMessage
+                  defaultMessage="Enter your Jira site as the URL, such as https://example.atlassian.net, and the API token or personal access token as the secret."
+                  description="Explains which webhook fields a Jira destination uses"
+                />
+              </FormUI.Hint>
+              <div>
+                <FormUI.Label htmlFor="mlflow.settings.webhooks.jira-project-input">
+                  <FormattedMessage defaultMessage="Jira project key" description="Jira project key field label" /> *
+                </FormUI.Label>
+                <RHFControlledComponents.Input
+                  name="jiraProjectKey"
+                  control={form.control}
+                  id="mlflow.settings.webhooks.jira-project-input"
+                  componentId="mlflow.settings.webhooks.jira-project-input"
+                  placeholder="OPS"
+                  rules={{
+                    validate: (value) =>
+                      !isJira ||
+                      String(value).trim().length > 0 ||
+                      intl.formatMessage({
+                        defaultMessage: 'Jira project key is required',
+                        description: 'Validation error for a missing Jira project key',
+                      }),
+                  }}
+                  validationState={form.formState.errors.jiraProjectKey ? 'error' : undefined}
+                />
+                {form.formState.errors.jiraProjectKey && (
+                  <FormUI.Message type="error" message={form.formState.errors.jiraProjectKey.message} />
+                )}
+              </div>
+              <div>
+                <FormUI.Label htmlFor="mlflow.settings.webhooks.jira-issue-type-input">
+                  <FormattedMessage defaultMessage="Jira issue type" description="Jira issue type field label" /> *
+                </FormUI.Label>
+                <RHFControlledComponents.Input
+                  name="jiraIssueType"
+                  control={form.control}
+                  id="mlflow.settings.webhooks.jira-issue-type-input"
+                  componentId="mlflow.settings.webhooks.jira-issue-type-input"
+                  placeholder="Bug"
+                  rules={{
+                    validate: (value) =>
+                      !isJira ||
+                      String(value).trim().length > 0 ||
+                      intl.formatMessage({
+                        defaultMessage: 'Jira issue type is required',
+                        description: 'Validation error for a missing Jira issue type',
+                      }),
+                  }}
+                  validationState={form.formState.errors.jiraIssueType ? 'error' : undefined}
+                />
+                {form.formState.errors.jiraIssueType && (
+                  <FormUI.Message type="error" message={form.formState.errors.jiraIssueType.message} />
+                )}
+              </div>
+              <div>
+                <FormUI.Label htmlFor="mlflow.settings.webhooks.jira-email-input">
+                  <FormattedMessage defaultMessage="Jira account email" description="Jira account email field label" />
+                </FormUI.Label>
+                <FormUI.Hint>
+                  <FormattedMessage
+                    defaultMessage="For Jira Cloud, the account the API token belongs to. Leave blank for a Jira Data Center personal access token."
+                    description="Jira account email field description"
+                  />
+                </FormUI.Hint>
+                <RHFControlledComponents.Input
+                  name="jiraUserEmail"
+                  control={form.control}
+                  id="mlflow.settings.webhooks.jira-email-input"
+                  componentId="mlflow.settings.webhooks.jira-email-input"
+                />
+              </div>
+            </div>
+          )}
 
           <div>
             <FormUI.Label htmlFor="mlflow.settings.webhooks.description-input">

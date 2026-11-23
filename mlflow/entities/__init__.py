@@ -109,7 +109,9 @@ from mlflow.entities.trace_location import (
 from mlflow.entities.trace_state import TraceState
 from mlflow.entities.view_type import ViewType
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     Webhook,
+    WebhookDestinationType,
     WebhookEvent,
     WebhookStatus,
     WebhookTestResult,
@@ -204,9 +206,11 @@ __all__ = [
     "GatewayModelLinkageType",
     "RoutingStrategy",
     "Webhook",
+    "WebhookDestinationType",
     "WebhookEvent",
     "WebhookStatus",
     "WebhookTestResult",
+    "JiraDestinationConfig",
     "TraceArchivalConfig",
     "Workspace",
     "WorkspaceDeletionMode",

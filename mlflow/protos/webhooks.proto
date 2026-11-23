@@ -126,6 +126,21 @@ enum WebhookDestinationType {
   DESTINATION_TYPE_UNSPECIFIED = 0; // Default/unknown destination, delivered as GENERIC
   GENERIC = 1; // Signed JSON envelope carrying the event's payload
   SLACK = 2; // Slack message, for a Slack incoming webhook URL
+  JIRA = 3; // Jira ticket for each new issue, filed through Jira's REST API
+}
+
+// Where a JIRA destination files its tickets. The webhook's url is the Jira site, such as
+// https://example.atlassian.net, and its secret is the credential tickets are filed with.
+message JiraDestinationConfig {
+  // Key of the Jira project to file tickets in, such as OPS
+  optional string project_key = 1;
+
+  // Name of the issue type to file tickets as, such as Bug
+  optional string issue_type = 2;
+
+  // Email of the Jira Cloud account whose API token is the webhook's secret. Leave unset to send
+  // the secret as a bearer token, as a Jira Data Center personal access token is sent.
+  optional string user_email = 3;
 }
 
 // Webhook entity types
@@ -198,6 +213,9 @@ message Webhook {
 
   // How the webhook's deliveries are formatted
   optional WebhookDestinationType destination_type = 10;
+
+  // Where tickets are filed, for a JIRA destination
+  optional JiraDestinationConfig jira_config = 11;
 }
 
 // Test webhook result
@@ -244,6 +262,9 @@ message CreateWebhook {
 
   // How deliveries are formatted (defaults to GENERIC if not specified)
   optional WebhookDestinationType destination_type = 8;
+
+  // Where tickets are filed. Required for a JIRA destination, which also requires a secret.
+  optional JiraDestinationConfig jira_config = 9;
 
   message Response {
     optional Webhook webhook = 1;
@@ -313,6 +334,9 @@ message UpdateWebhook {
 
   // New delivery format for the webhook
   optional WebhookDestinationType destination_type = 9;
+
+  // New ticket settings, replacing the current ones, for a JIRA destination
+  optional JiraDestinationConfig jira_config = 10;
 
   message Response {
     optional Webhook webhook = 1;

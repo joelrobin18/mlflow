@@ -5,6 +5,7 @@ import pytest
 from cryptography.fernet import Fernet
 
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     WebhookAction,
     WebhookDestinationType,
     WebhookEntity,
@@ -259,3 +260,23 @@ def test_webhook_destination_type_round_trips(store: RestStore):
         webhook.webhook_id, destination_type=WebhookDestinationType.GENERIC
     )
     assert updated.destination_type == WebhookDestinationType.GENERIC
+
+
+def test_jira_webhook_round_trips(store: RestStore):
+    config = JiraDestinationConfig(project_key="OPS", issue_type="Bug", user_email="bot@x.com")
+    webhook = store.create_webhook(
+        name="jira_webhook",
+        url="https://example.atlassian.net",
+        events=[WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)],
+        secret="api-token",
+        destination_type=WebhookDestinationType.JIRA,
+        jira_config=config,
+    )
+    assert webhook.jira_config == config
+    # The token is the webhook's secret, which no response carries.
+    assert webhook.secret is None
+
+    new_config = JiraDestinationConfig(project_key="SUP", issue_type="Task")
+    assert store.update_webhook(webhook.webhook_id, jira_config=new_config).jira_config == (
+        new_config
+    )

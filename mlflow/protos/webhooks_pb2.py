@@ -20,7 +20,7 @@ if Version(google.protobuf.__version__).major >= 5:
   from .scalapb import scalapb_pb2 as scalapb_dot_scalapb__pb2
 
 
-  DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0ewebhooks.proto\x12\x06mlflow\x1a\x10\x64\x61tabricks.proto\x1a\x15scalapb/scalapb.proto\"h\n\x0cWebhookEvent\x12+\n\x06\x65ntity\x18\x01 \x01(\x0e\x32\x15.mlflow.WebhookEntityB\x04\xf8\x86\x19\x01\x12+\n\x06\x61\x63tion\x18\x02 \x01(\x0e\x32\x15.mlflow.WebhookActionB\x04\xf8\x86\x19\x01\"\xa8\x02\n\x07Webhook\x12\x12\n\nwebhook_id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12$\n\x06\x65vents\x18\x05 \x03(\x0b\x32\x14.mlflow.WebhookEvent\x12%\n\x06status\x18\x06 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x1a\n\x12\x63reation_timestamp\x18\x07 \x01(\x03\x12\x1e\n\x16last_updated_timestamp\x18\x08 \x01(\x03\x12\x16\n\x0e\x65xperiment_ids\x18\t \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\n \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\"k\n\x11WebhookTestResult\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x17\n\x0fresponse_status\x18\x02 \x01(\x05\x12\x15\n\rresponse_body\x18\x03 \x01(\t\x12\x15\n\rerror_message\x18\x04 \x01(\t\"\xdb\x02\n\rCreateWebhook\x12\x12\n\x04name\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x11\n\x03url\x18\x03 \x01(\tB\x04\xf8\x86\x19\x01\x12*\n\x06\x65vents\x18\x04 \x03(\x0b\x32\x14.mlflow.WebhookEventB\x04\xf8\x86\x19\x01\x12\x0e\n\x06secret\x18\x05 \x01(\t\x12%\n\x06status\x18\x06 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x16\n\x0e\x65xperiment_ids\x18\x07 \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\x08 \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\xb1\x01\n\x0cListWebhooks\x12\x18\n\x0bmax_results\x18\x01 \x01(\x05:\x03\x31\x30\x30\x12\x12\n\npage_token\x18\x02 \x01(\t\x1a\x46\n\x08Response\x12!\n\x08webhooks\x18\x01 \x03(\x0b\x32\x0f.mlflow.Webhook\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\x81\x01\n\nGetWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\xe3\x02\n\rUpdateWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12$\n\x06\x65vents\x18\x05 \x03(\x0b\x32\x14.mlflow.WebhookEvent\x12\x0e\n\x06secret\x18\x06 \x01(\t\x12%\n\x06status\x18\x07 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x16\n\x0e\x65xperiment_ids\x18\x08 \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\t \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"b\n\rDeleteWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x1a\n\n\x08Response:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\xb0\x01\n\x0bTestWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12#\n\x05\x65vent\x18\x02 \x01(\x0b\x32\x14.mlflow.WebhookEvent\x1a\x35\n\x08Response\x12)\n\x06result\x18\x01 \x01(\x0b\x32\x19.mlflow.WebhookTestResult:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]*)\n\rWebhookStatus\x12\n\n\x06\x41\x43TIVE\x10\x01\x12\x0c\n\x08\x44ISABLED\x10\x02*R\n\x16WebhookDestinationType\x12 \n\x1c\x44\x45STINATION_TYPE_UNSPECIFIED\x10\x00\x12\x0b\n\x07GENERIC\x10\x01\x12\t\n\x05SLACK\x10\x02*\x91\x02\n\rWebhookEntity\x12\x16\n\x12\x45NTITY_UNSPECIFIED\x10\x00\x12\x14\n\x10REGISTERED_MODEL\x10\x01\x12\x11\n\rMODEL_VERSION\x10\x02\x12\x15\n\x11MODEL_VERSION_TAG\x10\x03\x12\x17\n\x13MODEL_VERSION_ALIAS\x10\x04\x12\n\n\x06PROMPT\x10\x05\x12\x12\n\x0ePROMPT_VERSION\x10\x06\x12\x0e\n\nPROMPT_TAG\x10\x07\x12\x16\n\x12PROMPT_VERSION_TAG\x10\x08\x12\x10\n\x0cPROMPT_ALIAS\x10\t\x12\x11\n\rBUDGET_POLICY\x10\n\x12\t\n\x05ISSUE\x10\x0b\x12\x17\n\x13ISSUE_DETECTION_RUN\x10\x0c*t\n\rWebhookAction\x12\x16\n\x12\x41\x43TION_UNSPECIFIED\x10\x00\x12\x0b\n\x07\x43REATED\x10\x01\x12\x0b\n\x07UPDATED\x10\x02\x12\x0b\n\x07\x44\x45LETED\x10\x03\x12\x07\n\x03SET\x10\x04\x12\x0c\n\x08\x45XCEEDED\x10\x05\x12\r\n\tCOMPLETED\x10\x06\x32\xb5\x06\n\x0eWebhookService\x12~\n\rcreateWebhook\x12\x15.mlflow.CreateWebhook\x1a\x1e.mlflow.CreateWebhook.Response\"6\xf2\x86\x19\x32\n\x1e\n\x04POST\x12\x10/mlflow/webhooks\x1a\x04\x08\x02\x10\x00\x10\x01*\x0e\x43reate Webhook\x12y\n\x0clistWebhooks\x12\x14.mlflow.ListWebhooks\x1a\x1d.mlflow.ListWebhooks.Response\"4\xf2\x86\x19\x30\n\x1d\n\x03GET\x12\x10/mlflow/webhooks\x1a\x04\x08\x02\x10\x00\x10\x01*\rList Webhooks\x12~\n\ngetWebhook\x12\x12.mlflow.GetWebhook\x1a\x1b.mlflow.GetWebhook.Response\"?\xf2\x86\x19;\n*\n\x03GET\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0bGet Webhook\x12\x8c\x01\n\rupdateWebhook\x12\x15.mlflow.UpdateWebhook\x1a\x1e.mlflow.UpdateWebhook.Response\"D\xf2\x86\x19@\n,\n\x05PATCH\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0eUpdate Webhook\x12\x8d\x01\n\rdeleteWebhook\x12\x15.mlflow.DeleteWebhook\x1a\x1e.mlflow.DeleteWebhook.Response\"E\xf2\x86\x19\x41\n-\n\x06\x44\x45LETE\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0e\x44\x65lete Webhook\x12\x88\x01\n\x0btestWebhook\x12\x13.mlflow.TestWebhook\x1a\x1c.mlflow.TestWebhook.Response\"F\xf2\x86\x19\x42\n0\n\x04POST\x12\"/mlflow/webhooks/{webhook_id}/test\x1a\x04\x08\x02\x10\x00\x10\x01*\x0cTest WebhookB!\n\x14org.mlflow.api.proto\x90\x01\x01\xa0\x01\x01\xe2?\x02\x10\x01')
+  DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0ewebhooks.proto\x12\x06mlflow\x1a\x10\x64\x61tabricks.proto\x1a\x15scalapb/scalapb.proto\"T\n\x15JiraDestinationConfig\x12\x13\n\x0bproject_key\x18\x01 \x01(\t\x12\x12\n\nissue_type\x18\x02 \x01(\t\x12\x12\n\nuser_email\x18\x03 \x01(\t\"h\n\x0cWebhookEvent\x12+\n\x06\x65ntity\x18\x01 \x01(\x0e\x32\x15.mlflow.WebhookEntityB\x04\xf8\x86\x19\x01\x12+\n\x06\x61\x63tion\x18\x02 \x01(\x0e\x32\x15.mlflow.WebhookActionB\x04\xf8\x86\x19\x01\"\xdc\x02\n\x07Webhook\x12\x12\n\nwebhook_id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12$\n\x06\x65vents\x18\x05 \x03(\x0b\x32\x14.mlflow.WebhookEvent\x12%\n\x06status\x18\x06 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x1a\n\x12\x63reation_timestamp\x18\x07 \x01(\x03\x12\x1e\n\x16last_updated_timestamp\x18\x08 \x01(\x03\x12\x16\n\x0e\x65xperiment_ids\x18\t \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\n \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\x12\x32\n\x0bjira_config\x18\x0b \x01(\x0b\x32\x1d.mlflow.JiraDestinationConfig\"k\n\x11WebhookTestResult\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x17\n\x0fresponse_status\x18\x02 \x01(\x05\x12\x15\n\rresponse_body\x18\x03 \x01(\t\x12\x15\n\rerror_message\x18\x04 \x01(\t\"\x8f\x03\n\rCreateWebhook\x12\x12\n\x04name\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x11\n\x03url\x18\x03 \x01(\tB\x04\xf8\x86\x19\x01\x12*\n\x06\x65vents\x18\x04 \x03(\x0b\x32\x14.mlflow.WebhookEventB\x04\xf8\x86\x19\x01\x12\x0e\n\x06secret\x18\x05 \x01(\t\x12%\n\x06status\x18\x06 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x16\n\x0e\x65xperiment_ids\x18\x07 \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\x08 \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\x12\x32\n\x0bjira_config\x18\t \x01(\x0b\x32\x1d.mlflow.JiraDestinationConfig\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\xb1\x01\n\x0cListWebhooks\x12\x18\n\x0bmax_results\x18\x01 \x01(\x05:\x03\x31\x30\x30\x12\x12\n\npage_token\x18\x02 \x01(\t\x1a\x46\n\x08Response\x12!\n\x08webhooks\x18\x01 \x03(\x0b\x32\x0f.mlflow.Webhook\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\x81\x01\n\nGetWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\x97\x03\n\rUpdateWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12$\n\x06\x65vents\x18\x05 \x03(\x0b\x32\x14.mlflow.WebhookEvent\x12\x0e\n\x06secret\x18\x06 \x01(\t\x12%\n\x06status\x18\x07 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x16\n\x0e\x65xperiment_ids\x18\x08 \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\t \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\x12\x32\n\x0bjira_config\x18\n \x01(\x0b\x32\x1d.mlflow.JiraDestinationConfig\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"b\n\rDeleteWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x1a\n\n\x08Response:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\xb0\x01\n\x0bTestWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12#\n\x05\x65vent\x18\x02 \x01(\x0b\x32\x14.mlflow.WebhookEvent\x1a\x35\n\x08Response\x12)\n\x06result\x18\x01 \x01(\x0b\x32\x19.mlflow.WebhookTestResult:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]*)\n\rWebhookStatus\x12\n\n\x06\x41\x43TIVE\x10\x01\x12\x0c\n\x08\x44ISABLED\x10\x02*\\\n\x16WebhookDestinationType\x12 \n\x1c\x44\x45STINATION_TYPE_UNSPECIFIED\x10\x00\x12\x0b\n\x07GENERIC\x10\x01\x12\t\n\x05SLACK\x10\x02\x12\x08\n\x04JIRA\x10\x03*\x91\x02\n\rWebhookEntity\x12\x16\n\x12\x45NTITY_UNSPECIFIED\x10\x00\x12\x14\n\x10REGISTERED_MODEL\x10\x01\x12\x11\n\rMODEL_VERSION\x10\x02\x12\x15\n\x11MODEL_VERSION_TAG\x10\x03\x12\x17\n\x13MODEL_VERSION_ALIAS\x10\x04\x12\n\n\x06PROMPT\x10\x05\x12\x12\n\x0ePROMPT_VERSION\x10\x06\x12\x0e\n\nPROMPT_TAG\x10\x07\x12\x16\n\x12PROMPT_VERSION_TAG\x10\x08\x12\x10\n\x0cPROMPT_ALIAS\x10\t\x12\x11\n\rBUDGET_POLICY\x10\n\x12\t\n\x05ISSUE\x10\x0b\x12\x17\n\x13ISSUE_DETECTION_RUN\x10\x0c*t\n\rWebhookAction\x12\x16\n\x12\x41\x43TION_UNSPECIFIED\x10\x00\x12\x0b\n\x07\x43REATED\x10\x01\x12\x0b\n\x07UPDATED\x10\x02\x12\x0b\n\x07\x44\x45LETED\x10\x03\x12\x07\n\x03SET\x10\x04\x12\x0c\n\x08\x45XCEEDED\x10\x05\x12\r\n\tCOMPLETED\x10\x06\x32\xb5\x06\n\x0eWebhookService\x12~\n\rcreateWebhook\x12\x15.mlflow.CreateWebhook\x1a\x1e.mlflow.CreateWebhook.Response\"6\xf2\x86\x19\x32\n\x1e\n\x04POST\x12\x10/mlflow/webhooks\x1a\x04\x08\x02\x10\x00\x10\x01*\x0e\x43reate Webhook\x12y\n\x0clistWebhooks\x12\x14.mlflow.ListWebhooks\x1a\x1d.mlflow.ListWebhooks.Response\"4\xf2\x86\x19\x30\n\x1d\n\x03GET\x12\x10/mlflow/webhooks\x1a\x04\x08\x02\x10\x00\x10\x01*\rList Webhooks\x12~\n\ngetWebhook\x12\x12.mlflow.GetWebhook\x1a\x1b.mlflow.GetWebhook.Response\"?\xf2\x86\x19;\n*\n\x03GET\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0bGet Webhook\x12\x8c\x01\n\rupdateWebhook\x12\x15.mlflow.UpdateWebhook\x1a\x1e.mlflow.UpdateWebhook.Response\"D\xf2\x86\x19@\n,\n\x05PATCH\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0eUpdate Webhook\x12\x8d\x01\n\rdeleteWebhook\x12\x15.mlflow.DeleteWebhook\x1a\x1e.mlflow.DeleteWebhook.Response\"E\xf2\x86\x19\x41\n-\n\x06\x44\x45LETE\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0e\x44\x65lete Webhook\x12\x88\x01\n\x0btestWebhook\x12\x13.mlflow.TestWebhook\x1a\x1c.mlflow.TestWebhook.Response\"F\xf2\x86\x19\x42\n0\n\x04POST\x12\"/mlflow/webhooks/{webhook_id}/test\x1a\x04\x08\x02\x10\x00\x10\x01*\x0cTest WebhookB!\n\x14org.mlflow.api.proto\x90\x01\x01\xa0\x01\x01\xe2?\x02\x10\x01')
 
   _globals = globals()
   _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -70,46 +70,48 @@ if Version(google.protobuf.__version__).major >= 5:
     _globals['_WEBHOOKSERVICE'].methods_by_name['deleteWebhook']._serialized_options = b'\362\206\031A\n-\n\006DELETE\022\035/mlflow/webhooks/{webhook_id}\032\004\010\002\020\000\020\001*\016Delete Webhook'
     _globals['_WEBHOOKSERVICE'].methods_by_name['testWebhook']._loaded_options = None
     _globals['_WEBHOOKSERVICE'].methods_by_name['testWebhook']._serialized_options = b'\362\206\031B\n0\n\004POST\022\"/mlflow/webhooks/{webhook_id}/test\032\004\010\002\020\000\020\001*\014Test Webhook'
-    _globals['_WEBHOOKSTATUS']._serialized_start=1880
-    _globals['_WEBHOOKSTATUS']._serialized_end=1921
-    _globals['_WEBHOOKDESTINATIONTYPE']._serialized_start=1923
-    _globals['_WEBHOOKDESTINATIONTYPE']._serialized_end=2005
-    _globals['_WEBHOOKENTITY']._serialized_start=2008
-    _globals['_WEBHOOKENTITY']._serialized_end=2281
-    _globals['_WEBHOOKACTION']._serialized_start=2283
-    _globals['_WEBHOOKACTION']._serialized_end=2399
-    _globals['_WEBHOOKEVENT']._serialized_start=67
-    _globals['_WEBHOOKEVENT']._serialized_end=171
-    _globals['_WEBHOOK']._serialized_start=174
-    _globals['_WEBHOOK']._serialized_end=470
-    _globals['_WEBHOOKTESTRESULT']._serialized_start=472
-    _globals['_WEBHOOKTESTRESULT']._serialized_end=579
-    _globals['_CREATEWEBHOOK']._serialized_start=582
-    _globals['_CREATEWEBHOOK']._serialized_end=929
-    _globals['_CREATEWEBHOOK_RESPONSE']._serialized_start=840
-    _globals['_CREATEWEBHOOK_RESPONSE']._serialized_end=884
-    _globals['_LISTWEBHOOKS']._serialized_start=932
-    _globals['_LISTWEBHOOKS']._serialized_end=1109
-    _globals['_LISTWEBHOOKS_RESPONSE']._serialized_start=994
-    _globals['_LISTWEBHOOKS_RESPONSE']._serialized_end=1064
-    _globals['_GETWEBHOOK']._serialized_start=1112
-    _globals['_GETWEBHOOK']._serialized_end=1241
-    _globals['_GETWEBHOOK_RESPONSE']._serialized_start=840
-    _globals['_GETWEBHOOK_RESPONSE']._serialized_end=884
-    _globals['_UPDATEWEBHOOK']._serialized_start=1244
-    _globals['_UPDATEWEBHOOK']._serialized_end=1599
-    _globals['_UPDATEWEBHOOK_RESPONSE']._serialized_start=840
-    _globals['_UPDATEWEBHOOK_RESPONSE']._serialized_end=884
-    _globals['_DELETEWEBHOOK']._serialized_start=1601
-    _globals['_DELETEWEBHOOK']._serialized_end=1699
-    _globals['_DELETEWEBHOOK_RESPONSE']._serialized_start=840
-    _globals['_DELETEWEBHOOK_RESPONSE']._serialized_end=850
-    _globals['_TESTWEBHOOK']._serialized_start=1702
-    _globals['_TESTWEBHOOK']._serialized_end=1878
-    _globals['_TESTWEBHOOK_RESPONSE']._serialized_start=1780
-    _globals['_TESTWEBHOOK_RESPONSE']._serialized_end=1833
-    _globals['_WEBHOOKSERVICE']._serialized_start=2402
-    _globals['_WEBHOOKSERVICE']._serialized_end=3223
+    _globals['_WEBHOOKSTATUS']._serialized_start=2122
+    _globals['_WEBHOOKSTATUS']._serialized_end=2163
+    _globals['_WEBHOOKDESTINATIONTYPE']._serialized_start=2165
+    _globals['_WEBHOOKDESTINATIONTYPE']._serialized_end=2257
+    _globals['_WEBHOOKENTITY']._serialized_start=2260
+    _globals['_WEBHOOKENTITY']._serialized_end=2533
+    _globals['_WEBHOOKACTION']._serialized_start=2535
+    _globals['_WEBHOOKACTION']._serialized_end=2651
+    _globals['_JIRADESTINATIONCONFIG']._serialized_start=67
+    _globals['_JIRADESTINATIONCONFIG']._serialized_end=151
+    _globals['_WEBHOOKEVENT']._serialized_start=153
+    _globals['_WEBHOOKEVENT']._serialized_end=257
+    _globals['_WEBHOOK']._serialized_start=260
+    _globals['_WEBHOOK']._serialized_end=608
+    _globals['_WEBHOOKTESTRESULT']._serialized_start=610
+    _globals['_WEBHOOKTESTRESULT']._serialized_end=717
+    _globals['_CREATEWEBHOOK']._serialized_start=720
+    _globals['_CREATEWEBHOOK']._serialized_end=1119
+    _globals['_CREATEWEBHOOK_RESPONSE']._serialized_start=1030
+    _globals['_CREATEWEBHOOK_RESPONSE']._serialized_end=1074
+    _globals['_LISTWEBHOOKS']._serialized_start=1122
+    _globals['_LISTWEBHOOKS']._serialized_end=1299
+    _globals['_LISTWEBHOOKS_RESPONSE']._serialized_start=1184
+    _globals['_LISTWEBHOOKS_RESPONSE']._serialized_end=1254
+    _globals['_GETWEBHOOK']._serialized_start=1302
+    _globals['_GETWEBHOOK']._serialized_end=1431
+    _globals['_GETWEBHOOK_RESPONSE']._serialized_start=1030
+    _globals['_GETWEBHOOK_RESPONSE']._serialized_end=1074
+    _globals['_UPDATEWEBHOOK']._serialized_start=1434
+    _globals['_UPDATEWEBHOOK']._serialized_end=1841
+    _globals['_UPDATEWEBHOOK_RESPONSE']._serialized_start=1030
+    _globals['_UPDATEWEBHOOK_RESPONSE']._serialized_end=1074
+    _globals['_DELETEWEBHOOK']._serialized_start=1843
+    _globals['_DELETEWEBHOOK']._serialized_end=1941
+    _globals['_DELETEWEBHOOK_RESPONSE']._serialized_start=1030
+    _globals['_DELETEWEBHOOK_RESPONSE']._serialized_end=1040
+    _globals['_TESTWEBHOOK']._serialized_start=1944
+    _globals['_TESTWEBHOOK']._serialized_end=2120
+    _globals['_TESTWEBHOOK_RESPONSE']._serialized_start=2022
+    _globals['_TESTWEBHOOK_RESPONSE']._serialized_end=2075
+    _globals['_WEBHOOKSERVICE']._serialized_start=2654
+    _globals['_WEBHOOKSERVICE']._serialized_end=3475
   _builder.BuildServices(DESCRIPTOR, 'webhooks_pb2', _globals)
   # @@protoc_insertion_point(module_scope)
 
@@ -135,7 +137,7 @@ else:
   from .scalapb import scalapb_pb2 as scalapb_dot_scalapb__pb2
 
 
-  DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0ewebhooks.proto\x12\x06mlflow\x1a\x10\x64\x61tabricks.proto\x1a\x15scalapb/scalapb.proto\"h\n\x0cWebhookEvent\x12+\n\x06\x65ntity\x18\x01 \x01(\x0e\x32\x15.mlflow.WebhookEntityB\x04\xf8\x86\x19\x01\x12+\n\x06\x61\x63tion\x18\x02 \x01(\x0e\x32\x15.mlflow.WebhookActionB\x04\xf8\x86\x19\x01\"\xa8\x02\n\x07Webhook\x12\x12\n\nwebhook_id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12$\n\x06\x65vents\x18\x05 \x03(\x0b\x32\x14.mlflow.WebhookEvent\x12%\n\x06status\x18\x06 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x1a\n\x12\x63reation_timestamp\x18\x07 \x01(\x03\x12\x1e\n\x16last_updated_timestamp\x18\x08 \x01(\x03\x12\x16\n\x0e\x65xperiment_ids\x18\t \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\n \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\"k\n\x11WebhookTestResult\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x17\n\x0fresponse_status\x18\x02 \x01(\x05\x12\x15\n\rresponse_body\x18\x03 \x01(\t\x12\x15\n\rerror_message\x18\x04 \x01(\t\"\xdb\x02\n\rCreateWebhook\x12\x12\n\x04name\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x11\n\x03url\x18\x03 \x01(\tB\x04\xf8\x86\x19\x01\x12*\n\x06\x65vents\x18\x04 \x03(\x0b\x32\x14.mlflow.WebhookEventB\x04\xf8\x86\x19\x01\x12\x0e\n\x06secret\x18\x05 \x01(\t\x12%\n\x06status\x18\x06 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x16\n\x0e\x65xperiment_ids\x18\x07 \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\x08 \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\xb1\x01\n\x0cListWebhooks\x12\x18\n\x0bmax_results\x18\x01 \x01(\x05:\x03\x31\x30\x30\x12\x12\n\npage_token\x18\x02 \x01(\t\x1a\x46\n\x08Response\x12!\n\x08webhooks\x18\x01 \x03(\x0b\x32\x0f.mlflow.Webhook\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\x81\x01\n\nGetWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\xe3\x02\n\rUpdateWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12$\n\x06\x65vents\x18\x05 \x03(\x0b\x32\x14.mlflow.WebhookEvent\x12\x0e\n\x06secret\x18\x06 \x01(\t\x12%\n\x06status\x18\x07 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x16\n\x0e\x65xperiment_ids\x18\x08 \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\t \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"b\n\rDeleteWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x1a\n\n\x08Response:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\xb0\x01\n\x0bTestWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12#\n\x05\x65vent\x18\x02 \x01(\x0b\x32\x14.mlflow.WebhookEvent\x1a\x35\n\x08Response\x12)\n\x06result\x18\x01 \x01(\x0b\x32\x19.mlflow.WebhookTestResult:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]*)\n\rWebhookStatus\x12\n\n\x06\x41\x43TIVE\x10\x01\x12\x0c\n\x08\x44ISABLED\x10\x02*R\n\x16WebhookDestinationType\x12 \n\x1c\x44\x45STINATION_TYPE_UNSPECIFIED\x10\x00\x12\x0b\n\x07GENERIC\x10\x01\x12\t\n\x05SLACK\x10\x02*\x91\x02\n\rWebhookEntity\x12\x16\n\x12\x45NTITY_UNSPECIFIED\x10\x00\x12\x14\n\x10REGISTERED_MODEL\x10\x01\x12\x11\n\rMODEL_VERSION\x10\x02\x12\x15\n\x11MODEL_VERSION_TAG\x10\x03\x12\x17\n\x13MODEL_VERSION_ALIAS\x10\x04\x12\n\n\x06PROMPT\x10\x05\x12\x12\n\x0ePROMPT_VERSION\x10\x06\x12\x0e\n\nPROMPT_TAG\x10\x07\x12\x16\n\x12PROMPT_VERSION_TAG\x10\x08\x12\x10\n\x0cPROMPT_ALIAS\x10\t\x12\x11\n\rBUDGET_POLICY\x10\n\x12\t\n\x05ISSUE\x10\x0b\x12\x17\n\x13ISSUE_DETECTION_RUN\x10\x0c*t\n\rWebhookAction\x12\x16\n\x12\x41\x43TION_UNSPECIFIED\x10\x00\x12\x0b\n\x07\x43REATED\x10\x01\x12\x0b\n\x07UPDATED\x10\x02\x12\x0b\n\x07\x44\x45LETED\x10\x03\x12\x07\n\x03SET\x10\x04\x12\x0c\n\x08\x45XCEEDED\x10\x05\x12\r\n\tCOMPLETED\x10\x06\x32\xb5\x06\n\x0eWebhookService\x12~\n\rcreateWebhook\x12\x15.mlflow.CreateWebhook\x1a\x1e.mlflow.CreateWebhook.Response\"6\xf2\x86\x19\x32\n\x1e\n\x04POST\x12\x10/mlflow/webhooks\x1a\x04\x08\x02\x10\x00\x10\x01*\x0e\x43reate Webhook\x12y\n\x0clistWebhooks\x12\x14.mlflow.ListWebhooks\x1a\x1d.mlflow.ListWebhooks.Response\"4\xf2\x86\x19\x30\n\x1d\n\x03GET\x12\x10/mlflow/webhooks\x1a\x04\x08\x02\x10\x00\x10\x01*\rList Webhooks\x12~\n\ngetWebhook\x12\x12.mlflow.GetWebhook\x1a\x1b.mlflow.GetWebhook.Response\"?\xf2\x86\x19;\n*\n\x03GET\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0bGet Webhook\x12\x8c\x01\n\rupdateWebhook\x12\x15.mlflow.UpdateWebhook\x1a\x1e.mlflow.UpdateWebhook.Response\"D\xf2\x86\x19@\n,\n\x05PATCH\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0eUpdate Webhook\x12\x8d\x01\n\rdeleteWebhook\x12\x15.mlflow.DeleteWebhook\x1a\x1e.mlflow.DeleteWebhook.Response\"E\xf2\x86\x19\x41\n-\n\x06\x44\x45LETE\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0e\x44\x65lete Webhook\x12\x88\x01\n\x0btestWebhook\x12\x13.mlflow.TestWebhook\x1a\x1c.mlflow.TestWebhook.Response\"F\xf2\x86\x19\x42\n0\n\x04POST\x12\"/mlflow/webhooks/{webhook_id}/test\x1a\x04\x08\x02\x10\x00\x10\x01*\x0cTest WebhookB!\n\x14org.mlflow.api.proto\x90\x01\x01\xa0\x01\x01\xe2?\x02\x10\x01')
+  DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0ewebhooks.proto\x12\x06mlflow\x1a\x10\x64\x61tabricks.proto\x1a\x15scalapb/scalapb.proto\"T\n\x15JiraDestinationConfig\x12\x13\n\x0bproject_key\x18\x01 \x01(\t\x12\x12\n\nissue_type\x18\x02 \x01(\t\x12\x12\n\nuser_email\x18\x03 \x01(\t\"h\n\x0cWebhookEvent\x12+\n\x06\x65ntity\x18\x01 \x01(\x0e\x32\x15.mlflow.WebhookEntityB\x04\xf8\x86\x19\x01\x12+\n\x06\x61\x63tion\x18\x02 \x01(\x0e\x32\x15.mlflow.WebhookActionB\x04\xf8\x86\x19\x01\"\xdc\x02\n\x07Webhook\x12\x12\n\nwebhook_id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12$\n\x06\x65vents\x18\x05 \x03(\x0b\x32\x14.mlflow.WebhookEvent\x12%\n\x06status\x18\x06 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x1a\n\x12\x63reation_timestamp\x18\x07 \x01(\x03\x12\x1e\n\x16last_updated_timestamp\x18\x08 \x01(\x03\x12\x16\n\x0e\x65xperiment_ids\x18\t \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\n \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\x12\x32\n\x0bjira_config\x18\x0b \x01(\x0b\x32\x1d.mlflow.JiraDestinationConfig\"k\n\x11WebhookTestResult\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x17\n\x0fresponse_status\x18\x02 \x01(\x05\x12\x15\n\rresponse_body\x18\x03 \x01(\t\x12\x15\n\rerror_message\x18\x04 \x01(\t\"\x8f\x03\n\rCreateWebhook\x12\x12\n\x04name\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x11\n\x03url\x18\x03 \x01(\tB\x04\xf8\x86\x19\x01\x12*\n\x06\x65vents\x18\x04 \x03(\x0b\x32\x14.mlflow.WebhookEventB\x04\xf8\x86\x19\x01\x12\x0e\n\x06secret\x18\x05 \x01(\t\x12%\n\x06status\x18\x06 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x16\n\x0e\x65xperiment_ids\x18\x07 \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\x08 \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\x12\x32\n\x0bjira_config\x18\t \x01(\x0b\x32\x1d.mlflow.JiraDestinationConfig\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\xb1\x01\n\x0cListWebhooks\x12\x18\n\x0bmax_results\x18\x01 \x01(\x05:\x03\x31\x30\x30\x12\x12\n\npage_token\x18\x02 \x01(\t\x1a\x46\n\x08Response\x12!\n\x08webhooks\x18\x01 \x03(\x0b\x32\x0f.mlflow.Webhook\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\x81\x01\n\nGetWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\x97\x03\n\rUpdateWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12$\n\x06\x65vents\x18\x05 \x03(\x0b\x32\x14.mlflow.WebhookEvent\x12\x0e\n\x06secret\x18\x06 \x01(\t\x12%\n\x06status\x18\x07 \x01(\x0e\x32\x15.mlflow.WebhookStatus\x12\x16\n\x0e\x65xperiment_ids\x18\x08 \x03(\t\x12\x38\n\x10\x64\x65stination_type\x18\t \x01(\x0e\x32\x1e.mlflow.WebhookDestinationType\x12\x32\n\x0bjira_config\x18\n \x01(\x0b\x32\x1d.mlflow.JiraDestinationConfig\x1a,\n\x08Response\x12 \n\x07webhook\x18\x01 \x01(\x0b\x32\x0f.mlflow.Webhook:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"b\n\rDeleteWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x1a\n\n\x08Response:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]\"\xb0\x01\n\x0bTestWebhook\x12\x18\n\nwebhook_id\x18\x01 \x01(\tB\x04\xf8\x86\x19\x01\x12#\n\x05\x65vent\x18\x02 \x01(\x0b\x32\x14.mlflow.WebhookEvent\x1a\x35\n\x08Response\x12)\n\x06result\x18\x01 \x01(\x0b\x32\x19.mlflow.WebhookTestResult:+\xe2?(\n&com.databricks.rpc.RPC[$this.Response]*)\n\rWebhookStatus\x12\n\n\x06\x41\x43TIVE\x10\x01\x12\x0c\n\x08\x44ISABLED\x10\x02*\\\n\x16WebhookDestinationType\x12 \n\x1c\x44\x45STINATION_TYPE_UNSPECIFIED\x10\x00\x12\x0b\n\x07GENERIC\x10\x01\x12\t\n\x05SLACK\x10\x02\x12\x08\n\x04JIRA\x10\x03*\x91\x02\n\rWebhookEntity\x12\x16\n\x12\x45NTITY_UNSPECIFIED\x10\x00\x12\x14\n\x10REGISTERED_MODEL\x10\x01\x12\x11\n\rMODEL_VERSION\x10\x02\x12\x15\n\x11MODEL_VERSION_TAG\x10\x03\x12\x17\n\x13MODEL_VERSION_ALIAS\x10\x04\x12\n\n\x06PROMPT\x10\x05\x12\x12\n\x0ePROMPT_VERSION\x10\x06\x12\x0e\n\nPROMPT_TAG\x10\x07\x12\x16\n\x12PROMPT_VERSION_TAG\x10\x08\x12\x10\n\x0cPROMPT_ALIAS\x10\t\x12\x11\n\rBUDGET_POLICY\x10\n\x12\t\n\x05ISSUE\x10\x0b\x12\x17\n\x13ISSUE_DETECTION_RUN\x10\x0c*t\n\rWebhookAction\x12\x16\n\x12\x41\x43TION_UNSPECIFIED\x10\x00\x12\x0b\n\x07\x43REATED\x10\x01\x12\x0b\n\x07UPDATED\x10\x02\x12\x0b\n\x07\x44\x45LETED\x10\x03\x12\x07\n\x03SET\x10\x04\x12\x0c\n\x08\x45XCEEDED\x10\x05\x12\r\n\tCOMPLETED\x10\x06\x32\xb5\x06\n\x0eWebhookService\x12~\n\rcreateWebhook\x12\x15.mlflow.CreateWebhook\x1a\x1e.mlflow.CreateWebhook.Response\"6\xf2\x86\x19\x32\n\x1e\n\x04POST\x12\x10/mlflow/webhooks\x1a\x04\x08\x02\x10\x00\x10\x01*\x0e\x43reate Webhook\x12y\n\x0clistWebhooks\x12\x14.mlflow.ListWebhooks\x1a\x1d.mlflow.ListWebhooks.Response\"4\xf2\x86\x19\x30\n\x1d\n\x03GET\x12\x10/mlflow/webhooks\x1a\x04\x08\x02\x10\x00\x10\x01*\rList Webhooks\x12~\n\ngetWebhook\x12\x12.mlflow.GetWebhook\x1a\x1b.mlflow.GetWebhook.Response\"?\xf2\x86\x19;\n*\n\x03GET\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0bGet Webhook\x12\x8c\x01\n\rupdateWebhook\x12\x15.mlflow.UpdateWebhook\x1a\x1e.mlflow.UpdateWebhook.Response\"D\xf2\x86\x19@\n,\n\x05PATCH\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0eUpdate Webhook\x12\x8d\x01\n\rdeleteWebhook\x12\x15.mlflow.DeleteWebhook\x1a\x1e.mlflow.DeleteWebhook.Response\"E\xf2\x86\x19\x41\n-\n\x06\x44\x45LETE\x12\x1d/mlflow/webhooks/{webhook_id}\x1a\x04\x08\x02\x10\x00\x10\x01*\x0e\x44\x65lete Webhook\x12\x88\x01\n\x0btestWebhook\x12\x13.mlflow.TestWebhook\x1a\x1c.mlflow.TestWebhook.Response\"F\xf2\x86\x19\x42\n0\n\x04POST\x12\"/mlflow/webhooks/{webhook_id}/test\x1a\x04\x08\x02\x10\x00\x10\x01*\x0cTest WebhookB!\n\x14org.mlflow.api.proto\x90\x01\x01\xa0\x01\x01\xe2?\x02\x10\x01')
 
   _WEBHOOKSTATUS = DESCRIPTOR.enum_types_by_name['WebhookStatus']
   WebhookStatus = enum_type_wrapper.EnumTypeWrapper(_WEBHOOKSTATUS)
@@ -150,6 +152,7 @@ else:
   DESTINATION_TYPE_UNSPECIFIED = 0
   GENERIC = 1
   SLACK = 2
+  JIRA = 3
   ENTITY_UNSPECIFIED = 0
   REGISTERED_MODEL = 1
   MODEL_VERSION = 2
@@ -172,6 +175,7 @@ else:
   COMPLETED = 6
 
 
+  _JIRADESTINATIONCONFIG = DESCRIPTOR.message_types_by_name['JiraDestinationConfig']
   _WEBHOOKEVENT = DESCRIPTOR.message_types_by_name['WebhookEvent']
   _WEBHOOK = DESCRIPTOR.message_types_by_name['Webhook']
   _WEBHOOKTESTRESULT = DESCRIPTOR.message_types_by_name['WebhookTestResult']
@@ -187,6 +191,13 @@ else:
   _DELETEWEBHOOK_RESPONSE = _DELETEWEBHOOK.nested_types_by_name['Response']
   _TESTWEBHOOK = DESCRIPTOR.message_types_by_name['TestWebhook']
   _TESTWEBHOOK_RESPONSE = _TESTWEBHOOK.nested_types_by_name['Response']
+  JiraDestinationConfig = _reflection.GeneratedProtocolMessageType('JiraDestinationConfig', (_message.Message,), {
+    'DESCRIPTOR' : _JIRADESTINATIONCONFIG,
+    '__module__' : 'webhooks_pb2'
+    # @@protoc_insertion_point(class_scope:mlflow.JiraDestinationConfig)
+    })
+  _sym_db.RegisterMessage(JiraDestinationConfig)
+
   WebhookEvent = _reflection.GeneratedProtocolMessageType('WebhookEvent', (_message.Message,), {
     'DESCRIPTOR' : _WEBHOOKEVENT,
     '__module__' : 'webhooks_pb2'
@@ -345,46 +356,48 @@ else:
     _WEBHOOKSERVICE.methods_by_name['deleteWebhook']._serialized_options = b'\362\206\031A\n-\n\006DELETE\022\035/mlflow/webhooks/{webhook_id}\032\004\010\002\020\000\020\001*\016Delete Webhook'
     _WEBHOOKSERVICE.methods_by_name['testWebhook']._options = None
     _WEBHOOKSERVICE.methods_by_name['testWebhook']._serialized_options = b'\362\206\031B\n0\n\004POST\022\"/mlflow/webhooks/{webhook_id}/test\032\004\010\002\020\000\020\001*\014Test Webhook'
-    _WEBHOOKSTATUS._serialized_start=1880
-    _WEBHOOKSTATUS._serialized_end=1921
-    _WEBHOOKDESTINATIONTYPE._serialized_start=1923
-    _WEBHOOKDESTINATIONTYPE._serialized_end=2005
-    _WEBHOOKENTITY._serialized_start=2008
-    _WEBHOOKENTITY._serialized_end=2281
-    _WEBHOOKACTION._serialized_start=2283
-    _WEBHOOKACTION._serialized_end=2399
-    _WEBHOOKEVENT._serialized_start=67
-    _WEBHOOKEVENT._serialized_end=171
-    _WEBHOOK._serialized_start=174
-    _WEBHOOK._serialized_end=470
-    _WEBHOOKTESTRESULT._serialized_start=472
-    _WEBHOOKTESTRESULT._serialized_end=579
-    _CREATEWEBHOOK._serialized_start=582
-    _CREATEWEBHOOK._serialized_end=929
-    _CREATEWEBHOOK_RESPONSE._serialized_start=840
-    _CREATEWEBHOOK_RESPONSE._serialized_end=884
-    _LISTWEBHOOKS._serialized_start=932
-    _LISTWEBHOOKS._serialized_end=1109
-    _LISTWEBHOOKS_RESPONSE._serialized_start=994
-    _LISTWEBHOOKS_RESPONSE._serialized_end=1064
-    _GETWEBHOOK._serialized_start=1112
-    _GETWEBHOOK._serialized_end=1241
-    _GETWEBHOOK_RESPONSE._serialized_start=840
-    _GETWEBHOOK_RESPONSE._serialized_end=884
-    _UPDATEWEBHOOK._serialized_start=1244
-    _UPDATEWEBHOOK._serialized_end=1599
-    _UPDATEWEBHOOK_RESPONSE._serialized_start=840
-    _UPDATEWEBHOOK_RESPONSE._serialized_end=884
-    _DELETEWEBHOOK._serialized_start=1601
-    _DELETEWEBHOOK._serialized_end=1699
-    _DELETEWEBHOOK_RESPONSE._serialized_start=840
-    _DELETEWEBHOOK_RESPONSE._serialized_end=850
-    _TESTWEBHOOK._serialized_start=1702
-    _TESTWEBHOOK._serialized_end=1878
-    _TESTWEBHOOK_RESPONSE._serialized_start=1780
-    _TESTWEBHOOK_RESPONSE._serialized_end=1833
-    _WEBHOOKSERVICE._serialized_start=2402
-    _WEBHOOKSERVICE._serialized_end=3223
+    _WEBHOOKSTATUS._serialized_start=2122
+    _WEBHOOKSTATUS._serialized_end=2163
+    _WEBHOOKDESTINATIONTYPE._serialized_start=2165
+    _WEBHOOKDESTINATIONTYPE._serialized_end=2257
+    _WEBHOOKENTITY._serialized_start=2260
+    _WEBHOOKENTITY._serialized_end=2533
+    _WEBHOOKACTION._serialized_start=2535
+    _WEBHOOKACTION._serialized_end=2651
+    _JIRADESTINATIONCONFIG._serialized_start=67
+    _JIRADESTINATIONCONFIG._serialized_end=151
+    _WEBHOOKEVENT._serialized_start=153
+    _WEBHOOKEVENT._serialized_end=257
+    _WEBHOOK._serialized_start=260
+    _WEBHOOK._serialized_end=608
+    _WEBHOOKTESTRESULT._serialized_start=610
+    _WEBHOOKTESTRESULT._serialized_end=717
+    _CREATEWEBHOOK._serialized_start=720
+    _CREATEWEBHOOK._serialized_end=1119
+    _CREATEWEBHOOK_RESPONSE._serialized_start=1030
+    _CREATEWEBHOOK_RESPONSE._serialized_end=1074
+    _LISTWEBHOOKS._serialized_start=1122
+    _LISTWEBHOOKS._serialized_end=1299
+    _LISTWEBHOOKS_RESPONSE._serialized_start=1184
+    _LISTWEBHOOKS_RESPONSE._serialized_end=1254
+    _GETWEBHOOK._serialized_start=1302
+    _GETWEBHOOK._serialized_end=1431
+    _GETWEBHOOK_RESPONSE._serialized_start=1030
+    _GETWEBHOOK_RESPONSE._serialized_end=1074
+    _UPDATEWEBHOOK._serialized_start=1434
+    _UPDATEWEBHOOK._serialized_end=1841
+    _UPDATEWEBHOOK_RESPONSE._serialized_start=1030
+    _UPDATEWEBHOOK_RESPONSE._serialized_end=1074
+    _DELETEWEBHOOK._serialized_start=1843
+    _DELETEWEBHOOK._serialized_end=1941
+    _DELETEWEBHOOK_RESPONSE._serialized_start=1030
+    _DELETEWEBHOOK_RESPONSE._serialized_end=1040
+    _TESTWEBHOOK._serialized_start=1944
+    _TESTWEBHOOK._serialized_end=2120
+    _TESTWEBHOOK_RESPONSE._serialized_start=2022
+    _TESTWEBHOOK_RESPONSE._serialized_end=2075
+    _WEBHOOKSERVICE._serialized_start=2654
+    _WEBHOOKSERVICE._serialized_end=3475
   WebhookService = service_reflection.GeneratedServiceType('WebhookService', (_service.Service,), dict(
     DESCRIPTOR = _WEBHOOKSERVICE,
     __module__ = 'webhooks_pb2'

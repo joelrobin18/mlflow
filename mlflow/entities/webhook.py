@@ -1,7 +1,10 @@
+import json
+from dataclasses import dataclass
 from enum import Enum
 from typing import Literal, Self, TypeAlias
 
 from mlflow.exceptions import MlflowException
+from mlflow.protos.webhooks_pb2 import JiraDestinationConfig as ProtoJiraDestinationConfig
 from mlflow.protos.webhooks_pb2 import Webhook as ProtoWebhook
 from mlflow.protos.webhooks_pb2 import WebhookAction as ProtoWebhookAction
 from mlflow.protos.webhooks_pb2 import WebhookDestinationType as ProtoWebhookDestinationType
@@ -41,6 +44,8 @@ class WebhookDestinationType(str, Enum):
     GENERIC = "GENERIC"
     #: A Slack message, for a Slack incoming webhook URL.
     SLACK = "SLACK"
+    #: A Jira ticket for each new issue, filed through Jira's REST API.
+    JIRA = "JIRA"
 
     def __str__(self) -> str:
         return self.value
@@ -55,6 +60,53 @@ class WebhookDestinationType(str, Enum):
 
     def to_proto(self) -> int:
         return ProtoWebhookDestinationType.Value(self.value)
+
+
+@dataclass(frozen=True)
+class JiraDestinationConfig:
+    """
+    Where a Jira destination files its tickets.
+
+    Args:
+        project_key: Key of the Jira project to file tickets in, such as ``"OPS"``.
+        issue_type: Name of the issue type to file tickets as, such as ``"Bug"``.
+        user_email: Email of the Jira Cloud account whose API token is the webhook's secret.
+            ``None`` sends the secret as a bearer token, as a Jira Data Center personal access
+            token is sent.
+    """
+
+    project_key: str
+    issue_type: str
+    user_email: str | None = None
+
+    @classmethod
+    def from_proto(cls, proto: ProtoJiraDestinationConfig) -> Self:
+        return cls(
+            project_key=proto.project_key,
+            issue_type=proto.issue_type,
+            user_email=proto.user_email or None,
+        )
+
+    def to_proto(self) -> ProtoJiraDestinationConfig:
+        proto = ProtoJiraDestinationConfig(project_key=self.project_key, issue_type=self.issue_type)
+        if self.user_email:
+            proto.user_email = self.user_email
+        return proto
+
+    def to_json(self) -> str:
+        stored = {"project_key": self.project_key, "issue_type": self.issue_type}
+        if self.user_email:
+            stored["user_email"] = self.user_email
+        return json.dumps(stored)
+
+    @classmethod
+    def from_json(cls, raw: str) -> Self:
+        stored = json.loads(raw)
+        return cls(
+            project_key=stored["project_key"],
+            issue_type=stored["issue_type"],
+            user_email=stored.get("user_email"),
+        )
 
 
 class WebhookEntity(str, Enum):
@@ -318,6 +370,7 @@ class Webhook:
         workspace: str | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: str | WebhookDestinationType = WebhookDestinationType.GENERIC,
+        jira_config: JiraDestinationConfig | None = None,
     ):
         """
         Initialize a Webhook entity.
@@ -335,6 +388,7 @@ class Webhook:
             workspace: Workspace the webhook belongs to
             experiment_ids: Experiments the webhook is limited to. Empty means every experiment.
             destination_type: How the webhook's deliveries are formatted.
+            jira_config: Where tickets are filed, for a Jira destination.
         """
         super().__init__()
         self._webhook_id = webhook_id
@@ -351,6 +405,7 @@ class Webhook:
         self._workspace = resolve_entity_workspace_name(workspace)
         self._experiment_ids = list(experiment_ids or [])
         self._destination_type = WebhookDestinationType(destination_type)
+        self._jira_config = jira_config
 
     @property
     def webhook_id(self) -> str:
@@ -401,6 +456,10 @@ class Webhook:
     def destination_type(self) -> WebhookDestinationType:
         return self._destination_type
 
+    @property
+    def jira_config(self) -> JiraDestinationConfig | None:
+        return self._jira_config
+
     def is_subscribed_to_experiment(self, experiment_id: str | None) -> bool:
         """
         Whether an event from ``experiment_id`` reaches this webhook.
@@ -423,6 +482,11 @@ class Webhook:
             last_updated_timestamp=proto.last_updated_timestamp,
             experiment_ids=list(proto.experiment_ids),
             destination_type=WebhookDestinationType.from_proto(proto.destination_type),
+            jira_config=(
+                JiraDestinationConfig.from_proto(proto.jira_config)
+                if proto.HasField("jira_config")
+                else None
+            ),
         )
 
     def to_proto(self):
@@ -438,6 +502,8 @@ class Webhook:
         webhook.last_updated_timestamp = self.last_updated_timestamp
         webhook.experiment_ids.extend(self.experiment_ids)
         webhook.destination_type = self.destination_type.to_proto()
+        if self.jira_config is not None:
+            webhook.jira_config.CopyFrom(self.jira_config.to_proto())
         return webhook
 
     def __repr__(self) -> str:

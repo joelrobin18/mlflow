@@ -86,6 +86,7 @@ from mlflow.entities.trace_info_v2 import TraceInfoV2
 from mlflow.entities.trace_metrics import MetricAggregation, MetricViewType
 from mlflow.entities.trace_status import TraceStatus
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     WebhookAction,
     WebhookDestinationType,
     WebhookEntity,
@@ -3945,6 +3946,7 @@ def _create_webhook():
             "status": [_assert_string],
             "experiment_ids": [_assert_array, _assert_item_type_string],
             "destination_type": [_assert_string],
+            "jira_config": [_assert_dict],
         },
     )
 
@@ -3959,6 +3961,11 @@ def _create_webhook():
         destination_type=(
             WebhookDestinationType.from_proto(request_message.destination_type)
             if request_message.HasField("destination_type")
+            else None
+        ),
+        jira_config=(
+            JiraDestinationConfig.from_proto(request_message.jira_config)
+            if request_message.HasField("jira_config")
             else None
         ),
     )
@@ -4009,6 +4016,7 @@ def _update_webhook(webhook_id: str):
             "status": [_assert_string],
             "experiment_ids": [_assert_array, _assert_item_type_string],
             "destination_type": [_assert_string],
+            "jira_config": [_assert_dict],
         },
     )
     # A present but empty list removes the limit; an absent one leaves it alone. The parsed
@@ -4040,6 +4048,11 @@ def _update_webhook(webhook_id: str):
         destination_type=(
             WebhookDestinationType.from_proto(request_message.destination_type)
             if request_message.HasField("destination_type")
+            else None
+        ),
+        jira_config=(
+            JiraDestinationConfig.from_proto(request_message.jira_config)
+            if request_message.HasField("jira_config")
             else None
         ),
     )

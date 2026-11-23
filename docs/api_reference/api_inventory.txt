@@ -500,6 +500,11 @@ mlflow.entities.IssueReference.from_dictionary
 mlflow.entities.IssueReference.from_proto
 mlflow.entities.IssueSeverity
 mlflow.entities.IssueStatus
+mlflow.entities.JiraDestinationConfig
+mlflow.entities.JiraDestinationConfig.from_json
+mlflow.entities.JiraDestinationConfig.from_proto
+mlflow.entities.JiraDestinationConfig.to_json
+mlflow.entities.JiraDestinationConfig.to_proto
 mlflow.entities.LifecycleStage
 mlflow.entities.LifecycleStage.is_valid
 mlflow.entities.LifecycleStage.matches_view_type
@@ -705,6 +710,9 @@ mlflow.entities.Webhook
 mlflow.entities.Webhook.from_proto
 mlflow.entities.Webhook.is_subscribed_to_experiment
 mlflow.entities.Webhook.to_proto
+mlflow.entities.WebhookDestinationType
+mlflow.entities.WebhookDestinationType.from_proto
+mlflow.entities.WebhookDestinationType.to_proto
 mlflow.entities.WebhookEvent
 mlflow.entities.WebhookEvent.from_proto
 mlflow.entities.WebhookEvent.from_str

@@ -739,6 +739,10 @@
     "defaultMessage": "Error registering model",
     "description": "Notification title for model registration failure on the logged model details page"
   },
+  "0SObwt": {
+    "defaultMessage": "Jira (a ticket for each new issue)",
+    "description": "Webhook destination type label"
+  },
   "0SQ4a6": {
     "defaultMessage": "Compare",
     "description": "Leading label of the eval-run comparison selection bar"
@@ -882,6 +886,10 @@
   "0z3Ko0": {
     "defaultMessage": "{sampleRatePercent}%",
     "description": "Sample rate value for scorer"
+  },
+  "0z3bCg": {
+    "defaultMessage": "Jira project key",
+    "description": "Jira project key field label"
   },
   "1+JyrI": {
     "defaultMessage": "LLM judge feedback",
@@ -1562,6 +1570,10 @@
   "37ReeZ": {
     "defaultMessage": "On",
     "description": "Usage tracking enabled state"
+  },
+  "37tAgS": {
+    "defaultMessage": "Jira issue type is required",
+    "description": "Validation error for a missing Jira issue type"
   },
   "38muiU": {
     "defaultMessage": "Select visible columns",
@@ -3055,6 +3067,10 @@
     "defaultMessage": "Time",
     "description": "Label for the time range select dropdown"
   },
+  "7oJlT4": {
+    "defaultMessage": "Jira issue type",
+    "description": "Jira issue type field label"
+  },
   "7oWks9": {
     "defaultMessage": "Sort",
     "description": "Display menu item opening the evaluation-runs sort submenu"
@@ -4270,6 +4286,10 @@
   "BRfxyC": {
     "defaultMessage": "See less",
     "description": "Toggle that collapses a long JSON code block on the playground page"
+  },
+  "BRsZWX": {
+    "defaultMessage": "For Jira Cloud, the account the API token belongs to. Leave blank for a Jira Data Center personal access token.",
+    "description": "Jira account email field description"
   },
   "BTAzqb": {
     "defaultMessage": "Toggle visibility of rows",
@@ -8531,6 +8551,10 @@
     "defaultMessage": "Select field",
     "description": "Usage overview > filter row > field column placeholder"
   },
+  "P9pLa4": {
+    "defaultMessage": "Jira account email",
+    "description": "Jira account email field label"
+  },
   "PAUNgq": {
     "defaultMessage": "Cost Breakdown",
     "description": "Title for the cost breakdown chart"
@@ -12191,6 +12215,10 @@
     "defaultMessage": "Irrelevant",
     "description": "Evaluation results > retrieval relevancy assessment > negative value label. Displayed if evaluation result is considered as irrelevant to the query."
   },
+  "amvbtq": {
+    "defaultMessage": "Jira: {projectKey}",
+    "description": "Badge for a webhook that files Jira tickets, naming its Jira project"
+  },
   "an4yfn": {
     "defaultMessage": "Your changes will be lost if you leave this panel without saving.",
     "description": "Body text for the discard-unsaved-changes prompt on the dataset record side panel"
@@ -13191,6 +13219,10 @@
     "defaultMessage": "Edit question",
     "description": "Edit review question modal title"
   },
+  "e4Zeon": {
+    "defaultMessage": "Jira project key is required",
+    "description": "Validation error for a missing Jira project key"
+  },
   "e515YD": {
     "defaultMessage": "Grounded",
     "description": "Evaluation results > retrieval grounded assessment > positive value label. Displayed if evaluation result is considered as grounded."
@@ -13734,6 +13766,10 @@
   "ffema5": {
     "defaultMessage": "Experiment ID",
     "description": "Run page > Overview > experiment ID section label"
+  },
+  "fgKepF": {
+    "defaultMessage": "Enter your Jira site as the URL, such as https://example.atlassian.net, and the API token or personal access token as the secret.",
+    "description": "Explains which webhook fields a Jira destination uses"
   },
   "fgvfcZ": {
     "defaultMessage": "Baseline: missing",

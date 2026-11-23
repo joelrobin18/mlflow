@@ -1,6 +1,12 @@
 import { fetchAPI, getAjaxUrl, HTTPMethods } from '../common/utils/FetchUtils';
 import type { WebhookDestinationType } from './webhookConstants';
 
+export interface JiraDestinationConfig {
+  project_key: string;
+  issue_type: string;
+  user_email?: string;
+}
+
 export interface WebhookEvent {
   entity: string;
   action: string;
@@ -19,6 +25,7 @@ export interface Webhook {
   experiment_ids?: string[];
   /** How deliveries are formatted. Absent on a server that predates destinations, which means GENERIC. */
   destination_type?: WebhookDestinationType;
+  jira_config?: JiraDestinationConfig;
 }
 
 export interface ListWebhooksResponse {
@@ -34,6 +41,7 @@ export interface CreateWebhookRequest {
   status: 'ACTIVE' | 'DISABLED';
   experiment_ids?: string[];
   destination_type?: WebhookDestinationType;
+  jira_config?: JiraDestinationConfig;
 }
 
 export interface UpdateWebhookRequest {
@@ -46,6 +54,7 @@ export interface UpdateWebhookRequest {
   /** Replaces the experiments the webhook is limited to; an empty list removes the limit. */
   experiment_ids?: string[];
   destination_type?: WebhookDestinationType;
+  jira_config?: JiraDestinationConfig;
 }
 
 export interface TestWebhookResult {

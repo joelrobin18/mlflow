@@ -17,6 +17,7 @@ from mlflow.entities.model_registry.model_version_stages import (
 )
 from mlflow.entities.model_registry.prompt_version import IS_PROMPT_TAG_KEY
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     Webhook,
     WebhookDestinationType,
     WebhookEvent,
@@ -70,6 +71,7 @@ from mlflow.utils.validation import (
     _validate_model_version_tag,
     _validate_registered_model_tag,
     _validate_tag_name,
+    _validate_webhook_destination,
     _validate_webhook_events,
     _validate_webhook_experiment_ids,
     _validate_webhook_name,
@@ -1615,11 +1617,14 @@ class SqlAlchemyStore(AbstractStore):
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: WebhookDestinationType | None = None,
+        jira_config: JiraDestinationConfig | None = None,
     ) -> Webhook:
         _validate_webhook_name(name)
         _validate_webhook_url(url)
         _validate_webhook_events(events)
         experiment_ids = _validate_webhook_experiment_ids(experiment_ids or [], events)
+        destination_type = destination_type or WebhookDestinationType.GENERIC
+        _validate_webhook_destination(destination_type, jira_config, events, bool(secret))
 
         with self.ManagedSessionMaker(read_only=False) as session:
             webhook_id = str(uuid.uuid4())
@@ -1632,7 +1637,8 @@ class SqlAlchemyStore(AbstractStore):
                     description=description,
                     secret=secret,
                     status=(status or WebhookStatus.ACTIVE).value,
-                    destination_type=(destination_type or WebhookDestinationType.GENERIC).value,
+                    destination_type=destination_type.value,
+                    destination_config=jira_config.to_json() if jira_config else None,
                     creation_timestamp=creation_time,
                     last_updated_timestamp=creation_time,
                 )
@@ -1744,9 +1750,36 @@ class SqlAlchemyStore(AbstractStore):
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: WebhookDestinationType | None = None,
+        jira_config: JiraDestinationConfig | None = None,
     ) -> Webhook:
         with self.ManagedSessionMaker(read_only=False) as session:
             webhook = self._get_webhook_by_id(session, webhook_id)
+
+            # Like the experiment check below, judged on what the webhook ends up with. Leaving a
+            # Jira destination drops its ticket settings, which no other destination reads.
+            resulting_destination_type = destination_type or WebhookDestinationType(
+                webhook.destination_type
+            )
+            resulting_jira_config = None
+            if resulting_destination_type == WebhookDestinationType.JIRA:
+                resulting_jira_config = jira_config or (
+                    JiraDestinationConfig.from_json(webhook.destination_config)
+                    if webhook.destination_config
+                    else None
+                )
+            elif destination_type is None:
+                resulting_jira_config = jira_config
+            if any(value is not None for value in (destination_type, jira_config, events, secret)):
+                if events is not None:
+                    _validate_webhook_events(events)
+                _validate_webhook_destination(
+                    resulting_destination_type,
+                    resulting_jira_config,
+                    events
+                    if events is not None
+                    else [we.to_mlflow_entity() for we in webhook.webhook_events],
+                    bool(secret if secret is not None else webhook.secret),
+                )
 
             # Checked against the events and experiments the webhook ends up with, not just the
             # ones this call changes: adding an unscoped event to a limited webhook is as invalid
@@ -1799,8 +1832,11 @@ class SqlAlchemyStore(AbstractStore):
                 webhook.secret = secret
             if status is not None:
                 webhook.status = status.value
-            if destination_type is not None:
-                webhook.destination_type = destination_type.value
+            if destination_type is not None or jira_config is not None:
+                webhook.destination_type = resulting_destination_type.value
+                webhook.destination_config = (
+                    resulting_jira_config.to_json() if resulting_jira_config else None
+                )
 
             webhook.last_updated_timestamp = get_current_time_millis()
 

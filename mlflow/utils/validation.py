@@ -16,7 +16,13 @@ from typing import Any, Iterator
 
 from mlflow.entities import Dataset, DatasetInput, InputTag, Param, RunTag
 from mlflow.entities.model_registry.prompt_version import PROMPT_TEXT_TAG_KEY
-from mlflow.entities.webhook import WebhookEvent
+from mlflow.entities.webhook import (
+    JiraDestinationConfig,
+    WebhookAction,
+    WebhookDestinationType,
+    WebhookEntity,
+    WebhookEvent,
+)
 from mlflow.environment_variables import (
     _MLFLOW_WEBHOOK_ALLOW_PRIVATE_IPS,
     _MLFLOW_WEBHOOK_ALLOWED_SCHEMES,
@@ -1601,6 +1607,53 @@ def _validate_webhook_events(events: list[WebhookEvent]) -> None:
     ):
         raise MlflowException.invalid_parameter_value(
             f"Webhook events must be a non-empty list of WebhookEvent objects: {events}."
+        )
+
+
+# The longest Jira project key, issue type name, or account email a Jira webhook stores. Jira's own
+# limits are lower; this keeps the stored settings within their column.
+MAX_JIRA_SETTING_LENGTH = 254
+
+
+def _validate_webhook_destination(
+    destination_type: WebhookDestinationType,
+    jira_config: JiraDestinationConfig | None,
+    events: list[WebhookEvent],
+    has_secret: bool,
+) -> None:
+    """
+    Check that a webhook carries what its destination needs, and nothing a different one does.
+
+    A Jira destination files one ticket per new issue, so it subscribes to ``issue.created`` alone:
+    any other event would either file tickets nobody wants or nothing at all.
+    """
+    if destination_type != WebhookDestinationType.JIRA:
+        if jira_config is not None:
+            raise MlflowException.invalid_parameter_value(
+                "jira_config is only for a webhook whose destination_type is JIRA."
+            )
+        return
+    if jira_config is None or not jira_config.project_key.strip() or not jira_config.issue_type:
+        raise MlflowException.invalid_parameter_value(
+            "A Jira webhook needs a jira_config with a project_key and an issue_type."
+        )
+    if any(
+        len(value) > MAX_JIRA_SETTING_LENGTH
+        for value in (jira_config.project_key, jira_config.issue_type, jira_config.user_email or "")
+    ):
+        raise MlflowException.invalid_parameter_value(
+            f"A Jira webhook's project_key, issue_type and user_email must each be at most "
+            f"{MAX_JIRA_SETTING_LENGTH} characters long."
+        )
+    if not has_secret:
+        raise MlflowException.invalid_parameter_value(
+            "A Jira webhook needs a secret: the API token or personal access token it files "
+            "tickets with."
+        )
+    if set(events) != {WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)}:
+        raise MlflowException.invalid_parameter_value(
+            "A Jira webhook files a ticket for each new issue, so it can only subscribe to "
+            "issue.created."
         )
 
 

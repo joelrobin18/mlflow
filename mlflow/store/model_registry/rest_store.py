@@ -3,6 +3,7 @@ import logging
 
 from mlflow.entities.model_registry import ModelVersion, RegisteredModel
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     Webhook,
     WebhookDestinationType,
     WebhookEvent,
@@ -534,6 +535,7 @@ class RestStore(WorkspaceRestStoreMixin, BaseRestStore):
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: WebhookDestinationType | None = None,
+        jira_config: JiraDestinationConfig | None = None,
     ) -> Webhook:
         req_body = message_to_json(
             CreateWebhook(
@@ -545,6 +547,7 @@ class RestStore(WorkspaceRestStoreMixin, BaseRestStore):
                 status=status.to_proto() if status else None,
                 experiment_ids=experiment_ids,
                 destination_type=destination_type.to_proto() if destination_type else None,
+                jira_config=jira_config.to_proto() if jira_config else None,
             )
         )
         response_proto = self._call_webhook_endpoint(CreateWebhook, req_body)
@@ -575,6 +578,7 @@ class RestStore(WorkspaceRestStoreMixin, BaseRestStore):
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
         destination_type: WebhookDestinationType | None = None,
+        jira_config: JiraDestinationConfig | None = None,
     ) -> Webhook:
         req_body = message_to_json(
             UpdateWebhook(
@@ -586,6 +590,7 @@ class RestStore(WorkspaceRestStoreMixin, BaseRestStore):
                 status=status.to_proto() if status else None,
                 experiment_ids=experiment_ids,
                 destination_type=destination_type.to_proto() if destination_type else None,
+                jira_config=jira_config.to_proto() if jira_config else None,
             )
         )
         # Protobuf JSON omits empty repeated fields, which would turn "remove the limit" into

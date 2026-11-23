@@ -348,4 +348,49 @@ describe('WebhooksSettings', () => {
       expect(mockCreateWebhook).toHaveBeenCalledWith(expect.objectContaining({ destination_type: 'GENERIC' }));
     });
   });
+  it('creates a Jira webhook that files a ticket for each new issue', async () => {
+    renderComponent();
+    await openCreateModal();
+
+    const trigger = document.querySelector<HTMLElement>(
+      '[data-component-id="mlflow.settings.webhooks.destination-type-select"]',
+    );
+    if (!trigger) throw new Error('destination select not found');
+    await userEvent.click(trigger);
+    await userEvent.click(await screen.findByRole('option', { name: 'Jira (a ticket for each new issue)' }));
+
+    expect(screen.queryByText('Prompt created')).not.toBeInTheDocument();
+    await userEvent.type(screen.getByPlaceholderText('OPS'), 'OPS');
+    await userEvent.type(screen.getByPlaceholderText('Optional secret key'), 'api-token');
+    await submitModal('Create');
+
+    await waitFor(() => {
+      expect(mockCreateWebhook).toHaveBeenCalledWith(
+        expect.objectContaining({
+          destination_type: 'JIRA',
+          events: [{ entity: 'ISSUE', action: 'CREATED' }],
+          jira_config: { project_key: 'OPS', issue_type: 'Bug', user_email: undefined },
+          secret: 'api-token',
+        }),
+      );
+    });
+  });
+
+  it('names the Jira project of a Jira webhook in the list', async () => {
+    mockListWebhooks.mockResolvedValue({
+      webhooks: [
+        {
+          ...ISSUE_WEBHOOK,
+          destination_type: 'JIRA' as const,
+          jira_config: { project_key: 'OPS', issue_type: 'Bug' },
+        },
+      ],
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Jira: OPS')).toBeInTheDocument();
+    });
+  });
 });

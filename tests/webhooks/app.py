@@ -45,6 +45,29 @@ async def insecure_webhook(request: Request):
     return {"status": "received"}
 
 
+# A stand-in for a Jira site's REST API, for webhooks whose destination is Jira.
+@app.post("/jira/rest/api/2/issue")
+async def jira_create_issue(request: Request):
+    body = await request.json()
+    webhook_data = {
+        "endpoint": "/jira/rest/api/2/issue",
+        "payload": body,
+        "headers": dict(request.headers),
+        "status_code": 201,
+        "error": None,
+    }
+    with LOG_FILE.open("a") as f:
+        f.write(json.dumps(webhook_data) + "\n")
+    return fastapi.responses.JSONResponse({"id": "10001", "key": "OPS-1"}, status_code=201)
+
+
+@app.get("/jira/rest/api/2/project/{project_key}")
+async def jira_get_project(project_key: str):
+    if project_key != "OPS":
+        raise HTTPException(status_code=404, detail="No project could be found")
+    return {"key": project_key}
+
+
 @app.post("/reset")
 async def reset():
     """Reset both logs and counters for testing"""

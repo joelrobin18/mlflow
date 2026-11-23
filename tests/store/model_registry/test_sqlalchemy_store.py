@@ -15,6 +15,7 @@ from mlflow.entities.model_registry import (
 )
 from mlflow.entities.model_registry.prompt_version import IS_PROMPT_TAG_KEY
 from mlflow.entities.webhook import (
+    JiraDestinationConfig,
     WebhookAction,
     WebhookDestinationType,
     WebhookEntity,
@@ -2853,3 +2854,95 @@ def test_create_webhook_with_a_slack_destination(store):
     (listed,) = store.list_webhooks_by_event(ISSUE_CREATED)
     assert listed.webhook_id == webhook.webhook_id
     assert listed.destination_type == WebhookDestinationType.SLACK
+
+
+JIRA_CONFIG = JiraDestinationConfig(project_key="OPS", issue_type="Bug", user_email="bot@x.com")
+
+
+def _create_jira_webhook(store, **overrides):
+    return store.create_webhook(
+        **{
+            "name": "jira_hook",
+            "url": "https://example.atlassian.net",
+            "events": [ISSUE_CREATED],
+            "secret": "api-token",
+            "destination_type": WebhookDestinationType.JIRA,
+            "jira_config": JIRA_CONFIG,
+        }
+        | overrides
+    )
+
+
+def test_create_jira_webhook_stores_its_ticket_settings(store):
+    webhook = _create_jira_webhook(store)
+
+    assert webhook.destination_type == WebhookDestinationType.JIRA
+    assert webhook.jira_config == JIRA_CONFIG
+    assert store.get_webhook(webhook.webhook_id).jira_config == JIRA_CONFIG
+    (listed,) = store.list_webhooks_by_event(ISSUE_CREATED)
+    assert listed.jira_config == JIRA_CONFIG
+    assert listed.secret == "api-token"
+
+
+@pytest.mark.parametrize(
+    ("overrides", "match"),
+    [
+        ({"jira_config": None}, "needs a jira_config"),
+        ({"secret": None}, "needs a secret"),
+        ({"events": [ISSUE_CREATED, RUN_COMPLETED]}, "only subscribe to issue.created"),
+    ],
+)
+def test_create_jira_webhook_rejects_missing_settings(store, overrides, match):
+    with pytest.raises(MlflowException, match=match):
+        _create_jira_webhook(store, **overrides)
+    assert store.list_webhooks() == []
+
+
+def test_create_webhook_rejects_jira_settings_for_another_destination(store):
+    with pytest.raises(MlflowException, match="only for a webhook whose destination_type is JIRA"):
+        _create_jira_webhook(store, destination_type=WebhookDestinationType.SLACK)
+
+
+def test_update_jira_webhook_keeps_or_replaces_its_ticket_settings(store):
+    webhook = _create_jira_webhook(store)
+
+    assert store.update_webhook(webhook.webhook_id, name="renamed").jira_config == JIRA_CONFIG
+    new_config = JiraDestinationConfig(project_key="SUP", issue_type="Task")
+    updated = store.update_webhook(webhook.webhook_id, jira_config=new_config)
+    assert updated.jira_config == new_config
+    assert store.get_webhook(webhook.webhook_id).jira_config == new_config
+
+
+def test_update_jira_webhook_rejects_events_it_cannot_file(store):
+    webhook = _create_jira_webhook(store)
+
+    with pytest.raises(MlflowException, match="only subscribe to issue.created"):
+        store.update_webhook(webhook.webhook_id, events=[RUN_COMPLETED])
+
+
+def test_moving_a_webhook_off_jira_drops_its_ticket_settings(store):
+    webhook = _create_jira_webhook(store)
+
+    updated = store.update_webhook(
+        webhook.webhook_id, destination_type=WebhookDestinationType.SLACK
+    )
+
+    assert updated.destination_type == WebhookDestinationType.SLACK
+    assert updated.jira_config is None
+    assert store.get_webhook(webhook.webhook_id).jira_config is None
+
+
+def test_moving_a_webhook_to_jira_needs_its_ticket_settings(store):
+    webhook = store.create_webhook(
+        name="issue_hook", url="https://example.atlassian.net", events=[ISSUE_CREATED]
+    )
+
+    with pytest.raises(MlflowException, match="needs a jira_config"):
+        store.update_webhook(webhook.webhook_id, destination_type=WebhookDestinationType.JIRA)
+    updated = store.update_webhook(
+        webhook.webhook_id,
+        destination_type=WebhookDestinationType.JIRA,
+        jira_config=JIRA_CONFIG,
+        secret="api-token",
+    )
+    assert updated.jira_config == JIRA_CONFIG
