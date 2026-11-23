@@ -4,6 +4,7 @@ from typing import Literal, Self, TypeAlias
 from mlflow.exceptions import MlflowException
 from mlflow.protos.webhooks_pb2 import Webhook as ProtoWebhook
 from mlflow.protos.webhooks_pb2 import WebhookAction as ProtoWebhookAction
+from mlflow.protos.webhooks_pb2 import WebhookDestinationType as ProtoWebhookDestinationType
 from mlflow.protos.webhooks_pb2 import WebhookEntity as ProtoWebhookEntity
 from mlflow.protos.webhooks_pb2 import WebhookEvent as ProtoWebhookEvent
 from mlflow.protos.webhooks_pb2 import WebhookStatus as ProtoWebhookStatus
@@ -31,6 +32,29 @@ class WebhookStatus(str, Enum):
 
     def is_active(self) -> bool:
         return self == WebhookStatus.ACTIVE
+
+
+class WebhookDestinationType(str, Enum):
+    """How a webhook's deliveries are formatted."""
+
+    #: A signed JSON envelope carrying the event's payload, for a receiver you run.
+    GENERIC = "GENERIC"
+    #: A Slack message, for a Slack incoming webhook URL.
+    SLACK = "SLACK"
+
+    def __str__(self) -> str:
+        return self.value
+
+    @classmethod
+    def from_proto(cls, proto: int) -> Self:
+        proto_name = ProtoWebhookDestinationType.Name(proto)
+        # A webhook stored before destinations existed, or sent by an older client, is generic.
+        if proto_name == "DESTINATION_TYPE_UNSPECIFIED":
+            return cls.GENERIC
+        return cls(proto_name)
+
+    def to_proto(self) -> int:
+        return ProtoWebhookDestinationType.Value(self.value)
 
 
 class WebhookEntity(str, Enum):
@@ -293,6 +317,7 @@ class Webhook:
         secret: str | None = None,
         workspace: str | None = None,
         experiment_ids: list[str] | None = None,
+        destination_type: str | WebhookDestinationType = WebhookDestinationType.GENERIC,
     ):
         """
         Initialize a Webhook entity.
@@ -309,6 +334,7 @@ class Webhook:
             secret: Optional secret key for HMAC signature verification
             workspace: Workspace the webhook belongs to
             experiment_ids: Experiments the webhook is limited to. Empty means every experiment.
+            destination_type: How the webhook's deliveries are formatted.
         """
         super().__init__()
         self._webhook_id = webhook_id
@@ -324,6 +350,7 @@ class Webhook:
         self._last_updated_timestamp = last_updated_timestamp
         self._workspace = resolve_entity_workspace_name(workspace)
         self._experiment_ids = list(experiment_ids or [])
+        self._destination_type = WebhookDestinationType(destination_type)
 
     @property
     def webhook_id(self) -> str:
@@ -370,6 +397,10 @@ class Webhook:
         """Experiments the webhook is limited to. Empty means it hears from every experiment."""
         return self._experiment_ids
 
+    @property
+    def destination_type(self) -> WebhookDestinationType:
+        return self._destination_type
+
     def is_subscribed_to_experiment(self, experiment_id: str | None) -> bool:
         """
         Whether an event from ``experiment_id`` reaches this webhook.
@@ -391,6 +422,7 @@ class Webhook:
             creation_timestamp=proto.creation_timestamp,
             last_updated_timestamp=proto.last_updated_timestamp,
             experiment_ids=list(proto.experiment_ids),
+            destination_type=WebhookDestinationType.from_proto(proto.destination_type),
         )
 
     def to_proto(self):
@@ -405,6 +437,7 @@ class Webhook:
         webhook.creation_timestamp = self.creation_timestamp
         webhook.last_updated_timestamp = self.last_updated_timestamp
         webhook.experiment_ids.extend(self.experiment_ids)
+        webhook.destination_type = self.destination_type.to_proto()
         return webhook
 
     def __repr__(self) -> str:
@@ -414,6 +447,7 @@ class Webhook:
             f"name='{self.name}', "
             f"url='{self.url}', "
             f"status='{self.status}', "
+            f"destination_type='{self.destination_type}', "
             f"workspace='{self.workspace}', "
             f"events={self.events}, "
             f"experiment_ids={self.experiment_ids}, "

@@ -23,7 +23,12 @@ from cachetools import TTLCache
 from packaging.version import Version
 from urllib3.util.retry import Retry
 
-from mlflow.entities.webhook import Webhook, WebhookEvent, WebhookTestResult
+from mlflow.entities.webhook import (
+    Webhook,
+    WebhookDestinationType,
+    WebhookEvent,
+    WebhookTestResult,
+)
 from mlflow.environment_variables import (
     MLFLOW_ENABLE_WORKSPACES,
     MLFLOW_WEBHOOK_CACHE_TTL,
@@ -40,6 +45,7 @@ from mlflow.webhooks.constants import (
     WEBHOOK_SIGNATURE_VERSION,
     WEBHOOK_TIMESTAMP_HEADER,
 )
+from mlflow.webhooks.formatters import format_slack_message
 from mlflow.webhooks.ssrf import SSRFProtectedHTTPAdapter
 from mlflow.webhooks.types import (
     WebhookPayload,
@@ -159,15 +165,19 @@ def _send_webhook_request(
     """
     _validate_webhook_url(webhook.url)
 
-    # Create webhook payload with metadata
-    webhook_payload = {
-        "entity": event.entity.value,
-        "action": event.action.value,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "data": payload,
-    }
-    if MLFLOW_ENABLE_WORKSPACES.get():
-        webhook_payload["workspace"] = webhook.workspace
+    # A destination with a message format of its own gets that instead of MLflow's envelope.
+    # The signature headers are still sent; such a receiver ignores them.
+    if webhook.destination_type == WebhookDestinationType.SLACK:
+        webhook_payload = format_slack_message(event, payload)
+    else:
+        webhook_payload = {
+            "entity": event.entity.value,
+            "action": event.action.value,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "data": payload,
+        }
+        if MLFLOW_ENABLE_WORKSPACES.get():
+            webhook_payload["workspace"] = webhook.workspace
 
     payload_json = json.dumps(webhook_payload)
     payload_bytes = payload_json.encode("utf-8")

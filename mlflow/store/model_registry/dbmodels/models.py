@@ -26,6 +26,7 @@ from mlflow.entities.model_registry.model_version_status import ModelVersionStat
 from mlflow.entities.webhook import (
     Webhook,
     WebhookAction,
+    WebhookDestinationType,
     WebhookEntity,
     WebhookEvent,
     WebhookStatus,
@@ -329,6 +330,12 @@ class SqlWebhook(Base):
     creation_timestamp = Column(BigInteger, default=get_current_time_millis)
     last_updated_timestamp = Column(BigInteger, nullable=True, default=None)
     deleted_timestamp = Column(BigInteger, nullable=True, default=None)  # For soft deletes
+    destination_type = Column(
+        String(20),
+        nullable=False,
+        default=WebhookDestinationType.GENERIC.value,
+        server_default=WebhookDestinationType.GENERIC.value,
+    )
 
     __table_args__ = (
         PrimaryKeyConstraint("webhook_id", name="webhook_pk"),
@@ -356,6 +363,7 @@ class SqlWebhook(Base):
             status=WebhookStatus(self.status),
             secret=self.secret,
             experiment_ids=sorted(we.experiment_id for we in self.webhook_experiments),
+            destination_type=WebhookDestinationType(self.destination_type),
         )
 
 

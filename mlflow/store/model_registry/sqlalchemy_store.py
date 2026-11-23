@@ -16,7 +16,12 @@ from mlflow.entities.model_registry.model_version_stages import (
     get_canonical_stage,
 )
 from mlflow.entities.model_registry.prompt_version import IS_PROMPT_TAG_KEY
-from mlflow.entities.webhook import Webhook, WebhookEvent, WebhookStatus
+from mlflow.entities.webhook import (
+    Webhook,
+    WebhookDestinationType,
+    WebhookEvent,
+    WebhookStatus,
+)
 from mlflow.exceptions import MlflowException
 from mlflow.prompt.registry_utils import handle_resource_already_exist_error, has_prompt_tag
 from mlflow.protos.databricks_pb2 import (
@@ -1609,6 +1614,7 @@ class SqlAlchemyStore(AbstractStore):
         secret: str | None = None,
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
+        destination_type: WebhookDestinationType | None = None,
     ) -> Webhook:
         _validate_webhook_name(name)
         _validate_webhook_url(url)
@@ -1626,6 +1632,7 @@ class SqlAlchemyStore(AbstractStore):
                     description=description,
                     secret=secret,
                     status=(status or WebhookStatus.ACTIVE).value,
+                    destination_type=(destination_type or WebhookDestinationType.GENERIC).value,
                     creation_timestamp=creation_time,
                     last_updated_timestamp=creation_time,
                 )
@@ -1736,6 +1743,7 @@ class SqlAlchemyStore(AbstractStore):
         secret: str | None = None,
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
+        destination_type: WebhookDestinationType | None = None,
     ) -> Webhook:
         with self.ManagedSessionMaker(read_only=False) as session:
             webhook = self._get_webhook_by_id(session, webhook_id)
@@ -1791,6 +1799,8 @@ class SqlAlchemyStore(AbstractStore):
                 webhook.secret = secret
             if status is not None:
                 webhook.status = status.value
+            if destination_type is not None:
+                webhook.destination_type = destination_type.value
 
             webhook.last_updated_timestamp = get_current_time_millis()
 

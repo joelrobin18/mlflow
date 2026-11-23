@@ -3419,6 +3419,10 @@
     "defaultMessage": "2. Trace your code",
     "description": "Section title introducing the tracing quickstart example"
   },
+  "8xfOYh": {
+    "defaultMessage": "Destination",
+    "description": "Webhook destination type field label"
+  },
   "8xji5J": {
     "defaultMessage": "X-axis:",
     "description": "Label text for X-axis in box plot comparison in MLflow"
@@ -4470,6 +4474,10 @@
   "C36xdr": {
     "defaultMessage": "Source digest",
     "description": "Eval run detail: digest of the evaluated agent function source code"
+  },
+  "C4AY/g": {
+    "defaultMessage": "Slack",
+    "description": "Badge for a webhook that posts to Slack"
   },
   "C4y1fv": {
     "defaultMessage": "-∞",
@@ -11171,6 +11179,10 @@
     "defaultMessage": "Create prompt version",
     "description": "A header for the create prompt version modal in the prompt management UI"
   },
+  "XNSxe9": {
+    "defaultMessage": "Slack incoming webhook",
+    "description": "Webhook destination type label"
+  },
   "XOUsyq": {
     "defaultMessage": "Loading model definitions...",
     "description": "Loading message for model definitions"
@@ -11590,6 +11602,10 @@
   "YnHiZ6": {
     "defaultMessage": "Relative Time (hours)",
     "description": "Label for the relative axis on the runs compare chart in hours"
+  },
+  "YnLaKg": {
+    "defaultMessage": "A Slack incoming webhook gets a formatted Slack message. An HTTP endpoint gets the event as signed JSON.",
+    "description": "Webhook destination type field description"
   },
   "YpZh9l": {
     "defaultMessage": "Rationale (optional)",
@@ -15398,6 +15414,10 @@
   "kEmVw4": {
     "defaultMessage": "Trace Archival Retention",
     "description": "Label for workspace trace archival retention field"
+  },
+  "kGkllD": {
+    "defaultMessage": "HTTP endpoint (signed JSON)",
+    "description": "Webhook destination type label"
   },
   "kHDQiE": {
     "defaultMessage": "Analyze the '{{ conversation }}' and determine if the agent maintains a polite and professional tone throughout all interactions.{br}Rate as 'consistently_polite', 'mostly_polite', or 'impolite'.",

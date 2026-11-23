@@ -313,4 +313,39 @@ describe('WebhooksSettings', () => {
       expect(mockUpdateWebhook).toHaveBeenCalledWith('wh-3', expect.objectContaining({ experiment_ids: [] }));
     });
   });
+  it('creates a webhook that posts to Slack', async () => {
+    renderComponent();
+    await openCreateModal();
+
+    const trigger = document.querySelector<HTMLElement>(
+      '[data-component-id="mlflow.settings.webhooks.destination-type-select"]',
+    );
+    if (!trigger) throw new Error('destination select not found');
+    await userEvent.click(trigger);
+    await userEvent.click(await screen.findByRole('option', { name: 'Slack incoming webhook' }));
+    await userEvent.click(screen.getByText('Issue created'));
+    await submitModal('Create');
+
+    await waitFor(() => {
+      expect(mockCreateWebhook).toHaveBeenCalledWith(expect.objectContaining({ destination_type: 'SLACK' }));
+    });
+  });
+
+  it('defaults a new webhook to signed JSON and marks Slack webhooks in the list', async () => {
+    mockListWebhooks.mockResolvedValue({ webhooks: [{ ...ISSUE_WEBHOOK, destination_type: 'SLACK' as const }] });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Slack')).toBeInTheDocument();
+    });
+
+    await openCreateModal();
+    await userEvent.click(screen.getByText('Prompt created'));
+    await submitModal('Create');
+
+    await waitFor(() => {
+      expect(mockCreateWebhook).toHaveBeenCalledWith(expect.objectContaining({ destination_type: 'GENERIC' }));
+    });
+  });
 });

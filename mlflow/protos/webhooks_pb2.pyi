@@ -39,6 +39,30 @@ DISABLED: WebhookStatus.ValueType  # 2
 """Webhook is disabled and not receiving events"""
 Global___WebhookStatus: _TypeAlias = WebhookStatus  # noqa: Y015
 
+class _WebhookDestinationType:
+    ValueType = _typing.NewType("ValueType", _builtins.int)
+    V: _TypeAlias = ValueType  # noqa: Y015
+
+class _WebhookDestinationTypeEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[_WebhookDestinationType.ValueType], _builtins.type):
+    DESCRIPTOR: _descriptor.EnumDescriptor
+    DESTINATION_TYPE_UNSPECIFIED: _WebhookDestinationType.ValueType  # 0
+    """Default/unknown destination, delivered as GENERIC"""
+    GENERIC: _WebhookDestinationType.ValueType  # 1
+    """Signed JSON envelope carrying the event's payload"""
+    SLACK: _WebhookDestinationType.ValueType  # 2
+    """Slack message, for a Slack incoming webhook URL"""
+
+class WebhookDestinationType(_WebhookDestinationType, metaclass=_WebhookDestinationTypeEnumTypeWrapper):
+    """How a webhook's deliveries are formatted"""
+
+DESTINATION_TYPE_UNSPECIFIED: WebhookDestinationType.ValueType  # 0
+"""Default/unknown destination, delivered as GENERIC"""
+GENERIC: WebhookDestinationType.ValueType  # 1
+"""Signed JSON envelope carrying the event's payload"""
+SLACK: WebhookDestinationType.ValueType  # 2
+"""Slack message, for a Slack incoming webhook URL"""
+Global___WebhookDestinationType: _TypeAlias = WebhookDestinationType  # noqa: Y015
+
 class _WebhookEntity:
     ValueType = _typing.NewType("ValueType", _builtins.int)
     V: _TypeAlias = ValueType  # noqa: Y015
@@ -184,6 +208,7 @@ class Webhook(_message.Message):
     CREATION_TIMESTAMP_FIELD_NUMBER: _builtins.int
     LAST_UPDATED_TIMESTAMP_FIELD_NUMBER: _builtins.int
     EXPERIMENT_IDS_FIELD_NUMBER: _builtins.int
+    DESTINATION_TYPE_FIELD_NUMBER: _builtins.int
     webhook_id: _builtins.str
     """Unique identifier for the webhook"""
     name: _builtins.str
@@ -198,6 +223,8 @@ class Webhook(_message.Message):
     """Timestamp when webhook was created"""
     last_updated_timestamp: _builtins.int
     """Timestamp when webhook was last updated"""
+    destination_type: Global___WebhookDestinationType.ValueType
+    """How the webhook's deliveries are formatted"""
     @_builtins.property
     def events(self) -> _containers.RepeatedCompositeFieldContainer[Global___WebhookEvent]:
         """List of events this webhook is subscribed to"""
@@ -221,10 +248,11 @@ class Webhook(_message.Message):
         creation_timestamp: _builtins.int | None = ...,
         last_updated_timestamp: _builtins.int | None = ...,
         experiment_ids: _abc.Iterable[_builtins.str] | None = ...,
+        destination_type: Global___WebhookDestinationType.ValueType | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "destination_type", b"destination_type", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "events", b"events", "experiment_ids", b"experiment_ids", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "destination_type", b"destination_type", "events", b"events", "experiment_ids", b"experiment_ids", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -295,6 +323,7 @@ class CreateWebhook(_message.Message):
     SECRET_FIELD_NUMBER: _builtins.int
     STATUS_FIELD_NUMBER: _builtins.int
     EXPERIMENT_IDS_FIELD_NUMBER: _builtins.int
+    DESTINATION_TYPE_FIELD_NUMBER: _builtins.int
     name: _builtins.str
     """Name of the webhook"""
     description: _builtins.str
@@ -305,6 +334,8 @@ class CreateWebhook(_message.Message):
     """Secret key for HMAC signature verification"""
     status: Global___WebhookStatus.ValueType
     """Initial status (defaults to ACTIVE if not specified)"""
+    destination_type: Global___WebhookDestinationType.ValueType
+    """How deliveries are formatted (defaults to GENERIC if not specified)"""
     @_builtins.property
     def events(self) -> _containers.RepeatedCompositeFieldContainer[Global___WebhookEvent]:
         """List of events to subscribe to"""
@@ -326,10 +357,11 @@ class CreateWebhook(_message.Message):
         secret: _builtins.str | None = ...,
         status: Global___WebhookStatus.ValueType | None = ...,
         experiment_ids: _abc.Iterable[_builtins.str] | None = ...,
+        destination_type: Global___WebhookDestinationType.ValueType | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "events", b"events", "experiment_ids", b"experiment_ids", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "events", b"events", "experiment_ids", b"experiment_ids", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -457,6 +489,7 @@ class UpdateWebhook(_message.Message):
     SECRET_FIELD_NUMBER: _builtins.int
     STATUS_FIELD_NUMBER: _builtins.int
     EXPERIMENT_IDS_FIELD_NUMBER: _builtins.int
+    DESTINATION_TYPE_FIELD_NUMBER: _builtins.int
     webhook_id: _builtins.str
     """ID of the webhook to update"""
     name: _builtins.str
@@ -469,6 +502,8 @@ class UpdateWebhook(_message.Message):
     """New secret key for HMAC signature"""
     status: Global___WebhookStatus.ValueType
     """New status for the webhook"""
+    destination_type: Global___WebhookDestinationType.ValueType
+    """New delivery format for the webhook"""
     @_builtins.property
     def events(self) -> _containers.RepeatedCompositeFieldContainer[Global___WebhookEvent]:
         """New list of events to subscribe to"""
@@ -491,10 +526,11 @@ class UpdateWebhook(_message.Message):
         secret: _builtins.str | None = ...,
         status: Global___WebhookStatus.ValueType | None = ...,
         experiment_ids: _abc.Iterable[_builtins.str] | None = ...,
+        destination_type: Global___WebhookDestinationType.ValueType | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "events", b"events", "experiment_ids", b"experiment_ids", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "destination_type", b"destination_type", "events", b"events", "experiment_ids", b"experiment_ids", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 

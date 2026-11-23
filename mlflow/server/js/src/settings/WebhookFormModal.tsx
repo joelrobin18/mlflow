@@ -6,19 +6,24 @@ import {
   FormUI,
   Modal,
   RHFControlledComponents,
+  SimpleSelect,
+  SimpleSelectOption,
   useDesignSystemTheme,
 } from '@databricks/design-system';
 import { FormattedMessage, useIntl } from '@databricks/i18n';
 import { WebhooksApi } from './webhooksApi';
 import type { Webhook, WebhookEvent } from './webhooksApi';
 import {
+  DESTINATION_TYPES,
   VALID_EVENTS,
   WEBHOOK_NAME_REGEX,
+  destinationTypeLabels,
   eventKey,
   eventLabels,
   isExperimentScopedEventKey,
   parseExperimentIds,
 } from './webhookConstants';
+import type { WebhookDestinationType } from './webhookConstants';
 
 interface WebhookFormData {
   name: string;
@@ -28,6 +33,7 @@ interface WebhookFormData {
   status: boolean;
   events: string[];
   experimentIds: string;
+  destinationType: WebhookDestinationType;
 }
 
 interface WebhookFormModalProps {
@@ -62,6 +68,7 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
       status: editingWebhook ? editingWebhook.status === 'ACTIVE' : true,
       events: defaultEvents,
       experimentIds: editingWebhook?.experiment_ids?.join(', ') ?? '',
+      destinationType: editingWebhook?.destination_type ?? 'GENERIC',
     },
   });
 
@@ -95,6 +102,7 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
       // Sent even when empty, so editing a limited webhook to drop its experiments, or to add an event
       // that cannot be limited, removes the limit instead of keeping it.
       experiment_ids: canLimitToExperiments ? parseExperimentIds(values.experimentIds) : [],
+      destination_type: values.destinationType,
     };
 
     try {
@@ -202,6 +210,36 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
               validationState={form.formState.errors.url ? 'error' : undefined}
             />
             {form.formState.errors.url && <FormUI.Message type="error" message={form.formState.errors.url.message} />}
+          </div>
+
+          <div>
+            <FormUI.Label htmlFor="mlflow.settings.webhooks.destination-type-select">
+              <FormattedMessage defaultMessage="Destination" description="Webhook destination type field label" />
+            </FormUI.Label>
+            <FormUI.Hint>
+              <FormattedMessage
+                defaultMessage="A Slack incoming webhook gets a formatted Slack message. An HTTP endpoint gets the event as signed JSON."
+                description="Webhook destination type field description"
+              />
+            </FormUI.Hint>
+            <Controller
+              name="destinationType"
+              control={form.control}
+              render={({ field }) => (
+                <SimpleSelect
+                  id="mlflow.settings.webhooks.destination-type-select"
+                  componentId="mlflow.settings.webhooks.destination-type-select"
+                  value={field.value}
+                  onChange={({ target }) => field.onChange(target.value as WebhookDestinationType)}
+                >
+                  {DESTINATION_TYPES.map((destinationType) => (
+                    <SimpleSelectOption key={destinationType} value={destinationType}>
+                      {intl.formatMessage(destinationTypeLabels[destinationType])}
+                    </SimpleSelectOption>
+                  ))}
+                </SimpleSelect>
+              )}
+            />
           </div>
 
           <div>

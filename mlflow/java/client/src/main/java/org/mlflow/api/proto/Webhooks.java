@@ -132,6 +132,139 @@ public final class Webhooks {
 
   /**
    * <pre>
+   * How a webhook's deliveries are formatted
+   * </pre>
+   *
+   * Protobuf enum {@code mlflow.WebhookDestinationType}
+   */
+  public enum WebhookDestinationType
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <pre>
+     * Default/unknown destination, delivered as GENERIC
+     * </pre>
+     *
+     * <code>DESTINATION_TYPE_UNSPECIFIED = 0;</code>
+     */
+    DESTINATION_TYPE_UNSPECIFIED(0),
+    /**
+     * <pre>
+     * Signed JSON envelope carrying the event's payload
+     * </pre>
+     *
+     * <code>GENERIC = 1;</code>
+     */
+    GENERIC(1),
+    /**
+     * <pre>
+     * Slack message, for a Slack incoming webhook URL
+     * </pre>
+     *
+     * <code>SLACK = 2;</code>
+     */
+    SLACK(2),
+    ;
+
+    /**
+     * <pre>
+     * Default/unknown destination, delivered as GENERIC
+     * </pre>
+     *
+     * <code>DESTINATION_TYPE_UNSPECIFIED = 0;</code>
+     */
+    public static final int DESTINATION_TYPE_UNSPECIFIED_VALUE = 0;
+    /**
+     * <pre>
+     * Signed JSON envelope carrying the event's payload
+     * </pre>
+     *
+     * <code>GENERIC = 1;</code>
+     */
+    public static final int GENERIC_VALUE = 1;
+    /**
+     * <pre>
+     * Slack message, for a Slack incoming webhook URL
+     * </pre>
+     *
+     * <code>SLACK = 2;</code>
+     */
+    public static final int SLACK_VALUE = 2;
+
+
+    public final int getNumber() {
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static WebhookDestinationType valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static WebhookDestinationType forNumber(int value) {
+      switch (value) {
+        case 0: return DESTINATION_TYPE_UNSPECIFIED;
+        case 1: return GENERIC;
+        case 2: return SLACK;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<WebhookDestinationType>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        WebhookDestinationType> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<WebhookDestinationType>() {
+            public WebhookDestinationType findValueByNumber(int number) {
+              return WebhookDestinationType.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.mlflow.api.proto.Webhooks.getDescriptor().getEnumTypes().get(1);
+    }
+
+    private static final WebhookDestinationType[] VALUES = values();
+
+    public static WebhookDestinationType valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private WebhookDestinationType(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:mlflow.WebhookDestinationType)
+  }
+
+  /**
+   * <pre>
    * Webhook entity types
    * </pre>
    *
@@ -410,7 +543,7 @@ public final class Webhooks {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.mlflow.api.proto.Webhooks.getDescriptor().getEnumTypes().get(1);
+      return org.mlflow.api.proto.Webhooks.getDescriptor().getEnumTypes().get(2);
     }
 
     private static final WebhookEntity[] VALUES = values();
@@ -611,7 +744,7 @@ public final class Webhooks {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.mlflow.api.proto.Webhooks.getDescriptor().getEnumTypes().get(2);
+      return org.mlflow.api.proto.Webhooks.getDescriptor().getEnumTypes().get(3);
     }
 
     private static final WebhookAction[] VALUES = values();
@@ -1619,6 +1752,25 @@ public final class Webhooks {
      */
     com.google.protobuf.ByteString
         getExperimentIdsBytes(int index);
+
+    /**
+     * <pre>
+     * How the webhook's deliveries are formatted
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 10;</code>
+     * @return Whether the destinationType field is set.
+     */
+    boolean hasDestinationType();
+    /**
+     * <pre>
+     * How the webhook's deliveries are formatted
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 10;</code>
+     * @return The destinationType.
+     */
+    org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType();
   }
   /**
    * <pre>
@@ -1644,6 +1796,7 @@ public final class Webhooks {
       events_ = java.util.Collections.emptyList();
       status_ = 1;
       experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      destinationType_ = 0;
     }
 
     @java.lang.Override
@@ -1739,6 +1892,18 @@ public final class Webhooks {
                 mutable_bitField0_ |= 0x00000100;
               }
               experimentIds_.add(bs);
+              break;
+            }
+            case 80: {
+              int rawValue = input.readEnum();
+                @SuppressWarnings("deprecation")
+              org.mlflow.api.proto.Webhooks.WebhookDestinationType value = org.mlflow.api.proto.Webhooks.WebhookDestinationType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(10, rawValue);
+              } else {
+                bitField0_ |= 0x00000080;
+                destinationType_ = rawValue;
+              }
               break;
             }
             default: {
@@ -2220,6 +2385,33 @@ public final class Webhooks {
       return experimentIds_.getByteString(index);
     }
 
+    public static final int DESTINATION_TYPE_FIELD_NUMBER = 10;
+    private int destinationType_;
+    /**
+     * <pre>
+     * How the webhook's deliveries are formatted
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 10;</code>
+     * @return Whether the destinationType field is set.
+     */
+    @java.lang.Override public boolean hasDestinationType() {
+      return ((bitField0_ & 0x00000080) != 0);
+    }
+    /**
+     * <pre>
+     * How the webhook's deliveries are formatted
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 10;</code>
+     * @return The destinationType.
+     */
+    @java.lang.Override public org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType() {
+      @SuppressWarnings("deprecation")
+      org.mlflow.api.proto.Webhooks.WebhookDestinationType result = org.mlflow.api.proto.Webhooks.WebhookDestinationType.valueOf(destinationType_);
+      return result == null ? org.mlflow.api.proto.Webhooks.WebhookDestinationType.DESTINATION_TYPE_UNSPECIFIED : result;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2260,6 +2452,9 @@ public final class Webhooks {
       }
       for (int i = 0; i < experimentIds_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 9, experimentIds_.getRaw(i));
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        output.writeEnum(10, destinationType_);
       }
       unknownFields.writeTo(output);
     }
@@ -2305,6 +2500,10 @@ public final class Webhooks {
         }
         size += dataSize;
         size += 1 * getExperimentIdsList().size();
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(10, destinationType_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2359,6 +2558,10 @@ public final class Webhooks {
       }
       if (!getExperimentIdsList()
           .equals(other.getExperimentIdsList())) return false;
+      if (hasDestinationType() != other.hasDestinationType()) return false;
+      if (hasDestinationType()) {
+        if (destinationType_ != other.destinationType_) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2407,6 +2610,10 @@ public final class Webhooks {
       if (getExperimentIdsCount() > 0) {
         hash = (37 * hash) + EXPERIMENT_IDS_FIELD_NUMBER;
         hash = (53 * hash) + getExperimentIdsList().hashCode();
+      }
+      if (hasDestinationType()) {
+        hash = (37 * hash) + DESTINATION_TYPE_FIELD_NUMBER;
+        hash = (53 * hash) + destinationType_;
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2568,6 +2775,8 @@ public final class Webhooks {
         bitField0_ = (bitField0_ & ~0x00000080);
         experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000100);
+        destinationType_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -2638,6 +2847,10 @@ public final class Webhooks {
           bitField0_ = (bitField0_ & ~0x00000100);
         }
         result.experimentIds_ = experimentIds_;
+        if (((from_bitField0_ & 0x00000200) != 0)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.destinationType_ = destinationType_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2751,6 +2964,9 @@ public final class Webhooks {
             experimentIds_.addAll(other.experimentIds_);
           }
           onChanged();
+        }
+        if (other.hasDestinationType()) {
+          setDestinationType(other.getDestinationType());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -3854,6 +4070,65 @@ public final class Webhooks {
   }
   ensureExperimentIdsIsMutable();
         experimentIds_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private int destinationType_ = 0;
+      /**
+       * <pre>
+       * How the webhook's deliveries are formatted
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 10;</code>
+       * @return Whether the destinationType field is set.
+       */
+      @java.lang.Override public boolean hasDestinationType() {
+        return ((bitField0_ & 0x00000200) != 0);
+      }
+      /**
+       * <pre>
+       * How the webhook's deliveries are formatted
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 10;</code>
+       * @return The destinationType.
+       */
+      @java.lang.Override
+      public org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType() {
+        @SuppressWarnings("deprecation")
+        org.mlflow.api.proto.Webhooks.WebhookDestinationType result = org.mlflow.api.proto.Webhooks.WebhookDestinationType.valueOf(destinationType_);
+        return result == null ? org.mlflow.api.proto.Webhooks.WebhookDestinationType.DESTINATION_TYPE_UNSPECIFIED : result;
+      }
+      /**
+       * <pre>
+       * How the webhook's deliveries are formatted
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 10;</code>
+       * @param value The destinationType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDestinationType(org.mlflow.api.proto.Webhooks.WebhookDestinationType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000200;
+        destinationType_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * How the webhook's deliveries are formatted
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 10;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDestinationType() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        destinationType_ = 0;
         onChanged();
         return this;
       }
@@ -5296,6 +5571,25 @@ public final class Webhooks {
      */
     com.google.protobuf.ByteString
         getExperimentIdsBytes(int index);
+
+    /**
+     * <pre>
+     * How deliveries are formatted (defaults to GENERIC if not specified)
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 8;</code>
+     * @return Whether the destinationType field is set.
+     */
+    boolean hasDestinationType();
+    /**
+     * <pre>
+     * How deliveries are formatted (defaults to GENERIC if not specified)
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 8;</code>
+     * @return The destinationType.
+     */
+    org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType();
   }
   /**
    * <pre>
@@ -5321,6 +5615,7 @@ public final class Webhooks {
       secret_ = "";
       status_ = 1;
       experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      destinationType_ = 0;
     }
 
     @java.lang.Override
@@ -5406,6 +5701,18 @@ public final class Webhooks {
                 mutable_bitField0_ |= 0x00000040;
               }
               experimentIds_.add(bs);
+              break;
+            }
+            case 64: {
+              int rawValue = input.readEnum();
+                @SuppressWarnings("deprecation")
+              org.mlflow.api.proto.Webhooks.WebhookDestinationType value = org.mlflow.api.proto.Webhooks.WebhookDestinationType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(8, rawValue);
+              } else {
+                bitField0_ |= 0x00000020;
+                destinationType_ = rawValue;
+              }
               break;
             }
             default: {
@@ -6465,6 +6772,33 @@ public final class Webhooks {
       return experimentIds_.getByteString(index);
     }
 
+    public static final int DESTINATION_TYPE_FIELD_NUMBER = 8;
+    private int destinationType_;
+    /**
+     * <pre>
+     * How deliveries are formatted (defaults to GENERIC if not specified)
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 8;</code>
+     * @return Whether the destinationType field is set.
+     */
+    @java.lang.Override public boolean hasDestinationType() {
+      return ((bitField0_ & 0x00000020) != 0);
+    }
+    /**
+     * <pre>
+     * How deliveries are formatted (defaults to GENERIC if not specified)
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 8;</code>
+     * @return The destinationType.
+     */
+    @java.lang.Override public org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType() {
+      @SuppressWarnings("deprecation")
+      org.mlflow.api.proto.Webhooks.WebhookDestinationType result = org.mlflow.api.proto.Webhooks.WebhookDestinationType.valueOf(destinationType_);
+      return result == null ? org.mlflow.api.proto.Webhooks.WebhookDestinationType.DESTINATION_TYPE_UNSPECIFIED : result;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -6499,6 +6833,9 @@ public final class Webhooks {
       }
       for (int i = 0; i < experimentIds_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 7, experimentIds_.getRaw(i));
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        output.writeEnum(8, destinationType_);
       }
       unknownFields.writeTo(output);
     }
@@ -6536,6 +6873,10 @@ public final class Webhooks {
         }
         size += dataSize;
         size += 1 * getExperimentIdsList().size();
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(8, destinationType_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -6580,6 +6921,10 @@ public final class Webhooks {
       }
       if (!getExperimentIdsList()
           .equals(other.getExperimentIdsList())) return false;
+      if (hasDestinationType() != other.hasDestinationType()) return false;
+      if (hasDestinationType()) {
+        if (destinationType_ != other.destinationType_) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -6618,6 +6963,10 @@ public final class Webhooks {
       if (getExperimentIdsCount() > 0) {
         hash = (37 * hash) + EXPERIMENT_IDS_FIELD_NUMBER;
         hash = (53 * hash) + getExperimentIdsList().hashCode();
+      }
+      if (hasDestinationType()) {
+        hash = (37 * hash) + DESTINATION_TYPE_FIELD_NUMBER;
+        hash = (53 * hash) + destinationType_;
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -6775,6 +7124,8 @@ public final class Webhooks {
         bitField0_ = (bitField0_ & ~0x00000020);
         experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000040);
+        destinationType_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -6837,6 +7188,10 @@ public final class Webhooks {
           bitField0_ = (bitField0_ & ~0x00000040);
         }
         result.experimentIds_ = experimentIds_;
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.destinationType_ = destinationType_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6944,6 +7299,9 @@ public final class Webhooks {
             experimentIds_.addAll(other.experimentIds_);
           }
           onChanged();
+        }
+        if (other.hasDestinationType()) {
+          setDestinationType(other.getDestinationType());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -7937,6 +8295,65 @@ public final class Webhooks {
   }
   ensureExperimentIdsIsMutable();
         experimentIds_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private int destinationType_ = 0;
+      /**
+       * <pre>
+       * How deliveries are formatted (defaults to GENERIC if not specified)
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 8;</code>
+       * @return Whether the destinationType field is set.
+       */
+      @java.lang.Override public boolean hasDestinationType() {
+        return ((bitField0_ & 0x00000080) != 0);
+      }
+      /**
+       * <pre>
+       * How deliveries are formatted (defaults to GENERIC if not specified)
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 8;</code>
+       * @return The destinationType.
+       */
+      @java.lang.Override
+      public org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType() {
+        @SuppressWarnings("deprecation")
+        org.mlflow.api.proto.Webhooks.WebhookDestinationType result = org.mlflow.api.proto.Webhooks.WebhookDestinationType.valueOf(destinationType_);
+        return result == null ? org.mlflow.api.proto.Webhooks.WebhookDestinationType.DESTINATION_TYPE_UNSPECIFIED : result;
+      }
+      /**
+       * <pre>
+       * How deliveries are formatted (defaults to GENERIC if not specified)
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 8;</code>
+       * @param value The destinationType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDestinationType(org.mlflow.api.proto.Webhooks.WebhookDestinationType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000080;
+        destinationType_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * How deliveries are formatted (defaults to GENERIC if not specified)
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 8;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDestinationType() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        destinationType_ = 0;
         onChanged();
         return this;
       }
@@ -11479,6 +11896,25 @@ public final class Webhooks {
      */
     com.google.protobuf.ByteString
         getExperimentIdsBytes(int index);
+
+    /**
+     * <pre>
+     * New delivery format for the webhook
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 9;</code>
+     * @return Whether the destinationType field is set.
+     */
+    boolean hasDestinationType();
+    /**
+     * <pre>
+     * New delivery format for the webhook
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 9;</code>
+     * @return The destinationType.
+     */
+    org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType();
   }
   /**
    * <pre>
@@ -11505,6 +11941,7 @@ public final class Webhooks {
       secret_ = "";
       status_ = 1;
       experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      destinationType_ = 0;
     }
 
     @java.lang.Override
@@ -11596,6 +12033,18 @@ public final class Webhooks {
                 mutable_bitField0_ |= 0x00000080;
               }
               experimentIds_.add(bs);
+              break;
+            }
+            case 72: {
+              int rawValue = input.readEnum();
+                @SuppressWarnings("deprecation")
+              org.mlflow.api.proto.Webhooks.WebhookDestinationType value = org.mlflow.api.proto.Webhooks.WebhookDestinationType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(9, rawValue);
+              } else {
+                bitField0_ |= 0x00000040;
+                destinationType_ = rawValue;
+              }
               break;
             }
             default: {
@@ -12715,6 +13164,33 @@ public final class Webhooks {
       return experimentIds_.getByteString(index);
     }
 
+    public static final int DESTINATION_TYPE_FIELD_NUMBER = 9;
+    private int destinationType_;
+    /**
+     * <pre>
+     * New delivery format for the webhook
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 9;</code>
+     * @return Whether the destinationType field is set.
+     */
+    @java.lang.Override public boolean hasDestinationType() {
+      return ((bitField0_ & 0x00000040) != 0);
+    }
+    /**
+     * <pre>
+     * New delivery format for the webhook
+     * </pre>
+     *
+     * <code>optional .mlflow.WebhookDestinationType destination_type = 9;</code>
+     * @return The destinationType.
+     */
+    @java.lang.Override public org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType() {
+      @SuppressWarnings("deprecation")
+      org.mlflow.api.proto.Webhooks.WebhookDestinationType result = org.mlflow.api.proto.Webhooks.WebhookDestinationType.valueOf(destinationType_);
+      return result == null ? org.mlflow.api.proto.Webhooks.WebhookDestinationType.DESTINATION_TYPE_UNSPECIFIED : result;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -12752,6 +13228,9 @@ public final class Webhooks {
       }
       for (int i = 0; i < experimentIds_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 8, experimentIds_.getRaw(i));
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        output.writeEnum(9, destinationType_);
       }
       unknownFields.writeTo(output);
     }
@@ -12792,6 +13271,10 @@ public final class Webhooks {
         }
         size += dataSize;
         size += 1 * getExperimentIdsList().size();
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(9, destinationType_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -12841,6 +13324,10 @@ public final class Webhooks {
       }
       if (!getExperimentIdsList()
           .equals(other.getExperimentIdsList())) return false;
+      if (hasDestinationType() != other.hasDestinationType()) return false;
+      if (hasDestinationType()) {
+        if (destinationType_ != other.destinationType_) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -12883,6 +13370,10 @@ public final class Webhooks {
       if (getExperimentIdsCount() > 0) {
         hash = (37 * hash) + EXPERIMENT_IDS_FIELD_NUMBER;
         hash = (53 * hash) + getExperimentIdsList().hashCode();
+      }
+      if (hasDestinationType()) {
+        hash = (37 * hash) + DESTINATION_TYPE_FIELD_NUMBER;
+        hash = (53 * hash) + destinationType_;
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -13042,6 +13533,8 @@ public final class Webhooks {
         bitField0_ = (bitField0_ & ~0x00000040);
         experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000080);
+        destinationType_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -13108,6 +13601,10 @@ public final class Webhooks {
           bitField0_ = (bitField0_ & ~0x00000080);
         }
         result.experimentIds_ = experimentIds_;
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.destinationType_ = destinationType_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -13220,6 +13717,9 @@ public final class Webhooks {
             experimentIds_.addAll(other.experimentIds_);
           }
           onChanged();
+        }
+        if (other.hasDestinationType()) {
+          setDestinationType(other.getDestinationType());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -14321,6 +14821,65 @@ public final class Webhooks {
   }
   ensureExperimentIdsIsMutable();
         experimentIds_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private int destinationType_ = 0;
+      /**
+       * <pre>
+       * New delivery format for the webhook
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 9;</code>
+       * @return Whether the destinationType field is set.
+       */
+      @java.lang.Override public boolean hasDestinationType() {
+        return ((bitField0_ & 0x00000100) != 0);
+      }
+      /**
+       * <pre>
+       * New delivery format for the webhook
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 9;</code>
+       * @return The destinationType.
+       */
+      @java.lang.Override
+      public org.mlflow.api.proto.Webhooks.WebhookDestinationType getDestinationType() {
+        @SuppressWarnings("deprecation")
+        org.mlflow.api.proto.Webhooks.WebhookDestinationType result = org.mlflow.api.proto.Webhooks.WebhookDestinationType.valueOf(destinationType_);
+        return result == null ? org.mlflow.api.proto.Webhooks.WebhookDestinationType.DESTINATION_TYPE_UNSPECIFIED : result;
+      }
+      /**
+       * <pre>
+       * New delivery format for the webhook
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 9;</code>
+       * @param value The destinationType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDestinationType(org.mlflow.api.proto.Webhooks.WebhookDestinationType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000100;
+        destinationType_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * New delivery format for the webhook
+       * </pre>
+       *
+       * <code>optional .mlflow.WebhookDestinationType destination_type = 9;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDestinationType() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        destinationType_ = 0;
         onChanged();
         return this;
       }
@@ -17130,77 +17689,84 @@ public final class Webhooks {
       "to\032\025scalapb/scalapb.proto\"h\n\014WebhookEven" +
       "t\022+\n\006entity\030\001 \001(\0162\025.mlflow.WebhookEntity" +
       "B\004\370\206\031\001\022+\n\006action\030\002 \001(\0162\025.mlflow.WebhookA" +
-      "ctionB\004\370\206\031\001\"\356\001\n\007Webhook\022\022\n\nwebhook_id\030\001 " +
+      "ctionB\004\370\206\031\001\"\250\002\n\007Webhook\022\022\n\nwebhook_id\030\001 " +
       "\001(\t\022\014\n\004name\030\002 \001(\t\022\023\n\013description\030\003 \001(\t\022\013" +
       "\n\003url\030\004 \001(\t\022$\n\006events\030\005 \003(\0132\024.mlflow.Web" +
       "hookEvent\022%\n\006status\030\006 \001(\0162\025.mlflow.Webho" +
       "okStatus\022\032\n\022creation_timestamp\030\007 \001(\003\022\036\n\026" +
       "last_updated_timestamp\030\010 \001(\003\022\026\n\016experime" +
-      "nt_ids\030\t \003(\t\"k\n\021WebhookTestResult\022\017\n\007suc" +
-      "cess\030\001 \001(\010\022\027\n\017response_status\030\002 \001(\005\022\025\n\rr" +
-      "esponse_body\030\003 \001(\t\022\025\n\rerror_message\030\004 \001(" +
-      "\t\"\241\002\n\rCreateWebhook\022\022\n\004name\030\001 \001(\tB\004\370\206\031\001\022" +
-      "\023\n\013description\030\002 \001(\t\022\021\n\003url\030\003 \001(\tB\004\370\206\031\001\022" +
-      "*\n\006events\030\004 \003(\0132\024.mlflow.WebhookEventB\004\370" +
-      "\206\031\001\022\016\n\006secret\030\005 \001(\t\022%\n\006status\030\006 \001(\0162\025.ml" +
-      "flow.WebhookStatus\022\026\n\016experiment_ids\030\007 \003" +
-      "(\t\032,\n\010Response\022 \n\007webhook\030\001 \001(\0132\017.mlflow" +
-      ".Webhook:+\342?(\n&com.databricks.rpc.RPC[$t" +
-      "his.Response]\"\261\001\n\014ListWebhooks\022\030\n\013max_re" +
-      "sults\030\001 \001(\005:\003100\022\022\n\npage_token\030\002 \001(\t\032F\n\010" +
-      "Response\022!\n\010webhooks\030\001 \003(\0132\017.mlflow.Webh" +
-      "ook\022\027\n\017next_page_token\030\002 \001(\t:+\342?(\n&com.d" +
-      "atabricks.rpc.RPC[$this.Response]\"\201\001\n\nGe" +
-      "tWebhook\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206\031\001\032,\n\010Re" +
-      "sponse\022 \n\007webhook\030\001 \001(\0132\017.mlflow.Webhook" +
-      ":+\342?(\n&com.databricks.rpc.RPC[$this.Resp" +
-      "onse]\"\251\002\n\rUpdateWebhook\022\030\n\nwebhook_id\030\001 " +
-      "\001(\tB\004\370\206\031\001\022\014\n\004name\030\002 \001(\t\022\023\n\013description\030\003" +
-      " \001(\t\022\013\n\003url\030\004 \001(\t\022$\n\006events\030\005 \003(\0132\024.mlfl" +
-      "ow.WebhookEvent\022\016\n\006secret\030\006 \001(\t\022%\n\006statu" +
-      "s\030\007 \001(\0162\025.mlflow.WebhookStatus\022\026\n\016experi" +
-      "ment_ids\030\010 \003(\t\032,\n\010Response\022 \n\007webhook\030\001 " +
-      "\001(\0132\017.mlflow.Webhook:+\342?(\n&com.databrick" +
-      "s.rpc.RPC[$this.Response]\"b\n\rDeleteWebho" +
-      "ok\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206\031\001\032\n\n\010Response" +
-      ":+\342?(\n&com.databricks.rpc.RPC[$this.Resp" +
-      "onse]\"\260\001\n\013TestWebhook\022\030\n\nwebhook_id\030\001 \001(" +
-      "\tB\004\370\206\031\001\022#\n\005event\030\002 \001(\0132\024.mlflow.WebhookE" +
-      "vent\0325\n\010Response\022)\n\006result\030\001 \001(\0132\031.mlflo" +
-      "w.WebhookTestResult:+\342?(\n&com.databricks" +
-      ".rpc.RPC[$this.Response]*)\n\rWebhookStatu" +
-      "s\022\n\n\006ACTIVE\020\001\022\014\n\010DISABLED\020\002*\221\002\n\rWebhookE" +
-      "ntity\022\026\n\022ENTITY_UNSPECIFIED\020\000\022\024\n\020REGISTE" +
-      "RED_MODEL\020\001\022\021\n\rMODEL_VERSION\020\002\022\025\n\021MODEL_" +
-      "VERSION_TAG\020\003\022\027\n\023MODEL_VERSION_ALIAS\020\004\022\n" +
-      "\n\006PROMPT\020\005\022\022\n\016PROMPT_VERSION\020\006\022\016\n\nPROMPT" +
-      "_TAG\020\007\022\026\n\022PROMPT_VERSION_TAG\020\010\022\020\n\014PROMPT" +
-      "_ALIAS\020\t\022\021\n\rBUDGET_POLICY\020\n\022\t\n\005ISSUE\020\013\022\027" +
-      "\n\023ISSUE_DETECTION_RUN\020\014*t\n\rWebhookAction" +
-      "\022\026\n\022ACTION_UNSPECIFIED\020\000\022\013\n\007CREATED\020\001\022\013\n" +
-      "\007UPDATED\020\002\022\013\n\007DELETED\020\003\022\007\n\003SET\020\004\022\014\n\010EXCE" +
-      "EDED\020\005\022\r\n\tCOMPLETED\020\0062\265\006\n\016WebhookService" +
-      "\022~\n\rcreateWebhook\022\025.mlflow.CreateWebhook" +
-      "\032\036.mlflow.CreateWebhook.Response\"6\362\206\0312\n\036" +
-      "\n\004POST\022\020/mlflow/webhooks\032\004\010\002\020\000\020\001*\016Create" +
-      " Webhook\022y\n\014listWebhooks\022\024.mlflow.ListWe" +
-      "bhooks\032\035.mlflow.ListWebhooks.Response\"4\362" +
-      "\206\0310\n\035\n\003GET\022\020/mlflow/webhooks\032\004\010\002\020\000\020\001*\rLi" +
-      "st Webhooks\022~\n\ngetWebhook\022\022.mlflow.GetWe" +
-      "bhook\032\033.mlflow.GetWebhook.Response\"?\362\206\031;" +
-      "\n*\n\003GET\022\035/mlflow/webhooks/{webhook_id}\032\004" +
-      "\010\002\020\000\020\001*\013Get Webhook\022\214\001\n\rupdateWebhook\022\025." +
-      "mlflow.UpdateWebhook\032\036.mlflow.UpdateWebh" +
-      "ook.Response\"D\362\206\031@\n,\n\005PATCH\022\035/mlflow/web" +
-      "hooks/{webhook_id}\032\004\010\002\020\000\020\001*\016Update Webho" +
-      "ok\022\215\001\n\rdeleteWebhook\022\025.mlflow.DeleteWebh" +
-      "ook\032\036.mlflow.DeleteWebhook.Response\"E\362\206\031" +
-      "A\n-\n\006DELETE\022\035/mlflow/webhooks/{webhook_i" +
-      "d}\032\004\010\002\020\000\020\001*\016Delete Webhook\022\210\001\n\013testWebho" +
-      "ok\022\023.mlflow.TestWebhook\032\034.mlflow.TestWeb" +
-      "hook.Response\"F\362\206\031B\n0\n\004POST\022\"/mlflow/web" +
-      "hooks/{webhook_id}/test\032\004\010\002\020\000\020\001*\014Test We" +
-      "bhookB!\n\024org.mlflow.api.proto\220\001\001\240\001\001\342?\002\020\001"
+      "nt_ids\030\t \003(\t\0228\n\020destination_type\030\n \001(\0162\036" +
+      ".mlflow.WebhookDestinationType\"k\n\021Webhoo" +
+      "kTestResult\022\017\n\007success\030\001 \001(\010\022\027\n\017response" +
+      "_status\030\002 \001(\005\022\025\n\rresponse_body\030\003 \001(\t\022\025\n\r" +
+      "error_message\030\004 \001(\t\"\333\002\n\rCreateWebhook\022\022\n" +
+      "\004name\030\001 \001(\tB\004\370\206\031\001\022\023\n\013description\030\002 \001(\t\022\021" +
+      "\n\003url\030\003 \001(\tB\004\370\206\031\001\022*\n\006events\030\004 \003(\0132\024.mlfl" +
+      "ow.WebhookEventB\004\370\206\031\001\022\016\n\006secret\030\005 \001(\t\022%\n" +
+      "\006status\030\006 \001(\0162\025.mlflow.WebhookStatus\022\026\n\016" +
+      "experiment_ids\030\007 \003(\t\0228\n\020destination_type" +
+      "\030\010 \001(\0162\036.mlflow.WebhookDestinationType\032," +
+      "\n\010Response\022 \n\007webhook\030\001 \001(\0132\017.mlflow.Web" +
+      "hook:+\342?(\n&com.databricks.rpc.RPC[$this." +
+      "Response]\"\261\001\n\014ListWebhooks\022\030\n\013max_result" +
+      "s\030\001 \001(\005:\003100\022\022\n\npage_token\030\002 \001(\t\032F\n\010Resp" +
+      "onse\022!\n\010webhooks\030\001 \003(\0132\017.mlflow.Webhook\022" +
+      "\027\n\017next_page_token\030\002 \001(\t:+\342?(\n&com.datab" +
+      "ricks.rpc.RPC[$this.Response]\"\201\001\n\nGetWeb" +
+      "hook\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206\031\001\032,\n\010Respon" +
+      "se\022 \n\007webhook\030\001 \001(\0132\017.mlflow.Webhook:+\342?" +
+      "(\n&com.databricks.rpc.RPC[$this.Response" +
+      "]\"\343\002\n\rUpdateWebhook\022\030\n\nwebhook_id\030\001 \001(\tB" +
+      "\004\370\206\031\001\022\014\n\004name\030\002 \001(\t\022\023\n\013description\030\003 \001(\t" +
+      "\022\013\n\003url\030\004 \001(\t\022$\n\006events\030\005 \003(\0132\024.mlflow.W" +
+      "ebhookEvent\022\016\n\006secret\030\006 \001(\t\022%\n\006status\030\007 " +
+      "\001(\0162\025.mlflow.WebhookStatus\022\026\n\016experiment" +
+      "_ids\030\010 \003(\t\0228\n\020destination_type\030\t \001(\0162\036.m" +
+      "lflow.WebhookDestinationType\032,\n\010Response" +
+      "\022 \n\007webhook\030\001 \001(\0132\017.mlflow.Webhook:+\342?(\n" +
+      "&com.databricks.rpc.RPC[$this.Response]\"" +
+      "b\n\rDeleteWebhook\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206" +
+      "\031\001\032\n\n\010Response:+\342?(\n&com.databricks.rpc." +
+      "RPC[$this.Response]\"\260\001\n\013TestWebhook\022\030\n\nw" +
+      "ebhook_id\030\001 \001(\tB\004\370\206\031\001\022#\n\005event\030\002 \001(\0132\024.m" +
+      "lflow.WebhookEvent\0325\n\010Response\022)\n\006result" +
+      "\030\001 \001(\0132\031.mlflow.WebhookTestResult:+\342?(\n&" +
+      "com.databricks.rpc.RPC[$this.Response]*)" +
+      "\n\rWebhookStatus\022\n\n\006ACTIVE\020\001\022\014\n\010DISABLED\020" +
+      "\002*R\n\026WebhookDestinationType\022 \n\034DESTINATI" +
+      "ON_TYPE_UNSPECIFIED\020\000\022\013\n\007GENERIC\020\001\022\t\n\005SL" +
+      "ACK\020\002*\221\002\n\rWebhookEntity\022\026\n\022ENTITY_UNSPEC" +
+      "IFIED\020\000\022\024\n\020REGISTERED_MODEL\020\001\022\021\n\rMODEL_V" +
+      "ERSION\020\002\022\025\n\021MODEL_VERSION_TAG\020\003\022\027\n\023MODEL" +
+      "_VERSION_ALIAS\020\004\022\n\n\006PROMPT\020\005\022\022\n\016PROMPT_V" +
+      "ERSION\020\006\022\016\n\nPROMPT_TAG\020\007\022\026\n\022PROMPT_VERSI" +
+      "ON_TAG\020\010\022\020\n\014PROMPT_ALIAS\020\t\022\021\n\rBUDGET_POL" +
+      "ICY\020\n\022\t\n\005ISSUE\020\013\022\027\n\023ISSUE_DETECTION_RUN\020" +
+      "\014*t\n\rWebhookAction\022\026\n\022ACTION_UNSPECIFIED" +
+      "\020\000\022\013\n\007CREATED\020\001\022\013\n\007UPDATED\020\002\022\013\n\007DELETED\020" +
+      "\003\022\007\n\003SET\020\004\022\014\n\010EXCEEDED\020\005\022\r\n\tCOMPLETED\020\0062" +
+      "\265\006\n\016WebhookService\022~\n\rcreateWebhook\022\025.ml" +
+      "flow.CreateWebhook\032\036.mlflow.CreateWebhoo" +
+      "k.Response\"6\362\206\0312\n\036\n\004POST\022\020/mlflow/webhoo" +
+      "ks\032\004\010\002\020\000\020\001*\016Create Webhook\022y\n\014listWebhoo" +
+      "ks\022\024.mlflow.ListWebhooks\032\035.mlflow.ListWe" +
+      "bhooks.Response\"4\362\206\0310\n\035\n\003GET\022\020/mlflow/we" +
+      "bhooks\032\004\010\002\020\000\020\001*\rList Webhooks\022~\n\ngetWebh" +
+      "ook\022\022.mlflow.GetWebhook\032\033.mlflow.GetWebh" +
+      "ook.Response\"?\362\206\031;\n*\n\003GET\022\035/mlflow/webho" +
+      "oks/{webhook_id}\032\004\010\002\020\000\020\001*\013Get Webhook\022\214\001" +
+      "\n\rupdateWebhook\022\025.mlflow.UpdateWebhook\032\036" +
+      ".mlflow.UpdateWebhook.Response\"D\362\206\031@\n,\n\005" +
+      "PATCH\022\035/mlflow/webhooks/{webhook_id}\032\004\010\002" +
+      "\020\000\020\001*\016Update Webhook\022\215\001\n\rdeleteWebhook\022\025" +
+      ".mlflow.DeleteWebhook\032\036.mlflow.DeleteWeb" +
+      "hook.Response\"E\362\206\031A\n-\n\006DELETE\022\035/mlflow/w" +
+      "ebhooks/{webhook_id}\032\004\010\002\020\000\020\001*\016Delete Web" +
+      "hook\022\210\001\n\013testWebhook\022\023.mlflow.TestWebhoo" +
+      "k\032\034.mlflow.TestWebhook.Response\"F\362\206\031B\n0\n" +
+      "\004POST\022\"/mlflow/webhooks/{webhook_id}/tes" +
+      "t\032\004\010\002\020\000\020\001*\014Test WebhookB!\n\024org.mlflow.ap" +
+      "i.proto\220\001\001\240\001\001\342?\002\020\001"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -17219,7 +17785,7 @@ public final class Webhooks {
     internal_static_mlflow_Webhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_Webhook_descriptor,
-        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Status", "CreationTimestamp", "LastUpdatedTimestamp", "ExperimentIds", });
+        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Status", "CreationTimestamp", "LastUpdatedTimestamp", "ExperimentIds", "DestinationType", });
     internal_static_mlflow_WebhookTestResult_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_mlflow_WebhookTestResult_fieldAccessorTable = new
@@ -17231,7 +17797,7 @@ public final class Webhooks {
     internal_static_mlflow_CreateWebhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_CreateWebhook_descriptor,
-        new java.lang.String[] { "Name", "Description", "Url", "Events", "Secret", "Status", "ExperimentIds", });
+        new java.lang.String[] { "Name", "Description", "Url", "Events", "Secret", "Status", "ExperimentIds", "DestinationType", });
     internal_static_mlflow_CreateWebhook_Response_descriptor =
       internal_static_mlflow_CreateWebhook_descriptor.getNestedTypes().get(0);
     internal_static_mlflow_CreateWebhook_Response_fieldAccessorTable = new
@@ -17267,7 +17833,7 @@ public final class Webhooks {
     internal_static_mlflow_UpdateWebhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_UpdateWebhook_descriptor,
-        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Secret", "Status", "ExperimentIds", });
+        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Secret", "Status", "ExperimentIds", "DestinationType", });
     internal_static_mlflow_UpdateWebhook_Response_descriptor =
       internal_static_mlflow_UpdateWebhook_descriptor.getNestedTypes().get(0);
     internal_static_mlflow_UpdateWebhook_Response_fieldAccessorTable = new

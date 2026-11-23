@@ -121,6 +121,13 @@ enum WebhookStatus {
   DISABLED = 2; // Webhook is disabled and not receiving events
 }
 
+// How a webhook's deliveries are formatted
+enum WebhookDestinationType {
+  DESTINATION_TYPE_UNSPECIFIED = 0; // Default/unknown destination, delivered as GENERIC
+  GENERIC = 1; // Signed JSON envelope carrying the event's payload
+  SLACK = 2; // Slack message, for a Slack incoming webhook URL
+}
+
 // Webhook entity types
 enum WebhookEntity {
   ENTITY_UNSPECIFIED = 0; // Default/unknown entity
@@ -188,6 +195,9 @@ message Webhook {
   // from every experiment, and is always empty for a webhook subscribed to events that don't
   // belong to an experiment.
   repeated string experiment_ids = 9;
+
+  // How the webhook's deliveries are formatted
+  optional WebhookDestinationType destination_type = 10;
 }
 
 // Test webhook result
@@ -231,6 +241,9 @@ message CreateWebhook {
   // as issue.created, can be limited this way. Leave empty to receive events from every
   // experiment.
   repeated string experiment_ids = 7;
+
+  // How deliveries are formatted (defaults to GENERIC if not specified)
+  optional WebhookDestinationType destination_type = 8;
 
   message Response {
     optional Webhook webhook = 1;
@@ -297,6 +310,9 @@ message UpdateWebhook {
   // list to receive events from every experiment, or leave the field out to keep the current
   // experiments.
   repeated string experiment_ids = 8;
+
+  // New delivery format for the webhook
+  optional WebhookDestinationType destination_type = 9;
 
   message Response {
     optional Webhook webhook = 1;

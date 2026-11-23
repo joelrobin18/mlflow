@@ -3,6 +3,7 @@ import pytest
 from mlflow.entities.webhook import (
     Webhook,
     WebhookAction,
+    WebhookDestinationType,
     WebhookEntity,
     WebhookEvent,
     WebhookStatus,
@@ -269,3 +270,28 @@ def test_webhook_experiment_ids_round_trip_through_proto():
 )
 def test_webhook_is_subscribed_to_experiment(experiment_ids, experiment_id, expected):
     assert _issue_webhook(experiment_ids).is_subscribed_to_experiment(experiment_id) is expected
+
+
+def test_webhook_defaults_to_a_generic_destination():
+    assert _issue_webhook(None).destination_type == WebhookDestinationType.GENERIC
+
+
+def test_webhook_destination_type_round_trips_through_proto():
+    webhook = Webhook(
+        webhook_id="wh-1",
+        name="slack",
+        url="https://hooks.slack.com/services/T/B/X",
+        events=[WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)],
+        creation_timestamp=0,
+        last_updated_timestamp=0,
+        destination_type="SLACK",
+    )
+
+    assert Webhook.from_proto(webhook.to_proto()).destination_type == WebhookDestinationType.SLACK
+
+
+def test_an_unspecified_proto_destination_reads_as_generic():
+    proto = _issue_webhook(None).to_proto()
+    proto.ClearField("destination_type")
+
+    assert Webhook.from_proto(proto).destination_type == WebhookDestinationType.GENERIC

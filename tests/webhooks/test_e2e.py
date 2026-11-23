@@ -1051,3 +1051,29 @@ def test_issue_created_reaches_only_webhooks_for_its_experiment(
     time.sleep(1)
     logs = app_client.get_logs()
     assert [log.payload["issue_id"] for log in logs] == [issue.issue_id]
+
+
+def test_issue_created_reaches_a_slack_webhook_as_a_slack_message(
+    mlflow_client: MlflowClient, mlflow_server: str, app_client: AppClient
+) -> None:
+    mlflow_client.create_webhook(
+        name="slack_issues",
+        url=app_client.get_url("/insecure-webhook"),
+        events=["issue.created"],
+        destination_type="SLACK",
+    )
+    experiment_id = mlflow_client.create_experiment("slack_issues")
+    TracingClient(tracking_uri=mlflow_server)._create_issue(
+        experiment_id=experiment_id,
+        name="Refund policy is invented",
+        description="d",
+        severity=IssueSeverity.HIGH,
+    )
+
+    (log,) = app_client.wait_for_logs(expected_count=1)
+    assert log.payload["text"] == (
+        f"New high severity issue in experiment {experiment_id}: Refund policy is invented"
+    )
+    assert log.payload["blocks"][0]["text"]["text"] == (
+        "*New high severity issue*: Refund policy is invented"
+    )

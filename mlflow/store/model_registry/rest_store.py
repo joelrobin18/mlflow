@@ -2,7 +2,13 @@ import json
 import logging
 
 from mlflow.entities.model_registry import ModelVersion, RegisteredModel
-from mlflow.entities.webhook import Webhook, WebhookEvent, WebhookStatus, WebhookTestResult
+from mlflow.entities.webhook import (
+    Webhook,
+    WebhookDestinationType,
+    WebhookEvent,
+    WebhookStatus,
+    WebhookTestResult,
+)
 from mlflow.protos.model_registry_pb2 import (
     CreateModelVersion,
     CreateRegisteredModel,
@@ -527,6 +533,7 @@ class RestStore(WorkspaceRestStoreMixin, BaseRestStore):
         secret: str | None = None,
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
+        destination_type: WebhookDestinationType | None = None,
     ) -> Webhook:
         req_body = message_to_json(
             CreateWebhook(
@@ -537,6 +544,7 @@ class RestStore(WorkspaceRestStoreMixin, BaseRestStore):
                 secret=secret,
                 status=status.to_proto() if status else None,
                 experiment_ids=experiment_ids,
+                destination_type=destination_type.to_proto() if destination_type else None,
             )
         )
         response_proto = self._call_webhook_endpoint(CreateWebhook, req_body)
@@ -566,6 +574,7 @@ class RestStore(WorkspaceRestStoreMixin, BaseRestStore):
         secret: str | None = None,
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
+        destination_type: WebhookDestinationType | None = None,
     ) -> Webhook:
         req_body = message_to_json(
             UpdateWebhook(
@@ -576,6 +585,7 @@ class RestStore(WorkspaceRestStoreMixin, BaseRestStore):
                 secret=secret,
                 status=status.to_proto() if status else None,
                 experiment_ids=experiment_ids,
+                destination_type=destination_type.to_proto() if destination_type else None,
             )
         )
         # Protobuf JSON omits empty repeated fields, which would turn "remove the limit" into

@@ -68,6 +68,11 @@ const WebhookListItem = ({
               ? intl.formatMessage({ defaultMessage: 'Active', description: 'Webhook active status' })
               : intl.formatMessage({ defaultMessage: 'Disabled', description: 'Webhook disabled status' })}
           </span>
+          {webhook.destination_type === 'SLACK' && (
+            <Typography.Text size="sm" color="secondary">
+              <FormattedMessage defaultMessage="Slack" description="Badge for a webhook that posts to Slack" />
+            </Typography.Text>
+          )}
         </div>
         <Typography.Text size="sm" color="secondary" css={{ display: 'block', marginTop: theme.spacing.xs }}>
           {webhook.url}

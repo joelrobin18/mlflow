@@ -241,6 +241,7 @@ CREATE TABLE webhooks (
 	last_updated_timestamp BIGINT,
 	deleted_timestamp BIGINT,
 	workspace VARCHAR(63) DEFAULT 'default'::character varying NOT NULL,
+	destination_type VARCHAR(20) DEFAULT 'GENERIC'::character varying NOT NULL,
 	CONSTRAINT webhook_pk PRIMARY KEY (webhook_id)
 )
 

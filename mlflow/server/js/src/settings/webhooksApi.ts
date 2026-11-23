@@ -1,4 +1,5 @@
 import { fetchAPI, getAjaxUrl, HTTPMethods } from '../common/utils/FetchUtils';
+import type { WebhookDestinationType } from './webhookConstants';
 
 export interface WebhookEvent {
   entity: string;
@@ -16,6 +17,8 @@ export interface Webhook {
   description?: string;
   /** Experiments the webhook is limited to. Absent or empty means every experiment. */
   experiment_ids?: string[];
+  /** How deliveries are formatted. Absent on a server that predates destinations, which means GENERIC. */
+  destination_type?: WebhookDestinationType;
 }
 
 export interface ListWebhooksResponse {
@@ -30,6 +33,7 @@ export interface CreateWebhookRequest {
   secret?: string;
   status: 'ACTIVE' | 'DISABLED';
   experiment_ids?: string[];
+  destination_type?: WebhookDestinationType;
 }
 
 export interface UpdateWebhookRequest {
@@ -41,6 +45,7 @@ export interface UpdateWebhookRequest {
   status: 'ACTIVE' | 'DISABLED';
   /** Replaces the experiments the webhook is limited to; an empty list removes the limit. */
   experiment_ids?: string[];
+  destination_type?: WebhookDestinationType;
 }
 
 export interface TestWebhookResult {

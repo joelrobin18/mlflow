@@ -62,6 +62,7 @@ from mlflow.entities.span import NO_OP_SPAN_TRACE_ID, NoOpSpan
 from mlflow.entities.trace_status import TraceStatus
 from mlflow.entities.webhook import (
     Webhook,
+    WebhookDestinationType,
     WebhookEvent,
     WebhookEventStr,
     WebhookStatus,
@@ -6746,6 +6747,7 @@ class MlflowClient:
         secret: str | None = None,
         status: str | WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
+        destination_type: str | WebhookDestinationType | None = None,
     ) -> Webhook:
         """
         Create a new webhook.
@@ -6762,6 +6764,9 @@ class MlflowClient:
             experiment_ids: IDs of the experiments to limit the webhook to. Only a webhook whose
                 events all belong to an experiment, such as ``"issue.created"``, can be limited.
                 By default the webhook receives its events from every experiment.
+            destination_type: How deliveries are formatted: ``"GENERIC"`` (the default) sends a
+                signed JSON envelope, and ``"SLACK"`` sends a Slack message to a Slack incoming
+                webhook URL.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the created webhook.
@@ -6769,6 +6774,8 @@ class MlflowClient:
         events = [WebhookEvent.from_str(e) if isinstance(e, str) else e for e in events]
         if status is not None:
             status = WebhookStatus(status) if isinstance(status, str) else status
+        if destination_type is not None:
+            destination_type = WebhookDestinationType(destination_type)
 
         return self._get_registry_client().create_webhook(
             name=name,
@@ -6778,6 +6785,7 @@ class MlflowClient:
             secret=secret,
             status=status,
             experiment_ids=experiment_ids,
+            destination_type=destination_type,
         )
 
     def get_webhook(self, webhook_id: str) -> Webhook:
@@ -6819,6 +6827,7 @@ class MlflowClient:
         secret: str | None = None,
         status: str | WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
+        destination_type: str | WebhookDestinationType | None = None,
     ) -> Webhook:
         """
         Update an existing webhook.
@@ -6835,6 +6844,7 @@ class MlflowClient:
             experiment_ids: IDs of the experiments to limit the webhook to, replacing the current
                 ones. Pass ``[]`` to receive events from every experiment again. By default the
                 current experiments are kept.
+            destination_type: New delivery format, ``"GENERIC"`` or ``"SLACK"``.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the updated webhook.
@@ -6844,6 +6854,8 @@ class MlflowClient:
 
         if status is not None:
             status = WebhookStatus(status) if isinstance(status, str) else status
+        if destination_type is not None:
+            destination_type = WebhookDestinationType(destination_type)
 
         return self._get_registry_client().update_webhook(
             webhook_id=webhook_id,
@@ -6854,6 +6866,7 @@ class MlflowClient:
             secret=secret,
             status=status,
             experiment_ids=experiment_ids,
+            destination_type=destination_type,
         )
 
     def delete_webhook(self, webhook_id: str) -> None:

@@ -184,6 +184,7 @@ CREATE TABLE webhooks (
 	last_updated_timestamp BIGINT,
 	deleted_timestamp BIGINT,
 	workspace VARCHAR(63) COLLATE "SQL_Latin1_General_CP1_CI_AS" DEFAULT ('default') NOT NULL,
+	destination_type VARCHAR(20) COLLATE "SQL_Latin1_General_CP1_CI_AS" DEFAULT ('GENERIC') NOT NULL,
 	CONSTRAINT webhook_pk PRIMARY KEY (webhook_id)
 )
 

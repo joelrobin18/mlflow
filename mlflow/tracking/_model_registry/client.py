@@ -19,6 +19,7 @@ from mlflow.entities.model_registry.prompt import Prompt
 from mlflow.entities.model_registry.prompt_version import PromptModelConfig
 from mlflow.entities.webhook import (
     Webhook,
+    WebhookDestinationType,
     WebhookEvent,
     WebhookEventStr,
     WebhookStatus,
@@ -819,6 +820,7 @@ class ModelRegistryClient:
         secret: str | None = None,
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
+        destination_type: WebhookDestinationType | None = None,
     ) -> Webhook:
         """
         Create a new webhook.
@@ -831,12 +833,20 @@ class ModelRegistryClient:
             secret: Optional secret for HMAC signature verification.
             status: Webhook status (defaults to ACTIVE).
             experiment_ids: Experiments to limit the webhook to. None means every experiment.
+            destination_type: How deliveries are formatted (defaults to GENERIC).
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the created webhook.
         """
         return self.store.create_webhook(
-            name, url, events, description, secret, status, experiment_ids=experiment_ids
+            name,
+            url,
+            events,
+            description,
+            secret,
+            status,
+            experiment_ids=experiment_ids,
+            destination_type=destination_type,
         )
 
     def get_webhook(self, webhook_id: str) -> Webhook:
@@ -878,6 +888,7 @@ class ModelRegistryClient:
         secret: str | None = None,
         status: WebhookStatus | None = None,
         experiment_ids: list[str] | None = None,
+        destination_type: WebhookDestinationType | None = None,
     ) -> Webhook:
         """
         Update an existing webhook.
@@ -892,6 +903,7 @@ class ModelRegistryClient:
             status: New webhook status.
             experiment_ids: Experiments to limit the webhook to, replacing the current ones.
                 ``[]`` removes the limit and None leaves it unchanged.
+            destination_type: New delivery format.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the updated webhook.
@@ -905,6 +917,7 @@ class ModelRegistryClient:
             secret,
             status,
             experiment_ids=experiment_ids,
+            destination_type=destination_type,
         )
 
     def delete_webhook(self, webhook_id: str) -> None:

@@ -56,6 +56,15 @@ export const WEBHOOK_NAME_REGEX = /^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/i;
 
 export const eventKey = (entity: string, action: string) => `${entity}.${action}`;
 
+export type WebhookDestinationType = 'GENERIC' | 'SLACK';
+
+export const DESTINATION_TYPES: WebhookDestinationType[] = ['GENERIC', 'SLACK'];
+
+export const destinationTypeLabels = defineMessages({
+  GENERIC: { defaultMessage: 'HTTP endpoint (signed JSON)', description: 'Webhook destination type label' },
+  SLACK: { defaultMessage: 'Slack incoming webhook', description: 'Webhook destination type label' },
+});
+
 /** Entities whose events happen inside an experiment, so a webhook can be limited to some experiments. */
 export const EXPERIMENT_SCOPED_ENTITIES = ['ISSUE', 'ISSUE_DETECTION_RUN'];
 

@@ -2219,6 +2219,7 @@ module.exports = {
   "mlflow.settings.webhooks.delete-button": "",
   "mlflow.settings.webhooks.delete-modal": "",
   "mlflow.settings.webhooks.description-input": "",
+  "mlflow.settings.webhooks.destination-type-select": "",
   "mlflow.settings.webhooks.edit-button": "",
   "mlflow.settings.webhooks.error-alert": "",
   "mlflow.settings.webhooks.event-checkbox": "",

@@ -1660,6 +1660,12 @@ MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS = _BooleanEnvironmentVariable(
     "MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS", False
 )
 
+#: Specifies the base URL of the MLflow UI, such as ``https://mlflow.example.com``, that webhook
+#: messages formatted for a destination like Slack link to. Without it, those messages name the
+#: experiment and issue but do not link to them.
+#: (default: ``None``)
+MLFLOW_WEBHOOK_LINK_BASE_URL = _EnvironmentVariable("MLFLOW_WEBHOOK_LINK_BASE_URL", str, None)
+
 #: Whether to allow webhook URLs that resolve to private/internal IP addresses.
 #: When set to ``true``, SSRF protection is disabled and webhooks can target
 #: localhost, private IPs, and cloud metadata endpoints.

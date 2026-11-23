@@ -4,7 +4,13 @@ from typing import Iterator
 import pytest
 from cryptography.fernet import Fernet
 
-from mlflow.entities.webhook import WebhookAction, WebhookEntity, WebhookEvent, WebhookStatus
+from mlflow.entities.webhook import (
+    WebhookAction,
+    WebhookDestinationType,
+    WebhookEntity,
+    WebhookEvent,
+    WebhookStatus,
+)
 from mlflow.environment_variables import MLFLOW_WEBHOOK_SECRET_ENCRYPTION_KEY
 from mlflow.exceptions import MlflowException
 from mlflow.server import handlers
@@ -238,3 +244,18 @@ def test_create_webhook_rejects_experiments_for_registry_events(store: RestStore
             events=[WebhookEvent(WebhookEntity.MODEL_VERSION, WebhookAction.CREATED)],
             experiment_ids=["7"],
         )
+
+
+def test_webhook_destination_type_round_trips(store: RestStore):
+    webhook = store.create_webhook(
+        name="slack_webhook",
+        url="https://hooks.slack.com/services/T/B/X",
+        events=[WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)],
+        destination_type=WebhookDestinationType.SLACK,
+    )
+    assert webhook.destination_type == WebhookDestinationType.SLACK
+
+    updated = store.update_webhook(
+        webhook.webhook_id, destination_type=WebhookDestinationType.GENERIC
+    )
+    assert updated.destination_type == WebhookDestinationType.GENERIC

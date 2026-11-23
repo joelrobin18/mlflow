@@ -7,7 +7,13 @@ from unittest.mock import Mock, patch
 import pytest
 from urllib3.util.retry import Retry
 
-from mlflow.entities.webhook import Webhook, WebhookAction, WebhookEntity, WebhookEvent
+from mlflow.entities.webhook import (
+    Webhook,
+    WebhookAction,
+    WebhookDestinationType,
+    WebhookEntity,
+    WebhookEvent,
+)
 from mlflow.environment_variables import MLFLOW_ENABLE_WORKSPACES
 from mlflow.store.model_registry.file_store import FileStore
 from mlflow.store.model_registry.sqlalchemy_store import SqlAlchemyStore
@@ -17,6 +23,7 @@ from mlflow.webhooks.delivery import (
     deliver_webhook,
 )
 from mlflow.webhooks.delivery import test_webhook as send_test_webhook
+from mlflow.webhooks.formatters import format_slack_message
 
 
 @pytest.fixture
@@ -266,3 +273,27 @@ def test_deliver_webhook_skips_webhooks_limited_to_other_experiments(sql_store: 
         "everywhere",
         "this-experiment",
     ]
+
+
+def test_send_webhook_request_posts_a_slack_message_to_a_slack_webhook(
+    webhook_event: WebhookEvent,
+    webhook_payload: dict[str, str],
+) -> None:
+    slack_webhook = Webhook(
+        webhook_id="wh-slack",
+        name="slack",
+        url="https://hooks.slack.com/services/T/B/X",
+        events=[webhook_event],
+        creation_timestamp=0,
+        last_updated_timestamp=0,
+        destination_type=WebhookDestinationType.SLACK,
+    )
+    session = Mock()
+    session.post.return_value = Mock(status_code=200, text="ok")
+
+    with patch("mlflow.webhooks.delivery._validate_webhook_url"):
+        _send_webhook_request(slack_webhook, webhook_payload, webhook_event, session)
+
+    body = json.loads(session.post.call_args.kwargs["data"].decode("utf-8"))
+    assert body == format_slack_message(webhook_event, webhook_payload)
+    assert "data" not in body

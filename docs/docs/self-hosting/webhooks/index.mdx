@@ -297,6 +297,24 @@ client.update_webhook(webhook_id=webhook.webhook_id, experiment_ids=["7"])
 
 Only a webhook whose events all belong to an experiment can be limited this way. MLflow rejects `experiment_ids` on a webhook subscribed to any other event, such as `model_version.created`, since that event would never match. In the UI, the **Experiments** field appears once every selected event belongs to an experiment.
 
+### Sending Notifications to Slack
+
+A webhook sends MLflow's signed JSON envelope by default, which a receiver you run has to translate. To post straight to a Slack channel instead, create a [Slack incoming webhook](https://api.slack.com/messaging/webhooks) and give MLflow its URL with `destination_type="SLACK"`:
+
+```python
+client.create_webhook(
+    name="checkout-agent-slack",
+    url="https://hooks.slack.com/services/T000/B000/XXXX",
+    events=["issue.created", "issue_detection_run.completed"],
+    destination_type="SLACK",
+    experiment_ids=["7"],
+)
+```
+
+MLflow then sends a Slack message for each event. New issues and detection runs read as sentences naming the issue, its severity, and the run's results; other events show their payload. Set `MLFLOW_WEBHOOK_LINK_BASE_URL` on the server to the address people open MLflow at, such as `https://mlflow.example.com`, and the messages link to the issue and to the experiment's detection run history.
+
+A Slack webhook carries no HMAC signature check, since Slack does not verify one, so treat its URL as a secret. In the UI, choose **Slack incoming webhook** under **Destination**.
+
 ### Deleting a Webhook
 
 Use <APILink fn="mlflow.client.MlflowClient.delete_webhook" >`MlflowClient.delete_webhook()`</APILink> to remove a webhook:

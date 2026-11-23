@@ -14,7 +14,13 @@ from mlflow.entities.model_registry import (
     RegisteredModelTag,
 )
 from mlflow.entities.model_registry.prompt_version import IS_PROMPT_TAG_KEY
-from mlflow.entities.webhook import WebhookAction, WebhookEntity, WebhookEvent, WebhookStatus
+from mlflow.entities.webhook import (
+    WebhookAction,
+    WebhookDestinationType,
+    WebhookEntity,
+    WebhookEvent,
+    WebhookStatus,
+)
 from mlflow.environment_variables import (
     _MLFLOW_GO_STORE_TESTING,
     MLFLOW_ENABLE_WORKSPACES,
@@ -2818,3 +2824,32 @@ def test_update_webhook_rejects_limiting_a_webhook_with_an_unscoped_event(store)
     with pytest.raises(MlflowException, match="can be limited to experiments"):
         store.update_webhook(webhook.webhook_id, experiment_ids=["7"])
     assert store.get_webhook(webhook.webhook_id).experiment_ids == []
+
+
+def test_webhook_destination_type_defaults_to_generic_and_can_change(store):
+    webhook = store.create_webhook(
+        name="issue_hook", url="https://example.com/webhook", events=[ISSUE_CREATED]
+    )
+    assert webhook.destination_type == WebhookDestinationType.GENERIC
+
+    updated = store.update_webhook(
+        webhook.webhook_id, destination_type=WebhookDestinationType.SLACK
+    )
+    assert updated.destination_type == WebhookDestinationType.SLACK
+    assert store.get_webhook(webhook.webhook_id).destination_type == WebhookDestinationType.SLACK
+
+    renamed = store.update_webhook(webhook.webhook_id, name="renamed_hook")
+    assert renamed.destination_type == WebhookDestinationType.SLACK
+
+
+def test_create_webhook_with_a_slack_destination(store):
+    webhook = store.create_webhook(
+        name="slack_hook",
+        url="https://hooks.slack.com/services/T/B/X",
+        events=[ISSUE_CREATED],
+        destination_type=WebhookDestinationType.SLACK,
+    )
+
+    (listed,) = store.list_webhooks_by_event(ISSUE_CREATED)
+    assert listed.webhook_id == webhook.webhook_id
+    assert listed.destination_type == WebhookDestinationType.SLACK

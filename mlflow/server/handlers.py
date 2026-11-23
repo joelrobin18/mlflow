@@ -85,7 +85,13 @@ from mlflow.entities.trace_info import TraceInfo
 from mlflow.entities.trace_info_v2 import TraceInfoV2
 from mlflow.entities.trace_metrics import MetricAggregation, MetricViewType
 from mlflow.entities.trace_status import TraceStatus
-from mlflow.entities.webhook import WebhookAction, WebhookEntity, WebhookEvent, WebhookStatus
+from mlflow.entities.webhook import (
+    WebhookAction,
+    WebhookDestinationType,
+    WebhookEntity,
+    WebhookEvent,
+    WebhookStatus,
+)
 from mlflow.environment_variables import (
     MLFLOW_ARTIFACTS_PRESIGNED_ONLY,
     MLFLOW_CREATE_MODEL_VERSION_SOURCE_VALIDATION_REGEX,
@@ -3938,6 +3944,7 @@ def _create_webhook():
             "secret": [_assert_string],
             "status": [_assert_string],
             "experiment_ids": [_assert_array, _assert_item_type_string],
+            "destination_type": [_assert_string],
         },
     )
 
@@ -3949,6 +3956,11 @@ def _create_webhook():
         secret=request_message.secret or None,
         status=WebhookStatus.from_proto(request_message.status) if request_message.status else None,
         experiment_ids=list(request_message.experiment_ids),
+        destination_type=(
+            WebhookDestinationType.from_proto(request_message.destination_type)
+            if request_message.HasField("destination_type")
+            else None
+        ),
     )
     response_message = CreateWebhook.Response(webhook=webhook.to_proto())
     return _wrap_response(response_message)
@@ -3996,6 +4008,7 @@ def _update_webhook(webhook_id: str):
             "secret": [_assert_string],
             "status": [_assert_string],
             "experiment_ids": [_assert_array, _assert_item_type_string],
+            "destination_type": [_assert_string],
         },
     )
     # A present but empty list removes the limit; an absent one leaves it alone. The parsed
@@ -4024,6 +4037,11 @@ def _update_webhook(webhook_id: str):
             else None
         ),
         experiment_ids=experiment_ids,
+        destination_type=(
+            WebhookDestinationType.from_proto(request_message.destination_type)
+            if request_message.HasField("destination_type")
+            else None
+        ),
     )
     response_message = UpdateWebhook.Response(webhook=webhook.to_proto())
     return _wrap_response(response_message)
