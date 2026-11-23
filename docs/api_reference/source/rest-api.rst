@@ -12475,6 +12475,8 @@ Webhook action types
 +--------------------+-------------+
 | EXCEEDED           |             |
 +--------------------+-------------+
+| COMPLETED          |             |
++--------------------+-------------+
 
 .. _mlflowWebhookEntity:
 
@@ -12510,6 +12512,8 @@ Webhook entity types
 | BUDGET_POLICY       |             |
 +---------------------+-------------+
 | ISSUE               |             |
++---------------------+-------------+
+| ISSUE_DETECTION_RUN |             |
 +---------------------+-------------+
 
 .. _mlflowWebhookStatus:

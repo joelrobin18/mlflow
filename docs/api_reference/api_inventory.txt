@@ -2230,6 +2230,8 @@ mlflow.utils.async_logging.run_operations.get_combined_run_operations
 mlflow.validate_evaluation_results
 mlflow.webhooks.IssueCreatedPayload
 mlflow.webhooks.IssueCreatedPayload.example
+mlflow.webhooks.IssueDetectionRunCompletedPayload
+mlflow.webhooks.IssueDetectionRunCompletedPayload.example
 mlflow.webhooks.ModelVersionAliasCreatedPayload
 mlflow.webhooks.ModelVersionAliasCreatedPayload.example
 mlflow.webhooks.ModelVersionAliasDeletedPayload
@@ -2259,6 +2261,7 @@ mlflow.webhooks.PromptVersionTagSetPayload.example
 mlflow.webhooks.RegisteredModelCreatedPayload
 mlflow.webhooks.RegisteredModelCreatedPayload.example
 mlflow.webhooks.types.IssueCreatedPayload
+mlflow.webhooks.types.IssueDetectionRunCompletedPayload
 mlflow.webhooks.types.ModelVersionAliasCreatedPayload
 mlflow.webhooks.types.ModelVersionAliasDeletedPayload
 mlflow.webhooks.types.ModelVersionCreatedPayload

@@ -16863,6 +16863,10 @@
     "defaultMessage": "Status",
     "description": "Experiment issues tab > Status dimension name in an active filter chip"
   },
+  "oz+rVR": {
+    "defaultMessage": "Issue detection run completed",
+    "description": "Webhook event label"
+  },
   "p+urWV": {
     "defaultMessage": "Load prompt from registry",
     "description": "Title of the prompt-registry picker modal on the playground page"

@@ -581,6 +581,86 @@ class IssueCreatedPayload(TypedDict):
         )
 
 
+class IssueDetectionRunCompletedPayload(TypedDict):
+    """Payload sent when an issue detection run finishes, whether it succeeded or failed.
+
+    Sent once per run, manual or scheduled, including a scheduled run that found no traces to
+    analyze. Each issue the run filed also triggers ``issue.created``; this event summarizes the
+    run, so a subscriber can send one message per run instead of one per issue.
+
+    Example payload:
+
+    .. code-block:: python
+
+        {
+            "run_id": "abcd1234abcd5678",
+            "experiment_id": "1",
+            "status": "succeeded",
+            "trigger": "schedule",
+            "start_time": 1704067200000,
+            "end_time": 1704067500000,
+            "error_message": None,
+            "model": "openai:/gpt-4o",
+            "total_traces_analyzed": 100,
+            "issue_count": 3,
+            "new_issue_ids": ["iss-abc123"],
+            "total_cost_usd": 0.42,
+            "window_start": 1703462400000,
+            "window_end": 1704067200000,
+        }
+
+    """
+
+    run_id: str
+    """The MLflow run that records the detection run."""
+    experiment_id: str
+    """The experiment whose traces the run analyzed."""
+    status: Literal["succeeded", "failed"]
+    """How the run ended."""
+    trigger: Literal["manual", "schedule"]
+    """Whether the run was started by hand or by the experiment's detection schedule."""
+    start_time: int
+    """When the run started, in milliseconds since the Unix epoch."""
+    end_time: int | None
+    """When the run ended, in milliseconds since the Unix epoch."""
+    error_message: str | None
+    """Why the run failed. None unless the status is ``failed``."""
+    model: str | None
+    """The model the run analyzed traces with, such as ``openai:/gpt-4o``."""
+    total_traces_analyzed: int
+    """How many traces the run analyzed."""
+    issue_count: int
+    """How many issues the run reported, counting issues it found again."""
+    new_issue_ids: list[str]
+    """The issues the run filed. Issues it found again are counted in ``issue_count`` only."""
+    total_cost_usd: float | None
+    """What the run's model calls cost, or None when it is unknown."""
+    window_start: int | None
+    """For a scheduled run, the start of the trace window it covered, in milliseconds since
+    the Unix epoch. None for a manual run, which analyzes a chosen set of traces."""
+    window_end: int | None
+    """For a scheduled run, the end of the trace window it covered. None for a manual run."""
+
+    @classmethod
+    def example(cls) -> "IssueDetectionRunCompletedPayload":
+        return cls(
+            run_id="abcd1234abcd5678",
+            experiment_id="1",
+            status="succeeded",
+            trigger="schedule",
+            start_time=1704067200000,
+            end_time=1704067500000,
+            error_message=None,
+            model="openai:/gpt-4o",
+            total_traces_analyzed=100,
+            issue_count=3,
+            new_issue_ids=["iss-abc123"],
+            total_cost_usd=0.42,
+            window_start=1703462400000,
+            window_end=1704067200000,
+        )
+
+
 WebhookPayload: TypeAlias = (
     RegisteredModelCreatedPayload
     | ModelVersionCreatedPayload
@@ -598,6 +678,7 @@ WebhookPayload: TypeAlias = (
     | PromptAliasDeletedPayload
     | BudgetPolicyExceededPayload
     | IssueCreatedPayload
+    | IssueDetectionRunCompletedPayload
 )
 
 # Mapping of (entity, action) tuples to their corresponding payload classes
@@ -618,6 +699,10 @@ EVENT_TO_PAYLOAD_CLASS: dict[tuple[WebhookEntity, WebhookAction], type[WebhookPa
     (WebhookEntity.PROMPT_ALIAS, WebhookAction.DELETED): PromptAliasDeletedPayload,
     (WebhookEntity.BUDGET_POLICY, WebhookAction.EXCEEDED): BudgetPolicyExceededPayload,
     (WebhookEntity.ISSUE, WebhookAction.CREATED): IssueCreatedPayload,
+    (
+        WebhookEntity.ISSUE_DETECTION_RUN,
+        WebhookAction.COMPLETED,
+    ): IssueDetectionRunCompletedPayload,
 }
 
 

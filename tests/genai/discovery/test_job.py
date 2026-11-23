@@ -435,3 +435,81 @@ def test_invoke_issue_detection_job_finishes_the_run_when_notifying_fails(monkey
         "run-123", RunStatus.to_string(RunStatus.FINISHED)
     )
     assert result["summary"] == mock_result.summary
+
+
+def test_invoke_issue_detection_job_announces_the_finished_run(monkeypatch):
+    monkeypatch.setenv(BACKEND_STORE_URI_ENV_VAR, "sqlite:///mlflow.db")
+    mock_client = mock.MagicMock()
+    mock_result = mock.MagicMock()
+    mock_result.issues = [mock.MagicMock(), mock.MagicMock()]
+    mock_result.new_issue_ids = ["iss-new"]
+    mock_result.new_issues = []
+    mock_result.total_traces_analyzed = 2
+    mock_result.total_cost_usd = 0.15
+
+    with (
+        mock.patch("mlflow.genai.discovery.job.issue_detection_run_completed_payload") as build,
+        mock.patch(
+            "mlflow.genai.discovery.job.deliver_issue_detection_run_completed_webhook"
+        ) as deliver,
+    ):
+        _run_detection_job(mock_client, mock_result)
+
+    mock_client.get_run.assert_called_once_with("run-123")
+    build.assert_called_once_with(
+        mock_client.get_run.return_value,
+        total_traces_analyzed=2,
+        issue_count=2,
+        new_issue_ids=["iss-new"],
+        total_cost_usd=0.15,
+    )
+    deliver.assert_called_once_with(build.return_value, wait=True)
+
+
+def test_invoke_issue_detection_job_announces_a_failed_run_and_raises_the_original(monkeypatch):
+    monkeypatch.setenv(BACKEND_STORE_URI_ENV_VAR, "sqlite:///mlflow.db")
+    mock_client = mock.MagicMock()
+    mock_client._tracing_client.batch_get_traces.side_effect = Exception("API error")
+
+    with (
+        mock.patch("mlflow.genai.discovery.job.MlflowClient", return_value=mock_client),
+        mock.patch("mlflow.genai.discovery.job.issue_detection_run_completed_payload") as build,
+        mock.patch(
+            "mlflow.genai.discovery.job.deliver_issue_detection_run_completed_webhook",
+            side_effect=RuntimeError("webhook store unreachable"),
+        ) as deliver,
+        pytest.raises(Exception, match="API error"),
+    ):
+        invoke_issue_detection_job(
+            experiment_id="exp-123",
+            trace_ids=["trace-1"],
+            categories=["correctness"],
+            run_id="run-123",
+        )
+
+    build.assert_called_once_with(
+        mock_client.get_run.return_value,
+        total_traces_analyzed=0,
+        issue_count=0,
+        new_issue_ids=[],
+        total_cost_usd=None,
+    )
+    deliver.assert_called_once()
+    mock_client.set_terminated.assert_called_once_with(
+        "run-123", RunStatus.to_string(RunStatus.FAILED)
+    )
+
+
+def test_invoke_issue_detection_job_without_the_backend_store_does_not_announce_the_run(
+    monkeypatch,
+):
+    monkeypatch.delenv(BACKEND_STORE_URI_ENV_VAR, raising=False)
+    mock_client = mock.MagicMock()
+
+    with mock.patch(
+        "mlflow.genai.discovery.job.deliver_issue_detection_run_completed_webhook"
+    ) as deliver:
+        _run_detection_job(mock_client, mock.MagicMock())
+
+    deliver.assert_not_called()
+    mock_client.get_run.assert_not_called()

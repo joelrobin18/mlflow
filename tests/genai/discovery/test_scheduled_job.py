@@ -24,6 +24,7 @@ from mlflow.genai.discovery.job import (
     run_scheduled_issue_detection_job,
 )
 from mlflow.genai.discovery.sampling import sample_traces
+from mlflow.server.constants import BACKEND_STORE_URI_ENV_VAR
 from mlflow.server.jobs.utils import MLFLOW_SERVER_JOB_ID_ENV_VAR
 from mlflow.tracing.constant import TraceMetadataKey
 from mlflow.utils.mlflow_tags import (
@@ -672,3 +673,39 @@ def test_a_long_failure_message_is_truncated_rather_than_dropped():
     assert len(described) == MAX_ERROR_TAG_LENGTH
     assert described.startswith("RuntimeError: xxx")
     assert described.endswith("…")
+
+
+def test_an_occurrence_with_nothing_to_analyze_announces_its_run(occurrence, monkeypatch):
+    # A quiet window is announced like any other run, so a subscriber can tell it from a
+    # schedule that stopped firing.
+    monkeypatch.setenv(BACKEND_STORE_URI_ENV_VAR, "sqlite:///mlflow.db")
+    occurrence.newest.return_value = None
+
+    with (
+        mock.patch("mlflow.genai.discovery.job.issue_detection_run_completed_payload") as build,
+        mock.patch(
+            "mlflow.genai.discovery.job.deliver_issue_detection_run_completed_webhook"
+        ) as deliver,
+    ):
+        occurrence.run()
+
+    occurrence.client.get_run.assert_called_once_with("run-scheduled")
+    build.assert_called_once_with(
+        occurrence.client.get_run.return_value,
+        total_traces_analyzed=0,
+        issue_count=0,
+        new_issue_ids=[],
+        total_cost_usd=0.0,
+    )
+    deliver.assert_called_once_with(build.return_value, wait=True)
+
+
+def test_a_successful_occurrence_announces_its_run_once(occurrence, monkeypatch):
+    monkeypatch.setenv(BACKEND_STORE_URI_ENV_VAR, "sqlite:///mlflow.db")
+
+    with mock.patch(
+        "mlflow.genai.discovery.job.deliver_issue_detection_run_completed_webhook"
+    ) as deliver:
+        occurrence.run()
+
+    deliver.assert_called_once()

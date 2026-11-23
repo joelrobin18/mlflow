@@ -7,6 +7,7 @@ and issue events.
 from mlflow.webhooks.constants import WEBHOOK_SIGNATURE_HEADER
 from mlflow.webhooks.types import (
     IssueCreatedPayload,
+    IssueDetectionRunCompletedPayload,
     ModelVersionAliasCreatedPayload,
     ModelVersionAliasDeletedPayload,
     ModelVersionCreatedPayload,
@@ -40,6 +41,7 @@ __all__ = [
     "PromptAliasCreatedPayload",
     "PromptAliasDeletedPayload",
     "IssueCreatedPayload",
+    "IssueDetectionRunCompletedPayload",
     "WebhookPayload",
     "WEBHOOK_SIGNATURE_HEADER",
 ]

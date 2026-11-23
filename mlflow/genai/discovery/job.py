@@ -39,7 +39,11 @@ from mlflow.utils.mlflow_tags import (
     MLFLOW_RUN_TYPE_ISSUE_DETECTION,
 )
 from mlflow.utils.providers import _CORE_PROVIDER_ENV_VARS
-from mlflow.webhooks.issues import deliver_issue_created_webhooks
+from mlflow.webhooks.issues import (
+    deliver_issue_created_webhooks,
+    deliver_issue_detection_run_completed_webhook,
+    issue_detection_run_completed_payload,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -97,23 +101,64 @@ def _newest_trace_matching(experiment_id: str, filter_string: str) -> Checkpoint
     return CheckpointTrace(trace_id=traces[0].info.trace_id, time_ms=traces[0].info.request_time)
 
 
+def _job_notifies() -> bool:
+    """
+    Whether this job sends the webhooks for what it does.
+
+    A job the server runs writes to the backend store directly, past the request handlers, so it
+    fires its own events and reads the webhooks from that store. A job without the backend store's
+    URI, as in a job container, writes through the server's HTTP API instead: the handler has
+    already announced its issues, and there is no store here to read webhooks from.
+    """
+    return bool(os.environ.get(BACKEND_STORE_URI_ENV_VAR))
+
+
 def _notify_new_issues(issues: list[Issue]) -> None:
     """
     Fire ``issue.created`` for the issues a detection run filed.
 
-    A job the server runs writes issues to the backend store directly, past the request handler
-    that fires the event for every other issue, so the job fires it itself and reads the webhooks
-    from that store. A job without the backend store's URI, as in a job container, writes through
-    the server's HTTP API instead, where the handler has already announced its issues.
-
     Waits for delivery because the job's process can exit as soon as the job returns.
     """
-    if not os.environ.get(BACKEND_STORE_URI_ENV_VAR):
+    if not _job_notifies():
         return
     try:
         deliver_issue_created_webhooks(issues, wait=True)
     except Exception:
         _logger.warning("Could not send the issue.created webhooks", exc_info=True)
+
+
+def _notify_run_completed(
+    client: MlflowClient,
+    run_id: str,
+    *,
+    total_traces_analyzed: int = 0,
+    issue_count: int = 0,
+    new_issue_ids: list[str] | None = None,
+    total_cost_usd: float | None = None,
+) -> None:
+    """
+    Fire ``issue_detection_run.completed`` for a detection run that has just ended.
+
+    Never raises: it runs on the failure path too, where an error here would replace the one that
+    failed the run.
+    """
+    if not _job_notifies():
+        return
+    try:
+        payload = issue_detection_run_completed_payload(
+            client.get_run(run_id),
+            total_traces_analyzed=total_traces_analyzed,
+            issue_count=issue_count,
+            new_issue_ids=new_issue_ids or [],
+            total_cost_usd=total_cost_usd,
+        )
+        deliver_issue_detection_run_completed_webhook(payload, wait=True)
+    except Exception:
+        _logger.warning(
+            "Could not send the issue_detection_run.completed webhook for run %s",
+            run_id,
+            exc_info=True,
+        )
 
 
 def _detect_issues_into_run(
@@ -159,10 +204,19 @@ def _detect_issues_into_run(
         except Exception:
             _logger.warning("Could not record why detection run %s failed", run_id, exc_info=True)
         client.set_terminated(run_id, RunStatus.to_string(RunStatus.FAILED))
+        _notify_run_completed(client, run_id)
         raise
     # Outside the try: the run has already finished, and a notification that goes wrong must not
     # turn it into a failed one.
     _notify_new_issues(result.new_issues)
+    _notify_run_completed(
+        client,
+        run_id,
+        total_traces_analyzed=result.total_traces_analyzed,
+        issue_count=len(result.issues),
+        new_issue_ids=list(result.new_issue_ids),
+        total_cost_usd=result.total_cost_usd,
+    )
     return {
         "summary": result.summary,
         "issues": len(result.issues),
@@ -279,6 +333,9 @@ def _record_quiet_occurrence(
     client.set_tag(run_id, "total_cost_usd", 0.0)
     client.set_tag(run_id, "total_traces_analyzed", 0)
     client.set_terminated(run_id, RunStatus.to_string(RunStatus.FINISHED))
+    # Announced like any other run, so a subscriber can tell a quiet window from a schedule that
+    # stopped firing.
+    _notify_run_completed(client, run_id, total_cost_usd=0.0)
     return run_id
 
 

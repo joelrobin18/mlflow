@@ -235,6 +235,14 @@ public final class Webhooks {
      * <code>ISSUE = 11;</code>
      */
     ISSUE(11),
+    /**
+     * <pre>
+     * Issue detection run entity
+     * </pre>
+     *
+     * <code>ISSUE_DETECTION_RUN = 12;</code>
+     */
+    ISSUE_DETECTION_RUN(12),
     ;
 
     /**
@@ -333,6 +341,14 @@ public final class Webhooks {
      * <code>ISSUE = 11;</code>
      */
     public static final int ISSUE_VALUE = 11;
+    /**
+     * <pre>
+     * Issue detection run entity
+     * </pre>
+     *
+     * <code>ISSUE_DETECTION_RUN = 12;</code>
+     */
+    public static final int ISSUE_DETECTION_RUN_VALUE = 12;
 
 
     public final int getNumber() {
@@ -367,6 +383,7 @@ public final class Webhooks {
         case 9: return PROMPT_ALIAS;
         case 10: return BUDGET_POLICY;
         case 11: return ISSUE;
+        case 12: return ISSUE_DETECTION_RUN;
         default: return null;
       }
     }
@@ -473,6 +490,14 @@ public final class Webhooks {
      * <code>EXCEEDED = 5;</code>
      */
     EXCEEDED(5),
+    /**
+     * <pre>
+     * Entity finished running, successfully or not
+     * </pre>
+     *
+     * <code>COMPLETED = 6;</code>
+     */
+    COMPLETED(6),
     ;
 
     /**
@@ -523,6 +548,14 @@ public final class Webhooks {
      * <code>EXCEEDED = 5;</code>
      */
     public static final int EXCEEDED_VALUE = 5;
+    /**
+     * <pre>
+     * Entity finished running, successfully or not
+     * </pre>
+     *
+     * <code>COMPLETED = 6;</code>
+     */
+    public static final int COMPLETED_VALUE = 6;
 
 
     public final int getNumber() {
@@ -551,6 +584,7 @@ public final class Webhooks {
         case 3: return DELETED;
         case 4: return SET;
         case 5: return EXCEEDED;
+        case 6: return COMPLETED;
         default: return null;
       }
     }
@@ -16179,16 +16213,17 @@ public final class Webhooks {
       "WebhookEvent\0325\n\010Response\022)\n\006result\030\001 \001(\013" +
       "2\031.mlflow.WebhookTestResult:+\342?(\n&com.da" +
       "tabricks.rpc.RPC[$this.Response]*)\n\rWebh" +
-      "ookStatus\022\n\n\006ACTIVE\020\001\022\014\n\010DISABLED\020\002*\370\001\n\r" +
+      "ookStatus\022\n\n\006ACTIVE\020\001\022\014\n\010DISABLED\020\002*\221\002\n\r" +
       "WebhookEntity\022\026\n\022ENTITY_UNSPECIFIED\020\000\022\024\n" +
       "\020REGISTERED_MODEL\020\001\022\021\n\rMODEL_VERSION\020\002\022\025" +
       "\n\021MODEL_VERSION_TAG\020\003\022\027\n\023MODEL_VERSION_A" +
       "LIAS\020\004\022\n\n\006PROMPT\020\005\022\022\n\016PROMPT_VERSION\020\006\022\016" +
       "\n\nPROMPT_TAG\020\007\022\026\n\022PROMPT_VERSION_TAG\020\010\022\020" +
       "\n\014PROMPT_ALIAS\020\t\022\021\n\rBUDGET_POLICY\020\n\022\t\n\005I" +
-      "SSUE\020\013*e\n\rWebhookAction\022\026\n\022ACTION_UNSPEC" +
-      "IFIED\020\000\022\013\n\007CREATED\020\001\022\013\n\007UPDATED\020\002\022\013\n\007DEL" +
-      "ETED\020\003\022\007\n\003SET\020\004\022\014\n\010EXCEEDED\020\0052\265\006\n\016Webhoo" +
+      "SSUE\020\013\022\027\n\023ISSUE_DETECTION_RUN\020\014*t\n\rWebho" +
+      "okAction\022\026\n\022ACTION_UNSPECIFIED\020\000\022\013\n\007CREA" +
+      "TED\020\001\022\013\n\007UPDATED\020\002\022\013\n\007DELETED\020\003\022\007\n\003SET\020\004" +
+      "\022\014\n\010EXCEEDED\020\005\022\r\n\tCOMPLETED\020\0062\265\006\n\016Webhoo" +
       "kService\022~\n\rcreateWebhook\022\025.mlflow.Creat" +
       "eWebhook\032\036.mlflow.CreateWebhook.Response" +
       "\"6\362\206\0312\n\036\n\004POST\022\020/mlflow/webhooks\032\004\010\002\020\000\020\001" +

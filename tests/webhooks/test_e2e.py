@@ -16,7 +16,7 @@ from mlflow import MlflowClient
 from mlflow.entities.issue import IssueSeverity
 from mlflow.entities.webhook import WebhookAction, WebhookEntity, WebhookEvent
 from mlflow.tracing.client import TracingClient
-from mlflow.webhooks.types import IssueCreatedPayload
+from mlflow.webhooks.types import IssueCreatedPayload, IssueDetectionRunCompletedPayload
 
 from tests.helper_functions import get_safe_port
 from tests.webhooks.app import WEBHOOK_SECRET
@@ -1011,3 +1011,20 @@ def test_issue_created_webhook_test_endpoint(
     assert result.success is True
     logs = app_client.wait_for_logs(expected_count=1)
     assert logs[0].payload == IssueCreatedPayload.example()
+
+
+def test_issue_detection_run_completed_webhook_test_endpoint(
+    mlflow_client: MlflowClient, app_client: AppClient
+) -> None:
+    event = WebhookEvent(WebhookEntity.ISSUE_DETECTION_RUN, WebhookAction.COMPLETED)
+    webhook = mlflow_client.create_webhook(
+        name="issue_detection_run_completed_test",
+        url=app_client.get_url("/insecure-webhook"),
+        events=[event],
+    )
+
+    result = mlflow_client.test_webhook(webhook.webhook_id, event=event)
+
+    assert result.success is True
+    logs = app_client.wait_for_logs(expected_count=1)
+    assert logs[0].payload == IssueDetectionRunCompletedPayload.example()

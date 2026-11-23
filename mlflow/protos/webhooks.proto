@@ -135,6 +135,7 @@ enum WebhookEntity {
   PROMPT_ALIAS = 9; // Prompt alias entity
   BUDGET_POLICY = 10; // Budget policy entity
   ISSUE = 11; // Issue entity
+  ISSUE_DETECTION_RUN = 12; // Issue detection run entity
 }
 
 // Webhook action types
@@ -145,6 +146,7 @@ enum WebhookAction {
   DELETED = 3; // Entity was deleted
   SET = 4; // Entity was set (e.g., tag set)
   EXCEEDED = 5; // Budget limit was exceeded
+  COMPLETED = 6; // Entity finished running, successfully or not
 }
 
 // Webhook event definition

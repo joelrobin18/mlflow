@@ -122,6 +122,11 @@ MLflow webhooks support the following Model Registry, Prompt Registry, AI Gatewa
       <td>Triggered when a new issue is filed in an experiment, including by [issue detection](/genai/eval-monitor/ai-insights/detect-issues). An issue that detection finds again is refreshed, not filed, and does not trigger it.</td>
       <td><APILink fn="mlflow.webhooks.IssueCreatedPayload" >`IssueCreatedPayload`</APILink></td>
     </tr>
+    <tr>
+      <td><code>issue_detection_run.completed</code></td>
+      <td>Triggered once when a manual or scheduled issue detection run finishes, whether it succeeds or fails, including a scheduled run that found no traces to analyze</td>
+      <td><APILink fn="mlflow.webhooks.IssueDetectionRunCompletedPayload" >`IssueDetectionRunCompletedPayload`</APILink></td>
+    </tr>
   </tbody>
 </table>
 

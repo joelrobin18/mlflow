@@ -135,6 +135,8 @@ To hear about new issues without opening the Issues tab, create a [webhook](/sel
 
 The payload carries the issue's ID, experiment, title, status, severity, and categories. It leaves out the description and root causes, which detection writes from trace content.
 
+To get one message per run instead of one per issue, subscribe to `issue_detection_run.completed`. MLflow sends it when a manual or scheduled run finishes, with the run's status, the IDs of the issues it filed, the number of traces it analyzed, and its cost. A failed run carries the reason it failed, and a scheduled run that found no traces still sends it, so you can tell a quiet window from a schedule that stopped running.
+
 ## Customize detection criteria
 
 Click the **Issue detection settings** gear icon on the Issues tab to configure detection for the experiment:

@@ -69,6 +69,8 @@ class _WebhookEntityEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[_Webhook
     """Budget policy entity"""
     ISSUE: _WebhookEntity.ValueType  # 11
     """Issue entity"""
+    ISSUE_DETECTION_RUN: _WebhookEntity.ValueType  # 12
+    """Issue detection run entity"""
 
 class WebhookEntity(_WebhookEntity, metaclass=_WebhookEntityEnumTypeWrapper):
     """Webhook entity types"""
@@ -97,6 +99,8 @@ BUDGET_POLICY: WebhookEntity.ValueType  # 10
 """Budget policy entity"""
 ISSUE: WebhookEntity.ValueType  # 11
 """Issue entity"""
+ISSUE_DETECTION_RUN: WebhookEntity.ValueType  # 12
+"""Issue detection run entity"""
 Global___WebhookEntity: _TypeAlias = WebhookEntity  # noqa: Y015
 
 class _WebhookAction:
@@ -117,6 +121,8 @@ class _WebhookActionEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[_Webhook
     """Entity was set (e.g., tag set)"""
     EXCEEDED: _WebhookAction.ValueType  # 5
     """Budget limit was exceeded"""
+    COMPLETED: _WebhookAction.ValueType  # 6
+    """Entity finished running, successfully or not"""
 
 class WebhookAction(_WebhookAction, metaclass=_WebhookActionEnumTypeWrapper):
     """Webhook action types"""
@@ -133,6 +139,8 @@ SET: WebhookAction.ValueType  # 4
 """Entity was set (e.g., tag set)"""
 EXCEEDED: WebhookAction.ValueType  # 5
 """Budget limit was exceeded"""
+COMPLETED: WebhookAction.ValueType  # 6
+"""Entity finished running, successfully or not"""
 Global___WebhookAction: _TypeAlias = WebhookAction  # noqa: Y015
 
 @_typing.final
