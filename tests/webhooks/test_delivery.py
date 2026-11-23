@@ -1,4 +1,6 @@
 import json
+import threading
+import time
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -157,6 +159,27 @@ def test_deliver_webhook_does_not_create_session_without_webhooks(
         deliver_webhook(event=webhook_event, payload=webhook_payload, store=sql_store)
 
     mock_get_session.assert_not_called()
+
+
+def test_deliver_webhook_with_wait_returns_after_the_delivery_finishes(
+    sql_store: SqlAlchemyStore,
+    webhook: Webhook,
+    webhook_event: WebhookEvent,
+    webhook_payload: dict[str, str],
+):
+    delivered = threading.Event()
+
+    def slow_send(*args, **kwargs):
+        time.sleep(0.2)
+        delivered.set()
+
+    with (
+        patch("mlflow.webhooks.delivery._get_cached_webhooks_by_event", return_value=[webhook]),
+        patch("mlflow.webhooks.delivery._send_webhook_with_error_handling", side_effect=slow_send),
+    ):
+        deliver_webhook(event=webhook_event, payload=webhook_payload, store=sql_store, wait=True)
+
+        assert delivered.is_set()
 
 
 def test_test_webhook_rejects_private_ip():

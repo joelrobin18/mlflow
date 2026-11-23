@@ -13,7 +13,10 @@ import requests
 from cryptography.fernet import Fernet
 
 from mlflow import MlflowClient
+from mlflow.entities.issue import IssueSeverity
 from mlflow.entities.webhook import WebhookAction, WebhookEntity, WebhookEvent
+from mlflow.tracing.client import TracingClient
+from mlflow.webhooks.types import IssueCreatedPayload
 
 from tests.helper_functions import get_safe_port
 from tests.webhooks.app import WEBHOOK_SECRET
@@ -957,3 +960,54 @@ def test_prompt_webhook_test_endpoint(mlflow_client: MlflowClient, app_client: A
         "key": "example_key",
         "value": "example_value",
     }
+
+
+def test_issue_created(
+    mlflow_client: MlflowClient, mlflow_server: str, app_client: AppClient
+) -> None:
+    mlflow_client.create_webhook(
+        name="issue_created",
+        url=app_client.get_url("/insecure-webhook"),
+        events=[WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)],
+    )
+    experiment_id = mlflow_client.create_experiment("issue_created")
+    issue = TracingClient(tracking_uri=mlflow_server)._create_issue(
+        experiment_id=experiment_id,
+        name="Refund policy is invented",
+        description="Quoted from a trace and kept out of the payload",
+        severity=IssueSeverity.HIGH,
+        root_causes=["The prompt never states the policy"],
+        categories=["correctness"],
+    )
+
+    logs = app_client.wait_for_logs(expected_count=1)
+    assert len(logs) == 1
+    assert logs[0].endpoint == "/insecure-webhook"
+    assert logs[0].payload == {
+        "issue_id": issue.issue_id,
+        "experiment_id": experiment_id,
+        "name": "Refund policy is invented",
+        "status": "pending",
+        "severity": "high",
+        "categories": ["correctness"],
+        "source_run_id": None,
+        "created_by": None,
+        "created_timestamp": issue.created_timestamp,
+    }
+
+
+def test_issue_created_webhook_test_endpoint(
+    mlflow_client: MlflowClient, app_client: AppClient
+) -> None:
+    event = WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)
+    webhook = mlflow_client.create_webhook(
+        name="issue_created_test",
+        url=app_client.get_url("/insecure-webhook"),
+        events=[event],
+    )
+
+    result = mlflow_client.test_webhook(webhook.webhook_id, event=event)
+
+    assert result.success is True
+    logs = app_client.wait_for_logs(expected_count=1)
+    assert logs[0].payload == IssueCreatedPayload.example()

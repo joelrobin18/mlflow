@@ -1,10 +1,12 @@
 """MLflow webhooks module.
 
-This module provides webhook functionality for MLflow model registry and prompt registry events.
+This module provides webhook functionality for MLflow model registry, prompt registry, AI Gateway
+and issue events.
 """
 
 from mlflow.webhooks.constants import WEBHOOK_SIGNATURE_HEADER
 from mlflow.webhooks.types import (
+    IssueCreatedPayload,
     ModelVersionAliasCreatedPayload,
     ModelVersionAliasDeletedPayload,
     ModelVersionCreatedPayload,
@@ -37,6 +39,7 @@ __all__ = [
     "PromptVersionTagDeletedPayload",
     "PromptAliasCreatedPayload",
     "PromptAliasDeletedPayload",
+    "IssueCreatedPayload",
     "WebhookPayload",
     "WEBHOOK_SIGNATURE_HEADER",
 ]

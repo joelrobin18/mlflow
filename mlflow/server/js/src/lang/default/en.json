@@ -13171,6 +13171,10 @@
     "defaultMessage": "Grounded",
     "description": "Evaluation results > retrieval grounded assessment > positive value label. Displayed if evaluation result is considered as grounded."
   },
+  "e5jV98": {
+    "defaultMessage": "Issue created",
+    "description": "Webhook event label"
+  },
   "e5r+Np": {
     "defaultMessage": "The SQL query timed out. Please retry, and if the problem persists, try selecting a larger SQL warehouse.",
     "description": "V4 traces > SQL warehouse timeout error description with CTA to select a larger warehouse"

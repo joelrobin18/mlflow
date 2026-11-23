@@ -4,6 +4,7 @@ from typing import Any
 
 import mlflow
 from mlflow.client import MlflowClient
+from mlflow.entities.issue import Issue
 from mlflow.entities.run_status import RunStatus
 from mlflow.environment_variables import (
     _MLFLOW_INTERNAL_GATEWAY_AUTH_TOKEN,
@@ -22,6 +23,7 @@ from mlflow.genai.discovery.checkpoint import (
 from mlflow.genai.discovery.constants import DEFAULT_MODEL
 from mlflow.genai.discovery.pipeline import discover_issues
 from mlflow.genai.discovery.sampling import sample_traces
+from mlflow.server.constants import BACKEND_STORE_URI_ENV_VAR
 from mlflow.server.jobs import job
 from mlflow.server.jobs.utils import MLFLOW_SERVER_JOB_ID_ENV_VAR
 from mlflow.store.tracking import MAX_TRACE_LINKS_PER_REQUEST
@@ -37,6 +39,7 @@ from mlflow.utils.mlflow_tags import (
     MLFLOW_RUN_TYPE_ISSUE_DETECTION,
 )
 from mlflow.utils.providers import _CORE_PROVIDER_ENV_VARS
+from mlflow.webhooks.issues import deliver_issue_created_webhooks
 
 _logger = logging.getLogger(__name__)
 
@@ -94,6 +97,25 @@ def _newest_trace_matching(experiment_id: str, filter_string: str) -> Checkpoint
     return CheckpointTrace(trace_id=traces[0].info.trace_id, time_ms=traces[0].info.request_time)
 
 
+def _notify_new_issues(issues: list[Issue]) -> None:
+    """
+    Fire ``issue.created`` for the issues a detection run filed.
+
+    A job the server runs writes issues to the backend store directly, past the request handler
+    that fires the event for every other issue, so the job fires it itself and reads the webhooks
+    from that store. A job without the backend store's URI, as in a job container, writes through
+    the server's HTTP API instead, where the handler has already announced its issues.
+
+    Waits for delivery because the job's process can exit as soon as the job returns.
+    """
+    if not os.environ.get(BACKEND_STORE_URI_ENV_VAR):
+        return
+    try:
+        deliver_issue_created_webhooks(issues, wait=True)
+    except Exception:
+        _logger.warning("Could not send the issue.created webhooks", exc_info=True)
+
+
 def _detect_issues_into_run(
     client: MlflowClient,
     experiment_id: str,
@@ -129,13 +151,6 @@ def _detect_issues_into_run(
         # submitted: the ``total_traces`` tag written when the run was created counts what was
         # handed in, so a run given 200 sessionless traces carries 200 there and 100 here.
         client.set_tag(run_id, "total_traces_analyzed", result.total_traces_analyzed)
-        return {
-            "summary": result.summary,
-            "issues": len(result.issues),
-            "new_issue_count": result.new_issue_count,
-            "total_traces_analyzed": result.total_traces_analyzed,
-            "total_cost_usd": result.total_cost_usd,
-        }
     except Exception as error:
         # Recorded before the status so a run that reads as FAILED already carries its reason,
         # and best-effort so a store that refuses the tag cannot swallow the original failure.
@@ -145,6 +160,16 @@ def _detect_issues_into_run(
             _logger.warning("Could not record why detection run %s failed", run_id, exc_info=True)
         client.set_terminated(run_id, RunStatus.to_string(RunStatus.FAILED))
         raise
+    # Outside the try: the run has already finished, and a notification that goes wrong must not
+    # turn it into a failed one.
+    _notify_new_issues(result.new_issues)
+    return {
+        "summary": result.summary,
+        "issues": len(result.issues),
+        "new_issue_count": result.new_issue_count,
+        "total_traces_analyzed": result.total_traces_analyzed,
+        "total_cost_usd": result.total_cost_usd,
+    }
 
 
 @job(name="invoke_issue_detection", max_workers=MLFLOW_SERVER_JUDGE_INVOKE_MAX_WORKERS.get())

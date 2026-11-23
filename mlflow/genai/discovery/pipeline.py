@@ -1098,7 +1098,7 @@ def discover_issues(
         # never maps a finding onto an issue it was not shown. Counted this way because a lost
         # match is filed as new, and because `run_id` can be reused across detections.
         offered = {candidate.issue_id for candidate in candidates}
-        new_issue_count = sum(1 for issue in issues if issue.issue_id not in offered)
+        new_issue_ids = [issue.issue_id for issue in issues if issue.issue_id not in offered]
 
         trace_to_session: dict[str, str] = {}
         for session_id, traces_in_session in session_groups.items():
@@ -1134,7 +1134,8 @@ def discover_issues(
             summary=summary,
             total_traces_analyzed=len(triage_traces),
             total_cost_usd=token_counter.cost_usd,
-            new_issue_count=new_issue_count,
+            new_issue_count=len(new_issue_ids),
+            new_issue_ids=new_issue_ids,
         )
 
         # Log artifacts to the triage run

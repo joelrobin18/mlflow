@@ -482,6 +482,7 @@ from mlflow.utils.validation import (
 )
 from mlflow.utils.workspace_utils import DEFAULT_WORKSPACE_NAME
 from mlflow.webhooks.delivery import deliver_webhook, test_webhook
+from mlflow.webhooks.issues import deliver_issue_created_webhooks
 from mlflow.webhooks.types import (
     ModelVersionAliasCreatedPayload,
     ModelVersionAliasDeletedPayload,
@@ -5227,6 +5228,7 @@ def _create_issue():
     if request_message.metadata:
         create_kwargs["metadata"] = dict(request_message.metadata)
     created_issue = _get_tracking_store().create_issue(**create_kwargs)
+    deliver_issue_created_webhooks([created_issue])
 
     response_message = CreateIssue.Response(issue=created_issue.to_proto())
     return _wrap_response(response_message)

@@ -13,7 +13,8 @@ import logging
 import threading
 import time
 import uuid
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import wait as wait_for_futures
 from datetime import datetime, timezone
 
 import requests
@@ -290,21 +291,24 @@ def _deliver_webhook_impl(
     event: WebhookEvent,
     payload: WebhookPayload,
     store: AbstractStore,
-) -> None:
+) -> list[Future[None]]:
     ttl_seconds = MLFLOW_WEBHOOK_CACHE_TTL.get()
 
     # Get only webhooks subscribed to this specific event (filtered at DB level when possible)
     webhooks = _get_cached_webhooks_by_event(store, event, ttl_seconds)
-    if active_webhooks := [w for w in webhooks if w.status.is_active()]:
-        session = _get_or_create_webhook_session()
-        for webhook in active_webhooks:
-            _webhook_delivery_executor.submit(
-                _send_webhook_with_error_handling,
-                webhook,
-                payload,
-                event,
-                session,
-            )
+    if not (active_webhooks := [w for w in webhooks if w.status.is_active()]):
+        return []
+    session = _get_or_create_webhook_session()
+    return [
+        _webhook_delivery_executor.submit(
+            _send_webhook_with_error_handling,
+            webhook,
+            payload,
+            event,
+            session,
+        )
+        for webhook in active_webhooks
+    ]
 
 
 def deliver_webhook(
@@ -312,13 +316,27 @@ def deliver_webhook(
     event: WebhookEvent,
     payload: WebhookPayload,
     store: AbstractStore,
+    wait: bool = False,
 ) -> None:
+    """
+    Send ``payload`` to every active webhook subscribed to ``event``.
+
+    Args:
+        event: The event that happened.
+        payload: The event's payload.
+        store: The model registry store webhooks are read from.
+        wait: Block until every delivery, retries included, has finished. Delivery is otherwise
+            fire-and-forget, which loses deliveries still queued when a short-lived process such
+            as a server job exits.
+    """
     # Exit early if the store is a FileStore since it does not support webhook APIs
     if isinstance(store, FileStore):
         return
 
     try:
-        _deliver_webhook_impl(event=event, payload=payload, store=store)
+        futures = _deliver_webhook_impl(event=event, payload=payload, store=store)
+        if wait and futures:
+            wait_for_futures(futures)
     except Exception as e:
         _logger.error(
             f"Failed to deliver webhook for event {event}: {e}",

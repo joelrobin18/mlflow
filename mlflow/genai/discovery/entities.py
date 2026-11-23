@@ -103,6 +103,14 @@ class DiscoverIssuesResult:
     # How many of `issues` this run filed; the rest were already reported and were refreshed
     # rather than duplicated.
     new_issue_count: int = 0
+    # Which of `issues` this run filed, so a notification goes out for those and not for the
+    # issues it only refreshed.
+    new_issue_ids: list[str] = field(default_factory=list)
+
+    @property
+    def new_issues(self) -> list[Issue]:
+        new_ids = set(self.new_issue_ids)
+        return [issue for issue in self.issues if issue.issue_id in new_ids]
 
 
 _SIGNAL_SEPARATOR = "; "

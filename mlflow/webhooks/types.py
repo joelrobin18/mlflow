@@ -521,6 +521,66 @@ class BudgetPolicyExceededPayload(TypedDict):
         )
 
 
+class IssueCreatedPayload(TypedDict):
+    """Payload sent when a new issue is filed in an experiment, including issues that issue
+    detection files.
+
+    The issue's description and root causes are left out: detection writes them from trace
+    content, so they can carry whatever the traces did. Fetch the issue with
+    :py:func:`mlflow.genai.get_issue` for the full record.
+
+    Example payload:
+
+    .. code-block:: python
+
+        {
+            "issue_id": "iss-abc123",
+            "experiment_id": "1",
+            "name": "Tool call omits a required argument",
+            "status": "pending",
+            "severity": "high",
+            "categories": ["tool_use"],
+            "source_run_id": "abcd1234abcd5678",
+            "created_by": None,
+            "created_timestamp": 1704067200000,
+        }
+
+    """
+
+    issue_id: str
+    """The unique identifier of the issue."""
+    experiment_id: str
+    """The experiment the issue belongs to."""
+    name: str
+    """The issue's title."""
+    status: str
+    """The issue's status, such as ``pending``."""
+    severity: str | None
+    """The issue's severity, such as ``high``, or None when it has none."""
+    categories: list[str]
+    """The categories the issue was filed under."""
+    source_run_id: str | None
+    """The issue detection run that filed the issue, or None when it was filed another way."""
+    created_by: str | None
+    """Who filed the issue, or None when it was filed by issue detection."""
+    created_timestamp: int
+    """When the issue was created, in milliseconds since the Unix epoch."""
+
+    @classmethod
+    def example(cls) -> "IssueCreatedPayload":
+        return cls(
+            issue_id="iss-abc123",
+            experiment_id="1",
+            name="Tool call omits a required argument",
+            status="pending",
+            severity="high",
+            categories=["tool_use"],
+            source_run_id="abcd1234abcd5678",
+            created_by=None,
+            created_timestamp=1704067200000,
+        )
+
+
 WebhookPayload: TypeAlias = (
     RegisteredModelCreatedPayload
     | ModelVersionCreatedPayload
@@ -537,6 +597,7 @@ WebhookPayload: TypeAlias = (
     | PromptAliasCreatedPayload
     | PromptAliasDeletedPayload
     | BudgetPolicyExceededPayload
+    | IssueCreatedPayload
 )
 
 # Mapping of (entity, action) tuples to their corresponding payload classes
@@ -556,6 +617,7 @@ EVENT_TO_PAYLOAD_CLASS: dict[tuple[WebhookEntity, WebhookAction], type[WebhookPa
     (WebhookEntity.PROMPT_ALIAS, WebhookAction.CREATED): PromptAliasCreatedPayload,
     (WebhookEntity.PROMPT_ALIAS, WebhookAction.DELETED): PromptAliasDeletedPayload,
     (WebhookEntity.BUDGET_POLICY, WebhookAction.EXCEEDED): BudgetPolicyExceededPayload,
+    (WebhookEntity.ISSUE, WebhookAction.CREATED): IssueCreatedPayload,
 }
 
 

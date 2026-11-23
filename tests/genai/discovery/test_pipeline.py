@@ -980,6 +980,8 @@ def test_discover_issues_counts_only_the_issues_this_run_filed(make_trace):
 
     assert len(result.issues) == 2
     assert result.new_issue_count == 1
+    assert result.new_issue_ids == ["filed-now"]
+    assert result.new_issues == [filed]
 
 
 def test_discover_issues_reports_no_new_issues_when_none_were_filed(make_trace):
@@ -1027,6 +1029,7 @@ def test_discover_issues_reports_no_new_issues_when_none_were_filed(make_trace):
 
     assert len(result.issues) == 1
     assert result.new_issue_count == 0
+    assert result.new_issues == []
 
 
 def test_an_issue_refreshed_by_the_run_that_filed_it_is_not_counted_as_new(make_trace):

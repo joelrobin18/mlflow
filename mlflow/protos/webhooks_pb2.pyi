@@ -67,6 +67,8 @@ class _WebhookEntityEnumTypeWrapper(_enum_type_wrapper._EnumTypeWrapper[_Webhook
     """Prompt alias entity"""
     BUDGET_POLICY: _WebhookEntity.ValueType  # 10
     """Budget policy entity"""
+    ISSUE: _WebhookEntity.ValueType  # 11
+    """Issue entity"""
 
 class WebhookEntity(_WebhookEntity, metaclass=_WebhookEntityEnumTypeWrapper):
     """Webhook entity types"""
@@ -93,6 +95,8 @@ PROMPT_ALIAS: WebhookEntity.ValueType  # 9
 """Prompt alias entity"""
 BUDGET_POLICY: WebhookEntity.ValueType  # 10
 """Budget policy entity"""
+ISSUE: WebhookEntity.ValueType  # 11
+"""Issue entity"""
 Global___WebhookEntity: _TypeAlias = WebhookEntity  # noqa: Y015
 
 class _WebhookAction:

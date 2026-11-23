@@ -44,6 +44,7 @@ class WebhookEntity(str, Enum):
     PROMPT_VERSION_TAG = "prompt_version_tag"
     PROMPT_ALIAS = "prompt_alias"
     BUDGET_POLICY = "budget_policy"
+    ISSUE = "issue"
 
     def __str__(self) -> str:
         return self.value
@@ -101,6 +102,7 @@ WebhookEventStr: TypeAlias = Literal[
     "prompt_alias.created",
     "prompt_alias.deleted",
     "budget_policy.exceeded",
+    "issue.created",
 ]
 
 # Valid actions for each entity type
@@ -139,6 +141,9 @@ VALID_ENTITY_ACTIONS: dict[WebhookEntity, set[WebhookAction]] = {
     },
     WebhookEntity.BUDGET_POLICY: {
         WebhookAction.EXCEEDED,
+    },
+    WebhookEntity.ISSUE: {
+        WebhookAction.CREATED,
     },
 }
 

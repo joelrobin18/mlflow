@@ -134,6 +134,7 @@ enum WebhookEntity {
   PROMPT_VERSION_TAG = 8; // Prompt version tag entity
   PROMPT_ALIAS = 9; // Prompt alias entity
   BUDGET_POLICY = 10; // Budget policy entity
+  ISSUE = 11; // Issue entity
 }
 
 // Webhook action types

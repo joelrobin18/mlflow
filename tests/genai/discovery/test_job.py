@@ -9,6 +9,7 @@ from mlflow.genai.discovery.job import (
     _fetch_provider_credentials,
     invoke_issue_detection_job,
 )
+from mlflow.server.constants import BACKEND_STORE_URI_ENV_VAR
 
 
 @pytest.mark.parametrize(
@@ -357,3 +358,80 @@ def test_invoke_issue_detection_job_without_priorities_passes_none():
         )
 
     assert discover.call_args.kwargs["instructions"] is None
+
+
+def _run_detection_job(mock_client, mock_result):
+    with (
+        mock.patch("mlflow.genai.discovery.job.MlflowClient", return_value=mock_client),
+        mock.patch("mlflow.genai.discovery.job.discover_issues", return_value=mock_result),
+    ):
+        return invoke_issue_detection_job(
+            experiment_id="exp-123",
+            trace_ids=["trace-1"],
+            categories=["correctness"],
+            run_id="run-123",
+            model="openai:/gpt-4o",
+        )
+
+
+def test_invoke_issue_detection_job_notifies_only_the_issues_it_filed(monkeypatch):
+    monkeypatch.setenv(BACKEND_STORE_URI_ENV_VAR, "sqlite:///mlflow.db")
+    filed = mock.MagicMock()
+    mock_result = mock.MagicMock()
+    mock_result.issues = [filed, mock.MagicMock()]
+    mock_result.new_issues = [filed]
+
+    with mock.patch("mlflow.genai.discovery.job.deliver_issue_created_webhooks") as deliver:
+        _run_detection_job(mock.MagicMock(), mock_result)
+
+    deliver.assert_called_once_with([filed], wait=True)
+
+
+def test_invoke_issue_detection_job_leaves_notification_to_the_server_over_http(monkeypatch):
+    # A job without the backend store, as in a job container, creates its issues through the
+    # server's handler, which notifies on its own; notifying here too would send them twice.
+    monkeypatch.delenv(BACKEND_STORE_URI_ENV_VAR, raising=False)
+    mock_result = mock.MagicMock()
+    mock_result.new_issues = [mock.MagicMock()]
+
+    with mock.patch("mlflow.genai.discovery.job.deliver_issue_created_webhooks") as deliver:
+        _run_detection_job(mock.MagicMock(), mock_result)
+
+    deliver.assert_not_called()
+
+
+def test_invoke_issue_detection_job_does_not_notify_when_detection_fails():
+    mock_client = mock.MagicMock()
+    mock_client._tracing_client.batch_get_traces.side_effect = Exception("API error")
+
+    with (
+        mock.patch("mlflow.genai.discovery.job.MlflowClient", return_value=mock_client),
+        mock.patch("mlflow.genai.discovery.job.deliver_issue_created_webhooks") as deliver,
+        pytest.raises(Exception, match="API error"),
+    ):
+        invoke_issue_detection_job(
+            experiment_id="exp-123",
+            trace_ids=["trace-1"],
+            categories=["correctness"],
+            run_id="run-123",
+        )
+
+    deliver.assert_not_called()
+
+
+def test_invoke_issue_detection_job_finishes_the_run_when_notifying_fails(monkeypatch):
+    monkeypatch.setenv(BACKEND_STORE_URI_ENV_VAR, "sqlite:///mlflow.db")
+    mock_client = mock.MagicMock()
+    mock_result = mock.MagicMock()
+    mock_result.new_issues = [mock.MagicMock()]
+
+    with mock.patch(
+        "mlflow.genai.discovery.job.deliver_issue_created_webhooks",
+        side_effect=RuntimeError("webhook store unreachable"),
+    ):
+        result = _run_detection_job(mock_client, mock_result)
+
+    mock_client.set_terminated.assert_called_once_with(
+        "run-123", RunStatus.to_string(RunStatus.FINISHED)
+    )
+    assert result["summary"] == mock_result.summary

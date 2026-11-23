@@ -25,6 +25,7 @@ export const eventLabels = defineMessages({
   'PROMPT_ALIAS.CREATED': { defaultMessage: 'Prompt alias created', description: 'Webhook event label' },
   'PROMPT_ALIAS.DELETED': { defaultMessage: 'Prompt alias deleted', description: 'Webhook event label' },
   'BUDGET_POLICY.EXCEEDED': { defaultMessage: 'Budget policy exceeded', description: 'Webhook event label' },
+  'ISSUE.CREATED': { defaultMessage: 'Issue created', description: 'Webhook event label' },
 });
 
 export const VALID_EVENTS: { entity: string; action: string }[] = [
@@ -43,6 +44,7 @@ export const VALID_EVENTS: { entity: string; action: string }[] = [
   { entity: 'PROMPT_ALIAS', action: 'CREATED' },
   { entity: 'PROMPT_ALIAS', action: 'DELETED' },
   { entity: 'BUDGET_POLICY', action: 'EXCEEDED' },
+  { entity: 'ISSUE', action: 'CREATED' },
 ];
 
 export const WEBHOOK_NAME_REGEX = /^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/i;

@@ -12,11 +12,11 @@ import { APILink } from "@site/src/components/APILink";
 
 ## Overview
 
-MLflow webhooks enable real-time notifications when specific events occur in the Model Registry and Prompt Registry. When you register a model or prompt, create a new version, or modify tags and aliases, MLflow can automatically send HTTP POST requests to your specified endpoints. This enables seamless integration with CI/CD pipelines, notification systems, and other external services.
+MLflow webhooks enable real-time notifications when specific events occur in the Model Registry, the Prompt Registry, the AI Gateway, and experiment issues. When you register a model or prompt, create a new version, modify tags and aliases, or a new issue is filed, MLflow can automatically send HTTP POST requests to your specified endpoints. This enables seamless integration with CI/CD pipelines, notification systems, and other external services.
 
 ## Key Features
 
-- **Real-time notifications** for Model Registry and Prompt Registry events
+- **Real-time notifications** for Model Registry, Prompt Registry, AI Gateway, and issue events
 - **HMAC signature verification** for secure webhook delivery
 - **Multiple event types** including model/prompt creation, versioning, and tagging
 - **Built-in testing** to verify webhook connectivity
@@ -31,7 +31,7 @@ users will receive a `403 Forbidden` response when attempting to access webhook 
 
 ## Supported Events
 
-MLflow webhooks support the following Model Registry, Prompt Registry, and AI Gateway events:
+MLflow webhooks support the following Model Registry, Prompt Registry, AI Gateway, and issue events:
 
 <table>
   <thead>
@@ -116,6 +116,11 @@ MLflow webhooks support the following Model Registry, Prompt Registry, and AI Ga
       <td><code>budget_policy.exceeded</code></td>
       <td>Triggered when a budget policy limit is exceeded</td>
       <td><APILink fn="mlflow.webhooks.BudgetPolicyExceededPayload" >`BudgetPolicyExceededPayload`</APILink></td>
+    </tr>
+    <tr>
+      <td><code>issue.created</code></td>
+      <td>Triggered when a new issue is filed in an experiment, including by [issue detection](/genai/eval-monitor/ai-insights/detect-issues). An issue that detection finds again is refreshed, not filed, and does not trigger it.</td>
+      <td><APILink fn="mlflow.webhooks.IssueCreatedPayload" >`IssueCreatedPayload`</APILink></td>
     </tr>
   </tbody>
 </table>

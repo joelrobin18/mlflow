@@ -129,6 +129,12 @@ Schedule issue detection to analyze new traces regularly:
 
 Scheduled runs require the server's periodic tasks and background job execution to be enabled. If **Schedule detection** is unavailable, check the server configuration. Each scheduled run incurs model usage costs.
 
+### Get notified about new issues
+
+To hear about new issues without opening the Issues tab, create a [webhook](/self-hosting/webhooks) subscribed to the `issue.created` event. MLflow sends it for each issue a manual or scheduled detection run files, and for each issue created through the API. An issue that a later run finds again is refreshed rather than filed, so it does not notify again.
+
+The payload carries the issue's ID, experiment, title, status, severity, and categories. It leaves out the description and root causes, which detection writes from trace content.
+
 ## Customize detection criteria
 
 Click the **Issue detection settings** gear icon on the Issues tab to configure detection for the experiment:
