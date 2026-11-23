@@ -10286,3 +10286,147 @@ def test_finalize_logged_model_acts_on_url_model_id(client, monkeypatch):
         assert client.get_logged_model(victim_model.model_id).status == LoggedModelStatus.PENDING
     with User(attacker, attacker_password, monkeypatch):
         assert client.get_logged_model(own_model.model_id).status == LoggedModelStatus.FAILED
+
+
+_EXPERIMENT_MANAGERS_CAN_MANAGE_WEBHOOKS = pytest.mark.parametrize(
+    "client", [{"MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS": "true"}], indirect=True
+)
+
+
+def _webhook_request(client, method, path="", *, auth, json=None):
+    return requests.request(
+        method,
+        url=f"{client.tracking_uri}/api/2.0/mlflow/webhooks{path}",
+        json=json,
+        auth=auth,
+    )
+
+
+def _issue_webhook_body(name, experiment_ids=None):
+    body = {
+        "name": name,
+        "url": "https://example.com/webhook",
+        "events": [{"entity": "ISSUE", "action": "CREATED"}],
+    }
+    if experiment_ids is not None:
+        body["experiment_ids"] = experiment_ids
+    return body
+
+
+def _create_experiment_as(client, monkeypatch, username, password, name):
+    with User(username, password, monkeypatch):
+        return MlflowClient(client.tracking_uri).create_experiment(name)
+
+
+@_EXPERIMENT_MANAGERS_CAN_MANAGE_WEBHOOKS
+def test_experiment_manager_manages_a_webhook_limited_to_their_experiment(client, monkeypatch):
+    owner, owner_password = create_user(client.tracking_uri)
+    owner_auth = (owner, owner_password)
+    experiment_id = _create_experiment_as(client, monkeypatch, owner, owner_password, "owned")
+
+    response = _webhook_request(
+        client, "POST", auth=owner_auth, json=_issue_webhook_body("owned-issues", [experiment_id])
+    )
+    response.raise_for_status()
+    webhook_id = response.json()["webhook"]["webhook_id"]
+    _webhook_request(
+        client, "POST", auth=(ADMIN_USERNAME, ADMIN_PASSWORD), json=_issue_webhook_body("global")
+    ).raise_for_status()
+
+    listed = _webhook_request(client, "GET", auth=owner_auth)
+    listed.raise_for_status()
+    assert [w["webhook_id"] for w in listed.json()["webhooks"]] == [webhook_id]
+
+    for method, path, body in [
+        ("GET", f"/{webhook_id}", None),
+        ("PATCH", f"/{webhook_id}", {"name": "renamed-issues"}),
+        ("PATCH", f"/{webhook_id}", {"experiment_ids": [experiment_id]}),
+        ("POST", f"/{webhook_id}/test", {}),
+        ("DELETE", f"/{webhook_id}", None),
+    ]:
+        response = _webhook_request(client, method, path, auth=owner_auth, json=body)
+        assert response.status_code == 200, (method, path, response.text)
+
+
+@_EXPERIMENT_MANAGERS_CAN_MANAGE_WEBHOOKS
+def test_experiment_manager_cannot_create_a_webhook_beyond_their_experiments(client, monkeypatch):
+    owner, owner_password = create_user(client.tracking_uri)
+    owner_auth = (owner, owner_password)
+    owned = _create_experiment_as(client, monkeypatch, owner, owner_password, "owned")
+    not_owned = _create_experiment_as(client, monkeypatch, ADMIN_USERNAME, ADMIN_PASSWORD, "admins")
+
+    for experiment_ids in [None, [], [not_owned], [owned, not_owned], "not-a-list"]:
+        response = _webhook_request(
+            client,
+            "POST",
+            auth=owner_auth,
+            json=_issue_webhook_body("too-broad", experiment_ids),
+        )
+        assert response.status_code == 403, experiment_ids
+
+
+@_EXPERIMENT_MANAGERS_CAN_MANAGE_WEBHOOKS
+def test_experiment_manager_cannot_widen_or_remove_a_webhooks_limit(client, monkeypatch):
+    owner, owner_password = create_user(client.tracking_uri)
+    owner_auth = (owner, owner_password)
+    owned = _create_experiment_as(client, monkeypatch, owner, owner_password, "owned")
+    not_owned = _create_experiment_as(client, monkeypatch, ADMIN_USERNAME, ADMIN_PASSWORD, "admins")
+    response = _webhook_request(
+        client, "POST", auth=owner_auth, json=_issue_webhook_body("owned-issues", [owned])
+    )
+    response.raise_for_status()
+    webhook_id = response.json()["webhook"]["webhook_id"]
+
+    for experiment_ids in [[], [owned, not_owned]]:
+        response = _webhook_request(
+            client,
+            "PATCH",
+            f"/{webhook_id}",
+            auth=owner_auth,
+            json={"experiment_ids": experiment_ids},
+        )
+        assert response.status_code == 403, experiment_ids
+
+
+@_EXPERIMENT_MANAGERS_CAN_MANAGE_WEBHOOKS
+def test_webhook_stays_out_of_reach_of_users_who_do_not_manage_its_experiments(client, monkeypatch):
+    owner, owner_password = create_user(client.tracking_uri)
+    outsider, outsider_password = create_user(client.tracking_uri)
+    outsider_auth = (outsider, outsider_password)
+    owned = _create_experiment_as(client, monkeypatch, owner, owner_password, "owned")
+    response = _webhook_request(
+        client,
+        "POST",
+        auth=(owner, owner_password),
+        json=_issue_webhook_body("owned-issues", [owned]),
+    )
+    response.raise_for_status()
+    webhook_id = response.json()["webhook"]["webhook_id"]
+
+    listed = _webhook_request(client, "GET", auth=outsider_auth)
+    listed.raise_for_status()
+    assert listed.json().get("webhooks", []) == []
+    for method, path in [
+        ("GET", f"/{webhook_id}"),
+        ("PATCH", f"/{webhook_id}"),
+        ("POST", f"/{webhook_id}/test"),
+        ("DELETE", f"/{webhook_id}"),
+        # A webhook that does not exist is refused the same way, so IDs cannot be probed.
+        ("GET", "/does-not-exist"),
+    ]:
+        response = _webhook_request(client, method, path, auth=outsider_auth, json={})
+        assert response.status_code == 403, (method, path)
+
+
+def test_experiment_managers_need_the_server_setting_to_manage_webhooks(client, monkeypatch):
+    owner, owner_password = create_user(client.tracking_uri)
+    owned = _create_experiment_as(client, monkeypatch, owner, owner_password, "owned")
+
+    response = _webhook_request(
+        client,
+        "POST",
+        auth=(owner, owner_password),
+        json=_issue_webhook_body("owned-issues", [owned]),
+    )
+
+    assert response.status_code == 403

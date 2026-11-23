@@ -1652,6 +1652,14 @@ MLFLOW_WEBHOOK_REQUEST_MAX_RETRIES = _EnvironmentVariable(
 #: (default: ``60``)
 MLFLOW_WEBHOOK_CACHE_TTL = _EnvironmentVariable("MLFLOW_WEBHOOK_CACHE_TTL", int, 60)
 
+#: Specifies whether, with authentication enabled, a user who can MANAGE experiments can create and
+#: manage webhooks limited to those experiments. Admins can always manage every webhook, and only
+#: they can manage a webhook that is not limited to experiments.
+#: (default: ``False``)
+MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS = _BooleanEnvironmentVariable(
+    "MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS", False
+)
+
 #: Whether to allow webhook URLs that resolve to private/internal IP addresses.
 #: When set to ``true``, SSRF protection is disabled and webhooks can target
 #: localhost, private IPs, and cloud metadata endpoints.

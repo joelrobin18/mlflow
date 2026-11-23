@@ -66,6 +66,7 @@ from mlflow.environment_variables import (
     MLFLOW_FLASK_SERVER_SECRET_KEY,
     MLFLOW_RBAC_SEED_DEFAULT_ROLES,
     MLFLOW_SERVER_ENABLE_GRAPHQL_AUTH,
+    MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS,
 )
 from mlflow.genai.discovery.schedule import scheduled_detection_secret_id
 from mlflow.prompt.constants import IS_PROMPT_TAG_KEY
@@ -5753,13 +5754,114 @@ LOGGED_MODEL_BEFORE_REQUEST_VALIDATORS[
 ] = validate_can_read_logged_model
 
 
+def _sender_manages_every_experiment(experiment_ids: list[str]) -> bool:
+    """
+    Whether the caller can MANAGE each of ``experiment_ids``, which must not be empty.
+
+    Empty is refused rather than vacuously allowed: a webhook limited to no experiments hears from
+    all of them, which only an admin may set up.
+    """
+    if not experiment_ids:
+        return False
+    username = authenticate_request().username
+    return all(
+        _get_experiment_permission(experiment_id, username).can_manage
+        for experiment_id in experiment_ids
+    )
+
+
+def _requested_webhook_experiment_ids() -> list[str] | None:
+    """
+    The ``experiment_ids`` a webhook create or update request names: ``None`` when it names none,
+    and an empty list both for an explicit empty list and for a value that is not a list of
+    strings, which an experiment manager may not send either way.
+    """
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        return None
+    experiment_ids = body.get("experiment_ids", body.get("experimentIds"))
+    if experiment_ids is None:
+        return None
+    if not isinstance(experiment_ids, list) or not all(
+        isinstance(experiment_id, str) for experiment_id in experiment_ids
+    ):
+        return []
+    return experiment_ids
+
+
+def _sender_manages_requested_webhook() -> bool:
+    """
+    Whether a non-admin caller can manage the webhook the request path names.
+
+    Only a webhook limited to experiments has an owner other than the admins: whoever can MANAGE
+    every experiment it is limited to. A webhook that does not exist is refused like one the caller
+    cannot manage, so its ID cannot be probed.
+    """
+    try:
+        webhook = _get_model_registry_store().get_webhook(_get_request_param("webhook_id"))
+    except MlflowException:
+        return False
+    return _sender_manages_every_experiment(webhook.experiment_ids)
+
+
+def validate_can_create_webhook() -> bool:
+    if sender_is_admin():
+        return True
+    if not MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS.get():
+        return False
+    return _sender_manages_every_experiment(_requested_webhook_experiment_ids() or [])
+
+
+def validate_can_list_webhooks() -> bool:
+    # A non-admin is listed only the webhooks they manage; see ``filter_list_webhooks``.
+    return sender_is_admin() or MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS.get()
+
+
+def validate_can_manage_webhook() -> bool:
+    if sender_is_admin():
+        return True
+    if not MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS.get():
+        return False
+    return _sender_manages_requested_webhook()
+
+
+def validate_can_update_webhook() -> bool:
+    if sender_is_admin():
+        return True
+    if not MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS.get():
+        return False
+    if not _sender_manages_requested_webhook():
+        return False
+    # Moving the webhook to other experiments needs MANAGE on those too, and removing its limit
+    # would make it hear from every experiment.
+    requested = _requested_webhook_experiment_ids()
+    return requested is None or _sender_manages_every_experiment(requested)
+
+
+def filter_list_webhooks(resp: Response) -> None:
+    """Narrow a ``ListWebhooks`` response to the webhooks a non-admin caller manages."""
+    if sender_is_admin():
+        return
+
+    response_message = ListWebhooks.Response()
+    parse_dict(resp.json, response_message)
+    managed = [
+        webhook
+        for webhook in response_message.webhooks
+        if _sender_manages_every_experiment(list(webhook.experiment_ids))
+    ]
+    response_message.ClearField("webhooks")
+    response_message.webhooks.extend(managed)
+    resp.data = message_to_json(response_message)
+
+
 WEBHOOK_BEFORE_REQUEST_HANDLERS = {
-    CreateWebhook: sender_is_admin,
-    GetWebhook: sender_is_admin,
-    ListWebhooks: sender_is_admin,
-    UpdateWebhook: sender_is_admin,
-    DeleteWebhook: sender_is_admin,
-    TestWebhook: sender_is_admin,
+    CreateWebhook: validate_can_create_webhook,
+    GetWebhook: validate_can_manage_webhook,
+    ListWebhooks: validate_can_list_webhooks,
+    UpdateWebhook: validate_can_update_webhook,
+    DeleteWebhook: validate_can_manage_webhook,
+    TestWebhook: validate_can_manage_webhook,
 }
 
 
@@ -7788,6 +7890,7 @@ AFTER_REQUEST_PATH_HANDLERS = {
     UpdateEndpointGuardrailConfig: redact_guardrail_config_scorer,
     DeleteScorer: delete_scorer_permissions_cascade,
     ListReviewQueues: filter_list_review_queues,
+    ListWebhooks: filter_list_webhooks,
     CreateGatewaySecret: set_can_manage_gateway_secret_permission,
     DeleteGatewaySecret: delete_gateway_secret_permissions_cascade,
     CreateGatewayEndpoint: set_can_manage_gateway_endpoint_permission,

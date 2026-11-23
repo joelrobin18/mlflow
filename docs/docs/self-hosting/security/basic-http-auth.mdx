@@ -1016,40 +1016,42 @@ MLflow Authentication provides API endpoints to manage users and permissions.
       <td>Create Webhook</td>
       <td>`2.0/mlflow/webhooks`</td>
       <td>`POST`</td>
-      <td>Only admin</td>
+      <td>Admin, or can_manage on every experiment in <code>experiment_ids</code>*</td>
     </tr>
     <tr>
       <td>List Webhooks</td>
       <td>`2.0/mlflow/webhooks`</td>
       <td>`GET`</td>
-      <td>Only admin</td>
+      <td>Admin (all webhooks), or the webhooks the caller can manage*</td>
     </tr>
     <tr>
       <td>Get Webhook</td>
       <td>`2.0/mlflow/webhooks/{webhook_id}`</td>
       <td>`GET`</td>
-      <td>Only admin</td>
+      <td>Admin, or can_manage on every experiment the webhook is limited to*</td>
     </tr>
     <tr>
       <td>Update Webhook</td>
       <td>`2.0/mlflow/webhooks/{webhook_id}`</td>
       <td>`PATCH`</td>
-      <td>Only admin</td>
+      <td>Admin, or can_manage on every experiment the webhook is limited to and on any new <code>experiment_ids</code>*</td>
     </tr>
     <tr>
       <td>Delete Webhook</td>
       <td>`2.0/mlflow/webhooks/{webhook_id}`</td>
       <td>`DELETE`</td>
-      <td>Only admin</td>
+      <td>Admin, or can_manage on every experiment the webhook is limited to*</td>
     </tr>
     <tr>
       <td>Test Webhook</td>
       <td>`2.0/mlflow/webhooks/{webhook_id}/test`</td>
       <td>`POST`</td>
-      <td>Only admin</td>
+      <td>Admin, or can_manage on every experiment the webhook is limited to*</td>
     </tr>
   </tbody>
 </table>
+
+\* Webhooks are admin-only unless the server sets `MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS=true`. Then a user who can MANAGE experiments can create and manage [webhooks limited to those experiments](/self-hosting/webhooks#limiting-a-webhook-to-experiments). Only an admin can manage a webhook that is not limited to experiments, or remove a webhook's limit.
 
 Some APIs will also have their behaviour modified.
 For example, the creator of an experiment will automatically be granted `MANAGE` permission

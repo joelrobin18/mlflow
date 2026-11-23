@@ -27,6 +27,13 @@ When [MLflow Authentication](/self-hosting/security/basic-http-auth) is enabled,
 operations (create, list, get, update, delete, and test) require **admin privileges**. Non-admin
 users will receive a `403 Forbidden` response when attempting to access webhook endpoints.
 
+To let teams set up their own notifications, start the server with
+`MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS=true`. A user who can MANAGE experiments can then create,
+list, update, test, and delete webhooks [limited to those experiments](#limiting-a-webhook-to-experiments),
+and only those. Only an admin can manage a webhook that hears from every experiment. Permissions are
+checked when a webhook is created or changed, so a webhook keeps delivering after its owner loses
+access to its experiments until an admin removes it.
+
 :::
 
 ## Supported Events
