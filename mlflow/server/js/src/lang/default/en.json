@@ -8551,6 +8551,10 @@
     "defaultMessage": "Select field",
     "description": "Usage overview > filter row > field column placeholder"
   },
+  "P9XeTZ": {
+    "defaultMessage": "Issue notifications",
+    "description": "Experiment issues tab > Label of the toolbar button opening the issue notification settings"
+  },
   "P9pLa4": {
     "defaultMessage": "Jira account email",
     "description": "Jira account email field label"
@@ -10586,6 +10590,10 @@
   "VYEXZx": {
     "defaultMessage": "All sources",
     "description": "Skill catalog source filter option for any source"
+  },
+  "VYF3mV": {
+    "defaultMessage": "Tell your team about new issues and detection runs in this experiment: post to a Slack channel, file a Jira ticket for each new issue, or call your own endpoint. Webhooks for every experiment are managed in Settings.",
+    "description": "Experiment issues tab > Description of the issue notification settings"
   },
   "VYfxMp": {
     "defaultMessage": "{hours}h ago",
@@ -17143,6 +17151,10 @@
     "defaultMessage": "See details",
     "description": "Evaluation review > assessments > see details button"
   },
+  "phJnnU": {
+    "defaultMessage": "Only admins can manage notifications on this server. To let experiment managers set them up, start the server with MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS=true.",
+    "description": "Error shown when a non-admin user cannot manage webhooks for an experiment"
+  },
   "pjCmlG": {
     "defaultMessage": "Usage",
     "description": "Section title for endpoint usage"
@@ -18926,6 +18938,10 @@
   "vcK5wo": {
     "defaultMessage": "To search by tags or by names and tags, use a simplified version{newline}of the SQL {whereBold} clause.",
     "description": "Tooltip to explain how to search MCP servers in the registry"
+  },
+  "vdJX0F": {
+    "defaultMessage": "No notifications are set up for this experiment yet.",
+    "description": "Experiment issues tab > Empty state of the issue notification settings"
   },
   "ve0pd3": {
     "defaultMessage": "No skills yet",

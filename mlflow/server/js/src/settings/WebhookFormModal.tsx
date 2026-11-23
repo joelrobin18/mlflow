@@ -45,22 +45,35 @@ interface WebhookFormModalProps {
   editingWebhook: Webhook | null;
   onClose: () => void;
   onSaved: () => void;
-  /** If set, only show events matching this entity */
-  eventFilter?: string;
+  /** If set, only show events matching this entity, or one of these */
+  eventFilter?: string | string[];
+  /**
+   * Limit a new webhook to this experiment, in place of the Experiments field. An edited webhook keeps the
+   * experiments it is limited to, which are changed from Settings.
+   */
+  experimentId?: string;
 }
 
-const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilter }: WebhookFormModalProps) => {
+const WebhookFormModal = ({
+  visible,
+  editingWebhook,
+  onClose,
+  onSaved,
+  eventFilter,
+  experimentId,
+}: WebhookFormModalProps) => {
   const { theme } = useDesignSystemTheme();
   const intl = useIntl();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const filteredEvents = eventFilter ? VALID_EVENTS.filter((e) => e.entity === eventFilter) : VALID_EVENTS;
+  const filterEntities = eventFilter === undefined ? undefined : [eventFilter].flat();
+  const filteredEvents = filterEntities ? VALID_EVENTS.filter((e) => filterEntities.includes(e.entity)) : VALID_EVENTS;
 
-  // When filtered to a single event (e.g. budget page), pre-select it for new webhooks
+  // When filtered (e.g. budget page, Issues tab), pre-select the first event for new webhooks
   const defaultEvents =
-    !editingWebhook && eventFilter && filteredEvents.length === 1
-      ? filteredEvents.map((e) => eventKey(e.entity, e.action))
+    !editingWebhook && filterEntities && filteredEvents.length > 0
+      ? [eventKey(filteredEvents[0].entity, filteredEvents[0].action)]
       : (editingWebhook?.events.map((e) => eventKey(e.entity, e.action)) ?? []);
 
   const form = useForm<WebhookFormData>({
@@ -114,7 +127,11 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
       status: values.status ? ('ACTIVE' as const) : ('DISABLED' as const),
       // Sent even when empty, so editing a limited webhook to drop its experiments, or to add an event
       // that cannot be limited, removes the limit instead of keeping it.
-      experiment_ids: canLimitToExperiments ? parseExperimentIds(values.experimentIds) : [],
+      experiment_ids: experimentId
+        ? (editingWebhook?.experiment_ids ?? [experimentId])
+        : canLimitToExperiments
+          ? parseExperimentIds(values.experimentIds)
+          : [],
       destination_type: values.destinationType,
       jira_config:
         values.destinationType === 'JIRA'
@@ -454,7 +471,7 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
             )}
           </div>
 
-          {canLimitToExperiments && (
+          {canLimitToExperiments && !experimentId && (
             <div>
               <FormUI.Label htmlFor="mlflow.settings.webhooks.experiment-ids-input">
                 <FormattedMessage defaultMessage="Experiments" description="Webhook experiment IDs field label" />

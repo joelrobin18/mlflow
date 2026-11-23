@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Spinner, Typography, useDesignSystemTheme } from '@databricks/design-system';
 import { FormattedMessage, useIntl } from '@databricks/i18n';
+import { PermissionError } from '@databricks/web-shared/errors';
 import { WebhooksApi } from './webhooksApi';
 import type { Webhook } from './webhooksApi';
 import WebhookListItem from './WebhookListItem';
@@ -8,8 +9,13 @@ import WebhookFormModal from './WebhookFormModal';
 import WebhookDeleteModal from './WebhookDeleteModal';
 
 interface WebhooksSettingsProps {
-  /** Filter displayed webhooks to only those containing at least one event whose entity matches this value exactly */
-  eventFilter?: string;
+  /** Filter displayed webhooks to only those containing at least one event whose entity is this one, or one of these */
+  eventFilter?: string | string[];
+  /**
+   * Show only the webhooks limited to this experiment, and create new ones limited to it. Workspace-wide
+   * webhooks still deliver this experiment's events but are managed from Settings.
+   */
+  experimentId?: string;
   /** Title override */
   title?: React.ReactNode;
   /** Description override */
@@ -24,6 +30,7 @@ interface WebhooksSettingsProps {
 
 const WebhooksSettings = ({
   eventFilter,
+  experimentId,
   title,
   description,
   showTitle = true,
@@ -56,24 +63,34 @@ const WebhooksSettings = ({
     setError(null);
     try {
       const response = await WebhooksApi.listWebhooks();
-      const all = response?.webhooks ?? [];
-      if (eventFilter) {
-        setWebhooks(all.filter((w) => w.events.some((e) => e.entity === eventFilter)));
-      } else {
-        setWebhooks(all);
-      }
+      const entities = eventFilter === undefined ? undefined : [eventFilter].flat();
+      setWebhooks(
+        (response?.webhooks ?? []).filter(
+          (w) =>
+            (!entities || w.events.some((e) => entities.includes(e.entity))) &&
+            (!experimentId || (w.experiment_ids ?? []).includes(experimentId)),
+        ),
+      );
     } catch (e: any) {
       setError(
-        e?.message ??
-          intl.formatMessage({
-            defaultMessage: 'Failed to load webhooks',
-            description: 'Error message informing the user that webhooks did not load successfully',
-          }),
+        // Webhooks are admin-only unless the server lets experiment managers manage their own, which is
+        // worth saying where someone outside Settings meets the refusal.
+        experimentId && e instanceof PermissionError
+          ? intl.formatMessage({
+              defaultMessage:
+                'Only admins can manage notifications on this server. To let experiment managers set them up, start the server with MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS=true.',
+              description: 'Error shown when a non-admin user cannot manage webhooks for an experiment',
+            })
+          : (e?.message ??
+              intl.formatMessage({
+                defaultMessage: 'Failed to load webhooks',
+                description: 'Error message informing the user that webhooks did not load successfully',
+              })),
       );
     } finally {
       setLoading(false);
     }
-  }, [intl, eventFilter]);
+  }, [intl, eventFilter, experimentId]);
 
   useEffect(() => {
     fetchWebhooks();
@@ -273,6 +290,7 @@ const WebhooksSettings = ({
           onClose={closeModal}
           onSaved={handleSaved}
           eventFilter={eventFilter}
+          experimentId={experimentId}
         />
       )}
 

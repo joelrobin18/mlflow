@@ -131,7 +131,11 @@ Scheduled runs require the server's periodic tasks and background job execution 
 
 ### Get notified about new issues
 
-To hear about new issues without opening the Issues tab, create a [webhook](/self-hosting/webhooks) subscribed to the `issue.created` event. MLflow sends it for each issue a manual or scheduled detection run files, and for each issue created through the API. An issue that a later run finds again is refreshed rather than filed, so it does not notify again.
+To hear about new issues without opening the Issues tab, click the **Issue notifications** bell on the Issues tab, then **Create webhook**. Choose where notifications go -- a **Slack incoming webhook**, **Jira** to file a ticket for each new issue, or an **HTTP endpoint** you run -- and which events to send. The webhook is limited to the experiment you created it from; webhooks for every experiment are managed in **Settings**.
+
+When MLflow authentication is enabled, managing webhooks requires an admin unless the server runs with `MLFLOW_WEBHOOK_ALLOW_EXPERIMENT_MANAGERS=true`, which lets anyone who can MANAGE the experiment set up its notifications.
+
+You can also create the [webhook](/self-hosting/webhooks) from code, subscribed to the `issue.created` event. MLflow sends it for each issue a manual or scheduled detection run files, and for each issue created through the API. An issue that a later run finds again is refreshed rather than filed, so it does not notify again.
 
 The payload carries the issue's ID, experiment, title, status, severity, and categories. It leaves out the description and root causes, which detection writes from trace content.
 

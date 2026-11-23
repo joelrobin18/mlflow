@@ -5,6 +5,7 @@ import { useNavigate } from '../../../common/utils/RoutingUtils';
 import Routes from '../../routes';
 import { CancelIssueDetectionButton } from './CancelIssueDetectionButton';
 import { IssueDetectionSettingsControl } from './IssueDetectionSettingsControl';
+import { IssueNotificationsControl } from './IssueNotificationsControl';
 import { ExperimentIssuesScheduleControl } from './ExperimentIssuesScheduleControl';
 import { ExperimentIssuesFilterControl } from './ExperimentIssuesToolbar';
 import type { ExperimentIssuesToolbarControls } from './useExperimentIssuesListControls';
@@ -106,6 +107,8 @@ export const ExperimentIssuesActionBar = ({
           onClick={() => navigate(Routes.getIssueDetectionRunsRoute(experimentId))}
         />
       </Tooltip>
+      {/* Outside the detection gate too: issues created through the API notify as well. */}
+      <IssueNotificationsControl experimentId={experimentId} />
       {detectionEnabled && (
         <>
           <IssueDetectionSettingsControl experimentId={experimentId} />
