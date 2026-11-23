@@ -818,6 +818,7 @@ class ModelRegistryClient:
         description: str | None = None,
         secret: str | None = None,
         status: WebhookStatus | None = None,
+        experiment_ids: list[str] | None = None,
     ) -> Webhook:
         """
         Create a new webhook.
@@ -829,11 +830,14 @@ class ModelRegistryClient:
             description: Optional description of the webhook.
             secret: Optional secret for HMAC signature verification.
             status: Webhook status (defaults to ACTIVE).
+            experiment_ids: Experiments to limit the webhook to. None means every experiment.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the created webhook.
         """
-        return self.store.create_webhook(name, url, events, description, secret, status)
+        return self.store.create_webhook(
+            name, url, events, description, secret, status, experiment_ids=experiment_ids
+        )
 
     def get_webhook(self, webhook_id: str) -> Webhook:
         """
@@ -873,6 +877,7 @@ class ModelRegistryClient:
         events: list[WebhookEvent] | None = None,
         secret: str | None = None,
         status: WebhookStatus | None = None,
+        experiment_ids: list[str] | None = None,
     ) -> Webhook:
         """
         Update an existing webhook.
@@ -885,11 +890,22 @@ class ModelRegistryClient:
             events: New list of event types.
             secret: New webhook secret.
             status: New webhook status.
+            experiment_ids: Experiments to limit the webhook to, replacing the current ones.
+                ``[]`` removes the limit and None leaves it unchanged.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the updated webhook.
         """
-        return self.store.update_webhook(webhook_id, name, description, url, events, secret, status)
+        return self.store.update_webhook(
+            webhook_id,
+            name,
+            description,
+            url,
+            events,
+            secret,
+            status,
+            experiment_ids=experiment_ids,
+        )
 
     def delete_webhook(self, webhook_id: str) -> None:
         """

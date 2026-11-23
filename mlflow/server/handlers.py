@@ -3937,6 +3937,7 @@ def _create_webhook():
             "description": [_assert_string],
             "secret": [_assert_string],
             "status": [_assert_string],
+            "experiment_ids": [_assert_array, _assert_item_type_string],
         },
     )
 
@@ -3947,6 +3948,7 @@ def _create_webhook():
         description=request_message.description or None,
         secret=request_message.secret or None,
         status=WebhookStatus.from_proto(request_message.status) if request_message.status else None,
+        experiment_ids=list(request_message.experiment_ids),
     )
     response_message = CreateWebhook.Response(webhook=webhook.to_proto())
     return _wrap_response(response_message)
@@ -3993,7 +3995,15 @@ def _update_webhook(webhook_id: str):
             "events": [_assert_array],
             "secret": [_assert_string],
             "status": [_assert_string],
+            "experiment_ids": [_assert_array, _assert_item_type_string],
         },
+    )
+    # A present but empty list removes the limit; an absent one leaves it alone. The parsed
+    # message cannot tell the two apart, so the request body is consulted.
+    experiment_ids = (
+        list(request_message.experiment_ids)
+        if _get_normalized_request_json().get("experiment_ids") is not None
+        else None
     )
     webhook = _get_model_registry_store().update_webhook(
         webhook_id=webhook_id,
@@ -4013,6 +4023,7 @@ def _update_webhook(webhook_id: str):
             if request_message.HasField("status")
             else None
         ),
+        experiment_ids=experiment_ids,
     )
     response_message = UpdateWebhook.Response(webhook=webhook.to_proto())
     return _wrap_response(response_message)

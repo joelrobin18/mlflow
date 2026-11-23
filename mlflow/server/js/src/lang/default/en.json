@@ -2947,6 +2947,10 @@
     "defaultMessage": "Context sufficient",
     "description": "Evaluation results > context sufficiency assessment > positive value label. Displayed if retrieved context is sufficient to generate the expected response."
   },
+  "7UKpH4": {
+    "defaultMessage": "Experiments",
+    "description": "Webhook experiment IDs field label"
+  },
   "7ULPAY": {
     "defaultMessage": "Could not load runs for comparison.",
     "description": "Message shown when the eval-run comparison picker cannot load runs"
@@ -5198,6 +5202,10 @@
   "Eamscw": {
     "defaultMessage": "Show run details",
     "description": "Expand the evaluation run traces sidebar"
+  },
+  "EavYiC": {
+    "defaultMessage": "Experiments: {experimentIds}",
+    "description": "Lists the experiment IDs a webhook is limited to"
   },
   "EbJub1": {
     "defaultMessage": "Test",
@@ -15119,6 +15127,10 @@
     "defaultMessage": "Output",
     "description": "Label indicating that the logged model was the output of the experiment run Displayed in logged model list table on the run page."
   },
+  "jVL3zz": {
+    "defaultMessage": "IDs of the experiments to send events from, separated by commas. Leave blank to send events from every experiment.",
+    "description": "Webhook experiment IDs field description"
+  },
   "jW3Cwp": {
     "defaultMessage": "User",
     "description": "Trace filter field: user"
@@ -15918,6 +15930,10 @@
   "m6v6p2": {
     "defaultMessage": "Go to previous page",
     "description": "Button on the traces end-of-results state that returns to the previous page"
+  },
+  "m8rjjB": {
+    "defaultMessage": "All experiments",
+    "description": "Webhook experiment IDs placeholder"
   },
   "m8ztHR": {
     "defaultMessage": "Edited {timeSince} by {source}.",

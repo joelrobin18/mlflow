@@ -2712,3 +2712,109 @@ def test_create_model_version_concurrent(store):
     # All versions should be unique
     assert len(results) == len(set(results))
     assert len(results) == num_threads * versions_per_thread
+
+
+ISSUE_CREATED = WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)
+RUN_COMPLETED = WebhookEvent(WebhookEntity.ISSUE_DETECTION_RUN, WebhookAction.COMPLETED)
+
+
+def test_create_webhook_limited_to_experiments(store):
+    webhook = store.create_webhook(
+        name="issue_hook",
+        url="https://example.com/webhook",
+        events=[ISSUE_CREATED, RUN_COMPLETED],
+        experiment_ids=["7", "12", "7"],
+    )
+
+    assert webhook.experiment_ids == ["12", "7"]
+    assert store.get_webhook(webhook.webhook_id).experiment_ids == ["12", "7"]
+    (listed,) = store.list_webhooks_by_event(ISSUE_CREATED)
+    assert listed.experiment_ids == ["12", "7"]
+
+
+def test_create_webhook_without_experiments_hears_from_every_experiment(store):
+    webhook = store.create_webhook(
+        name="issue_hook", url="https://example.com/webhook", events=[ISSUE_CREATED]
+    )
+
+    assert webhook.experiment_ids == []
+
+
+def test_create_webhook_rejects_experiments_for_an_event_outside_an_experiment(store):
+    with pytest.raises(MlflowException, match="these events don't: model_version.created"):
+        store.create_webhook(
+            name="mixed_hook",
+            url="https://example.com/webhook",
+            events=[
+                ISSUE_CREATED,
+                WebhookEvent(WebhookEntity.MODEL_VERSION, WebhookAction.CREATED),
+            ],
+            experiment_ids=["7"],
+        )
+    assert store.list_webhooks() == []
+
+
+def test_update_webhook_replaces_and_clears_experiments(store):
+    webhook = store.create_webhook(
+        name="issue_hook",
+        url="https://example.com/webhook",
+        events=[ISSUE_CREATED],
+        experiment_ids=["7"],
+    )
+
+    updated = store.update_webhook(webhook.webhook_id, experiment_ids=["8", "9"])
+    assert updated.experiment_ids == ["8", "9"]
+    assert store.get_webhook(webhook.webhook_id).experiment_ids == ["8", "9"]
+
+    unchanged = store.update_webhook(webhook.webhook_id, name="renamed_hook")
+    assert unchanged.experiment_ids == ["8", "9"]
+
+    cleared = store.update_webhook(webhook.webhook_id, experiment_ids=[])
+    assert cleared.experiment_ids == []
+    assert store.get_webhook(webhook.webhook_id).experiment_ids == []
+
+
+def test_update_webhook_keeps_experiments_when_only_events_change(store):
+    webhook = store.create_webhook(
+        name="issue_hook",
+        url="https://example.com/webhook",
+        events=[ISSUE_CREATED],
+        experiment_ids=["7"],
+    )
+
+    updated = store.update_webhook(webhook.webhook_id, events=[ISSUE_CREATED, RUN_COMPLETED])
+
+    assert updated.experiment_ids == ["7"]
+    assert set(updated.events) == {ISSUE_CREATED, RUN_COMPLETED}
+
+
+def test_update_webhook_rejects_an_unscoped_event_on_a_limited_webhook(store):
+    webhook = store.create_webhook(
+        name="issue_hook",
+        url="https://example.com/webhook",
+        events=[ISSUE_CREATED],
+        experiment_ids=["7"],
+    )
+    model_version_created = WebhookEvent(WebhookEntity.MODEL_VERSION, WebhookAction.CREATED)
+
+    with pytest.raises(MlflowException, match="can be limited to experiments"):
+        store.update_webhook(webhook.webhook_id, events=[ISSUE_CREATED, model_version_created])
+
+    # Dropping the limit in the same call makes the new events valid.
+    updated = store.update_webhook(
+        webhook.webhook_id, events=[model_version_created], experiment_ids=[]
+    )
+    assert updated.events == [model_version_created]
+    assert updated.experiment_ids == []
+
+
+def test_update_webhook_rejects_limiting_a_webhook_with_an_unscoped_event(store):
+    webhook = store.create_webhook(
+        name="model_hook",
+        url="https://example.com/webhook",
+        events=[WebhookEvent(WebhookEntity.MODEL_VERSION, WebhookAction.CREATED)],
+    )
+
+    with pytest.raises(MlflowException, match="can be limited to experiments"):
+        store.update_webhook(webhook.webhook_id, experiment_ids=["7"])
+    assert store.get_webhook(webhook.webhook_id).experiment_ids == []

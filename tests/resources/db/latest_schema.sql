@@ -612,6 +612,14 @@ CREATE TABLE webhook_events (
 )
 
 
+CREATE TABLE webhook_experiments (
+	webhook_id VARCHAR(256) NOT NULL,
+	experiment_id VARCHAR(32) NOT NULL,
+	CONSTRAINT webhook_experiment_pk PRIMARY KEY (webhook_id, experiment_id),
+	CONSTRAINT fk_webhook_experiments_webhook_id FOREIGN KEY(webhook_id) REFERENCES webhooks (webhook_id) ON DELETE CASCADE
+)
+
+
 CREATE TABLE assessments (
 	assessment_id VARCHAR(50) NOT NULL,
 	trace_id VARCHAR(50) NOT NULL,

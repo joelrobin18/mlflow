@@ -6745,6 +6745,7 @@ class MlflowClient:
         description: str | None = None,
         secret: str | None = None,
         status: str | WebhookStatus | None = None,
+        experiment_ids: list[str] | None = None,
     ) -> Webhook:
         """
         Create a new webhook.
@@ -6758,6 +6759,9 @@ class MlflowClient:
             secret: Optional secret for HMAC signature verification.
             status: Webhook status (defaults to ACTIVE). Can be string or WebhookStatus enum.
                 Valid statuses: "ACTIVE", "DISABLED"
+            experiment_ids: IDs of the experiments to limit the webhook to. Only a webhook whose
+                events all belong to an experiment, such as ``"issue.created"``, can be limited.
+                By default the webhook receives its events from every experiment.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the created webhook.
@@ -6773,6 +6777,7 @@ class MlflowClient:
             description=description,
             secret=secret,
             status=status,
+            experiment_ids=experiment_ids,
         )
 
     def get_webhook(self, webhook_id: str) -> Webhook:
@@ -6813,6 +6818,7 @@ class MlflowClient:
         events: list[WebhookEventStr | WebhookEvent] | None = None,
         secret: str | None = None,
         status: str | WebhookStatus | None = None,
+        experiment_ids: list[str] | None = None,
     ) -> Webhook:
         """
         Update an existing webhook.
@@ -6826,6 +6832,9 @@ class MlflowClient:
             secret: New webhook secret.
             status: New webhook status. Can be string or WebhookStatus enum.
                 Valid statuses: "ACTIVE", "DISABLED"
+            experiment_ids: IDs of the experiments to limit the webhook to, replacing the current
+                ones. Pass ``[]`` to receive events from every experiment again. By default the
+                current experiments are kept.
 
         Returns:
             A :py:class:`mlflow.entities.webhook.Webhook` object representing the updated webhook.
@@ -6844,6 +6853,7 @@ class MlflowClient:
             events=events,
             secret=secret,
             status=status,
+            experiment_ids=experiment_ids,
         )
 
     def delete_webhook(self, webhook_id: str) -> None:

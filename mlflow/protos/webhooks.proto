@@ -183,6 +183,11 @@ message Webhook {
 
   // Timestamp when webhook was last updated
   optional int64 last_updated_timestamp = 8;
+
+  // IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+  // from every experiment, and is always empty for a webhook subscribed to events that don't
+  // belong to an experiment.
+  repeated string experiment_ids = 9;
 }
 
 // Test webhook result
@@ -221,6 +226,11 @@ message CreateWebhook {
 
   // Initial status (defaults to ACTIVE if not specified)
   optional WebhookStatus status = 6;
+
+  // IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+  // as issue.created, can be limited this way. Leave empty to receive events from every
+  // experiment.
+  repeated string experiment_ids = 7;
 
   message Response {
     optional Webhook webhook = 1;
@@ -282,6 +292,11 @@ message UpdateWebhook {
 
   // New status for the webhook
   optional WebhookStatus status = 7;
+
+  // New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+  // list to receive events from every experiment, or leave the field out to keep the current
+  // experiments.
+  repeated string experiment_ids = 8;
 
   message Response {
     optional Webhook webhook = 1;

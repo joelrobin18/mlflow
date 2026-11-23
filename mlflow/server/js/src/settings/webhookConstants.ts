@@ -55,3 +55,13 @@ export const VALID_EVENTS: { entity: string; action: string }[] = [
 export const WEBHOOK_NAME_REGEX = /^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/i;
 
 export const eventKey = (entity: string, action: string) => `${entity}.${action}`;
+
+/** Entities whose events happen inside an experiment, so a webhook can be limited to some experiments. */
+export const EXPERIMENT_SCOPED_ENTITIES = ['ISSUE', 'ISSUE_DETECTION_RUN'];
+
+export const isExperimentScopedEventKey = (key: string) => EXPERIMENT_SCOPED_ENTITIES.includes(key.split('.', 1)[0]);
+
+/** Split a comma- or whitespace-separated list of experiment IDs, dropping blanks and repeats. */
+export const parseExperimentIds = (value: string): string[] => [
+  ...new Set(value.split(/[\s,]+/).filter((id) => id.length > 0)),
+];

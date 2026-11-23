@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from mlflow.entities import Metric, Param, RunTag
+from mlflow.entities.webhook import WebhookAction, WebhookEntity, WebhookEvent
 from mlflow.environment_variables import MLFLOW_ARTIFACT_LOCATION_MAX_LENGTH
 from mlflow.exceptions import MlflowException
 from mlflow.protos.databricks_pb2 import INVALID_PARAMETER_VALUE, ErrorCode
@@ -42,6 +43,7 @@ from mlflow.utils.validation import (
     _validate_tag_name,
     _validate_text_field,
     _validate_third_party_scorer_data,
+    _validate_webhook_experiment_ids,
     _validate_webhook_url,
     path_not_unique,
 )
@@ -1434,3 +1436,34 @@ def test_validate_text_field_rejects_values_the_database_would_refuse(value, mat
     with pytest.raises(MlflowException, match=match) as exc:
         _validate_text_field("Field", value, 5)
     assert exc.value.error_code == ErrorCode.Name(INVALID_PARAMETER_VALUE)
+
+
+_ISSUE_CREATED = WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)
+
+
+def test_validate_webhook_experiment_ids_deduplicates_in_order():
+    assert _validate_webhook_experiment_ids(["7", "12", "7"], [_ISSUE_CREATED]) == ["7", "12"]
+
+
+def test_validate_webhook_experiment_ids_accepts_no_experiments_with_any_event():
+    model_version_created = WebhookEvent(WebhookEntity.MODEL_VERSION, WebhookAction.CREATED)
+
+    assert _validate_webhook_experiment_ids([], [model_version_created]) == []
+
+
+@pytest.mark.parametrize("experiment_ids", [["7", ""], [" 7"], ["x" * 33], "7", [7]])
+def test_validate_webhook_experiment_ids_rejects_unusable_ids(experiment_ids):
+    with pytest.raises(MlflowException, match="experiment IDs must"):
+        _validate_webhook_experiment_ids(experiment_ids, [_ISSUE_CREATED])
+
+
+def test_validate_webhook_experiment_ids_caps_the_count():
+    with pytest.raises(MlflowException, match="at most 100 experiments"):
+        _validate_webhook_experiment_ids([str(i) for i in range(101)], [_ISSUE_CREATED])
+
+
+def test_validate_webhook_experiment_ids_rejects_events_outside_an_experiment():
+    prompt_created = WebhookEvent(WebhookEntity.PROMPT, WebhookAction.CREATED)
+
+    with pytest.raises(MlflowException, match="these events don't: prompt.created"):
+        _validate_webhook_experiment_ids(["7"], [_ISSUE_CREATED, prompt_created])

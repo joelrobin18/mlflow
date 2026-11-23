@@ -49,6 +49,7 @@ from mlflow.store.model_registry.dbmodels.models import (
     SqlRegisteredModelTag,
     SqlWebhook,
     SqlWebhookEvent,
+    SqlWebhookExperiment,
 )
 from mlflow.tracking.client import MlflowClient
 from mlflow.utils.search_utils import SearchModelUtils, SearchModelVersionUtils, SearchUtils
@@ -65,6 +66,7 @@ from mlflow.utils.validation import (
     _validate_registered_model_tag,
     _validate_tag_name,
     _validate_webhook_events,
+    _validate_webhook_experiment_ids,
     _validate_webhook_name,
     _validate_webhook_url,
 )
@@ -1606,10 +1608,12 @@ class SqlAlchemyStore(AbstractStore):
         description: str | None = None,
         secret: str | None = None,
         status: WebhookStatus | None = None,
+        experiment_ids: list[str] | None = None,
     ) -> Webhook:
         _validate_webhook_name(name)
         _validate_webhook_url(url)
         _validate_webhook_events(events)
+        experiment_ids = _validate_webhook_experiment_ids(experiment_ids or [], events)
 
         with self.ManagedSessionMaker(read_only=False) as session:
             webhook_id = str(uuid.uuid4())
@@ -1634,6 +1638,10 @@ class SqlAlchemyStore(AbstractStore):
                     action=e.action.value,
                 )
                 for e in events
+            )
+            session.add_all(
+                SqlWebhookExperiment(webhook_id=webhook_id, experiment_id=experiment_id)
+                for experiment_id in experiment_ids
             )
             session.flush()
             return webhook.to_mlflow_entity()
@@ -1727,9 +1735,28 @@ class SqlAlchemyStore(AbstractStore):
         events: list[WebhookEvent] | None = None,
         secret: str | None = None,
         status: WebhookStatus | None = None,
+        experiment_ids: list[str] | None = None,
     ) -> Webhook:
         with self.ManagedSessionMaker(read_only=False) as session:
             webhook = self._get_webhook_by_id(session, webhook_id)
+
+            # Checked against the events and experiments the webhook ends up with, not just the
+            # ones this call changes: adding an unscoped event to a limited webhook is as invalid
+            # as limiting a webhook that has one.
+            if events is not None or experiment_ids is not None:
+                if events is not None:
+                    _validate_webhook_events(events)
+                resulting_events = (
+                    events
+                    if events is not None
+                    else [we.to_mlflow_entity() for we in webhook.webhook_events]
+                )
+                resulting_experiment_ids = _validate_webhook_experiment_ids(
+                    experiment_ids
+                    if experiment_ids is not None
+                    else [we.experiment_id for we in webhook.webhook_experiments],
+                    resulting_events,
+                )
 
             # Update fields if provided
             if name is not None:
@@ -1739,7 +1766,6 @@ class SqlAlchemyStore(AbstractStore):
                 _validate_webhook_url(url)
                 webhook.url = url
             if events is not None:
-                _validate_webhook_events(events)
                 # Delete existing webhook events
                 session.query(SqlWebhookEvent).filter(
                     SqlWebhookEvent.webhook_id == webhook_id
@@ -1750,6 +1776,14 @@ class SqlAlchemyStore(AbstractStore):
                         webhook_id=webhook_id, entity=e.entity.value, action=e.action.value
                     )
                     for e in events
+                )
+            if experiment_ids is not None:
+                session.query(SqlWebhookExperiment).filter(
+                    SqlWebhookExperiment.webhook_id == webhook_id
+                ).delete()
+                session.add_all(
+                    SqlWebhookExperiment(webhook_id=webhook_id, experiment_id=experiment_id)
+                    for experiment_id in resulting_experiment_ids
                 )
             if description is not None:
                 webhook.description = description

@@ -379,3 +379,27 @@ def test_single_tenant_registry_startup_rejects_non_default_workspace_models(
         SqlAlchemyStore(webhook_db_uri)
 
     assert excinfo.value.error_code == "INVALID_STATE"
+
+
+def test_webhook_experiments_stay_with_their_workspace(workspace_registry_store):
+    event = WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)
+
+    with WorkspaceContext("team-a"):
+        webhook = workspace_registry_store.create_webhook(
+            name="team-a-issues",
+            url="https://example.com/hook",
+            events=[event],
+            experiment_ids=["7"],
+        )
+        (listed,) = workspace_registry_store.list_webhooks_by_event(event)
+        assert listed.experiment_ids == ["7"]
+
+    with WorkspaceContext("team-b"):
+        assert len(workspace_registry_store.list_webhooks_by_event(event)) == 0
+        with pytest.raises(
+            MlflowException, match=f"Webhook with ID {webhook.webhook_id} not found"
+        ):
+            workspace_registry_store.update_webhook(webhook.webhook_id, experiment_ids=[])
+
+    with WorkspaceContext("team-a"):
+        assert workspace_registry_store.get_webhook(webhook.webhook_id).experiment_ids == ["7"]

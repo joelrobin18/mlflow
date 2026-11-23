@@ -1604,6 +1604,57 @@ def _validate_webhook_events(events: list[WebhookEvent]) -> None:
         )
 
 
+# How many experiments one webhook can be limited to. A webhook meant for more is better left
+# unlimited and filtered by its receiver.
+MAX_WEBHOOK_EXPERIMENT_IDS = 100
+
+# The longest experiment ID a webhook can be limited to, matching the column that stores it.
+MAX_WEBHOOK_EXPERIMENT_ID_LENGTH = 32
+
+
+def _validate_webhook_experiment_ids(
+    experiment_ids: list[str], events: list[WebhookEvent]
+) -> list[str]:
+    """
+    Check the experiments a webhook is limited to against the events it subscribes to.
+
+    Returns the IDs deduplicated, in the order given. An empty list, meaning every experiment, is
+    valid with any events; a non-empty one only with events that belong to an experiment, since
+    any other event would never match it and the webhook would silently receive nothing.
+    """
+    if not isinstance(experiment_ids, list) or not all(
+        isinstance(experiment_id, str) for experiment_id in experiment_ids
+    ):
+        raise MlflowException.invalid_parameter_value(
+            f"Webhook experiment IDs must be a list of strings: {experiment_ids!r}."
+        )
+    normalized = list(dict.fromkeys(experiment_ids))
+    if not normalized:
+        return normalized
+    if invalid := [
+        experiment_id
+        for experiment_id in normalized
+        if not experiment_id
+        or experiment_id != experiment_id.strip()
+        or len(experiment_id) > MAX_WEBHOOK_EXPERIMENT_ID_LENGTH
+    ]:
+        raise MlflowException.invalid_parameter_value(
+            "Webhook experiment IDs must be non-empty, have no surrounding whitespace, and be at "
+            f"most {MAX_WEBHOOK_EXPERIMENT_ID_LENGTH} characters long: {invalid!r}."
+        )
+    if len(normalized) > MAX_WEBHOOK_EXPERIMENT_IDS:
+        raise MlflowException.invalid_parameter_value(
+            f"A webhook can be limited to at most {MAX_WEBHOOK_EXPERIMENT_IDS} experiments, "
+            f"got {len(normalized)}."
+        )
+    if unscoped := [str(event) for event in events if not event.is_experiment_scoped]:
+        raise MlflowException.invalid_parameter_value(
+            "Only a webhook whose events all belong to an experiment can be limited to "
+            f"experiments, but these events don't: {', '.join(unscoped)}."
+        )
+    return normalized
+
+
 def _resolve_experiment_ids_and_locations(
     experiment_ids: list[str] | None, locations: list[str] | None
 ) -> list[str]:

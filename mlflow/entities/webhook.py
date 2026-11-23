@@ -153,6 +153,13 @@ VALID_ENTITY_ACTIONS: dict[WebhookEntity, set[WebhookAction]] = {
     },
 }
 
+# Entities whose events happen inside an experiment and carry its ID, so a webhook subscribed to
+# them can be limited to some experiments. Any other event has no experiment to match.
+EXPERIMENT_SCOPED_ENTITIES: frozenset[WebhookEntity] = frozenset({
+    WebhookEntity.ISSUE,
+    WebhookEntity.ISSUE_DETECTION_RUN,
+})
+
 
 class WebhookEvent:
     """
@@ -259,6 +266,11 @@ class WebhookEvent:
     def __hash__(self) -> int:
         return hash((self.entity, self.action))
 
+    @property
+    def is_experiment_scoped(self) -> bool:
+        """Whether the event happens inside an experiment, so a webhook can be limited to it."""
+        return self.entity in EXPERIMENT_SCOPED_ENTITIES
+
     def __repr__(self) -> str:
         return f"WebhookEvent(entity={self.entity}, action={self.action})"
 
@@ -280,6 +292,7 @@ class Webhook:
         status: str | WebhookStatus = WebhookStatus.ACTIVE,
         secret: str | None = None,
         workspace: str | None = None,
+        experiment_ids: list[str] | None = None,
     ):
         """
         Initialize a Webhook entity.
@@ -295,6 +308,7 @@ class Webhook:
             status: Webhook status (ACTIVE or DISABLED)
             secret: Optional secret key for HMAC signature verification
             workspace: Workspace the webhook belongs to
+            experiment_ids: Experiments the webhook is limited to. Empty means every experiment.
         """
         super().__init__()
         self._webhook_id = webhook_id
@@ -309,6 +323,7 @@ class Webhook:
         self._creation_timestamp = creation_timestamp
         self._last_updated_timestamp = last_updated_timestamp
         self._workspace = resolve_entity_workspace_name(workspace)
+        self._experiment_ids = list(experiment_ids or [])
 
     @property
     def webhook_id(self) -> str:
@@ -350,6 +365,20 @@ class Webhook:
     def workspace(self) -> str:
         return self._workspace
 
+    @property
+    def experiment_ids(self) -> list[str]:
+        """Experiments the webhook is limited to. Empty means it hears from every experiment."""
+        return self._experiment_ids
+
+    def is_subscribed_to_experiment(self, experiment_id: str | None) -> bool:
+        """
+        Whether an event from ``experiment_id`` reaches this webhook.
+
+        ``None`` is an event that belongs to no experiment, which only a webhook that is not
+        limited to experiments receives.
+        """
+        return not self._experiment_ids or experiment_id in self._experiment_ids
+
     @classmethod
     def from_proto(cls, proto: ProtoWebhook) -> Self:
         return cls(
@@ -361,6 +390,7 @@ class Webhook:
             status=WebhookStatus.from_proto(proto.status),
             creation_timestamp=proto.creation_timestamp,
             last_updated_timestamp=proto.last_updated_timestamp,
+            experiment_ids=list(proto.experiment_ids),
         )
 
     def to_proto(self):
@@ -374,6 +404,7 @@ class Webhook:
         webhook.status = self.status.to_proto()
         webhook.creation_timestamp = self.creation_timestamp
         webhook.last_updated_timestamp = self.last_updated_timestamp
+        webhook.experiment_ids.extend(self.experiment_ids)
         return webhook
 
     def __repr__(self) -> str:
@@ -385,6 +416,7 @@ class Webhook:
             f"status='{self.status}', "
             f"workspace='{self.workspace}', "
             f"events={self.events}, "
+            f"experiment_ids={self.experiment_ids}, "
             f"creation_timestamp={self.creation_timestamp}, "
             f"last_updated_timestamp={self.last_updated_timestamp}"
             f")"

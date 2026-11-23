@@ -223,3 +223,49 @@ def test_webhook_test_result():
     assert result.response_status == 500
     assert result.error_message == "Internal server error"
     assert result.response_body is None
+
+
+@pytest.mark.parametrize(
+    ("entity", "action", "expected"),
+    [
+        (WebhookEntity.ISSUE, WebhookAction.CREATED, True),
+        (WebhookEntity.ISSUE_DETECTION_RUN, WebhookAction.COMPLETED, True),
+        (WebhookEntity.MODEL_VERSION, WebhookAction.CREATED, False),
+        (WebhookEntity.BUDGET_POLICY, WebhookAction.EXCEEDED, False),
+    ],
+)
+def test_webhook_event_is_experiment_scoped(entity, action, expected):
+    assert WebhookEvent(entity, action).is_experiment_scoped is expected
+
+
+def _issue_webhook(experiment_ids):
+    return Webhook(
+        webhook_id="wh-1",
+        name="issues",
+        url="https://example.com/hook",
+        events=[WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)],
+        creation_timestamp=0,
+        last_updated_timestamp=0,
+        experiment_ids=experiment_ids,
+    )
+
+
+def test_webhook_experiment_ids_round_trip_through_proto():
+    webhook = _issue_webhook(["7", "12"])
+
+    assert Webhook.from_proto(webhook.to_proto()).experiment_ids == ["7", "12"]
+    assert Webhook.from_proto(_issue_webhook(None).to_proto()).experiment_ids == []
+
+
+@pytest.mark.parametrize(
+    ("experiment_ids", "experiment_id", "expected"),
+    [
+        ([], "7", True),
+        ([], None, True),
+        (["7"], "7", True),
+        (["7"], "8", False),
+        (["7"], None, False),
+    ],
+)
+def test_webhook_is_subscribed_to_experiment(experiment_ids, experiment_id, expected):
+    assert _issue_webhook(experiment_ids).is_subscribed_to_experiment(experiment_id) is expected

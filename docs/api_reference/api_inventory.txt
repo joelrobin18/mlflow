@@ -703,6 +703,7 @@ mlflow.entities.ViewType.to_proto
 mlflow.entities.ViewType.to_string
 mlflow.entities.Webhook
 mlflow.entities.Webhook.from_proto
+mlflow.entities.Webhook.is_subscribed_to_experiment
 mlflow.entities.Webhook.to_proto
 mlflow.entities.WebhookEvent
 mlflow.entities.WebhookEvent.from_proto

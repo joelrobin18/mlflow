@@ -2222,6 +2222,7 @@ module.exports = {
   "mlflow.settings.webhooks.edit-button": "",
   "mlflow.settings.webhooks.error-alert": "",
   "mlflow.settings.webhooks.event-checkbox": "",
+  "mlflow.settings.webhooks.experiment-ids-input": "",
   "mlflow.settings.webhooks.form-error-alert": "",
   "mlflow.settings.webhooks.form-modal": "",
   "mlflow.settings.webhooks.name-input": "",

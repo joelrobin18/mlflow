@@ -1028,3 +1028,26 @@ def test_issue_detection_run_completed_webhook_test_endpoint(
     assert result.success is True
     logs = app_client.wait_for_logs(expected_count=1)
     assert logs[0].payload == IssueDetectionRunCompletedPayload.example()
+
+
+def test_issue_created_reaches_only_webhooks_for_its_experiment(
+    mlflow_client: MlflowClient, mlflow_server: str, app_client: AppClient
+) -> None:
+    watched = mlflow_client.create_experiment("issue_scope_watched")
+    other = mlflow_client.create_experiment("issue_scope_other")
+    mlflow_client.create_webhook(
+        name="watched_experiment_issues",
+        url=app_client.get_url("/insecure-webhook"),
+        events=["issue.created"],
+        experiment_ids=[watched],
+    )
+    tracing_client = TracingClient(tracking_uri=mlflow_server)
+
+    tracing_client._create_issue(experiment_id=other, name="Elsewhere", description="d")
+    issue = tracing_client._create_issue(experiment_id=watched, name="Here", description="d")
+
+    logs = app_client.wait_for_logs(expected_count=1)
+    # Give a stray delivery for the other experiment time to arrive before checking for it.
+    time.sleep(1)
+    logs = app_client.get_logs()
+    assert [log.payload["issue_id"] for log in logs] == [issue.issue_id]

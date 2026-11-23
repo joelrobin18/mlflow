@@ -11,7 +11,14 @@ import {
 import { FormattedMessage, useIntl } from '@databricks/i18n';
 import { WebhooksApi } from './webhooksApi';
 import type { Webhook, WebhookEvent } from './webhooksApi';
-import { VALID_EVENTS, WEBHOOK_NAME_REGEX, eventKey, eventLabels } from './webhookConstants';
+import {
+  VALID_EVENTS,
+  WEBHOOK_NAME_REGEX,
+  eventKey,
+  eventLabels,
+  isExperimentScopedEventKey,
+  parseExperimentIds,
+} from './webhookConstants';
 
 interface WebhookFormData {
   name: string;
@@ -20,6 +27,7 @@ interface WebhookFormData {
   secret: string;
   status: boolean;
   events: string[];
+  experimentIds: string;
 }
 
 interface WebhookFormModalProps {
@@ -53,8 +61,14 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
       secret: '',
       status: editingWebhook ? editingWebhook.status === 'ACTIVE' : true,
       events: defaultEvents,
+      experimentIds: editingWebhook?.experiment_ids?.join(', ') ?? '',
     },
   });
+
+  // Only a webhook whose events all happen in an experiment can be limited to experiments: any other
+  // event carries no experiment to match, so the server rejects the combination.
+  const selectedEvents = form.watch('events');
+  const canLimitToExperiments = selectedEvents.length > 0 && selectedEvents.every(isExperimentScopedEventKey);
 
   const formatEventLabel = (entity: string, action: string) => {
     const key = eventKey(entity, action);
@@ -78,6 +92,9 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
       description: values.description.trim() || undefined,
       secret: values.secret.trim() || undefined,
       status: values.status ? ('ACTIVE' as const) : ('DISABLED' as const),
+      // Sent even when empty, so editing a limited webhook to drop its experiments, or to add an event
+      // that cannot be limited, removes the limit instead of keeping it.
+      experiment_ids: canLimitToExperiments ? parseExperimentIds(values.experimentIds) : [],
     };
 
     try {
@@ -293,6 +310,30 @@ const WebhookFormModal = ({ visible, editingWebhook, onClose, onSaved, eventFilt
               <FormUI.Message type="error" message={form.formState.errors.events.message} />
             )}
           </div>
+
+          {canLimitToExperiments && (
+            <div>
+              <FormUI.Label htmlFor="mlflow.settings.webhooks.experiment-ids-input">
+                <FormattedMessage defaultMessage="Experiments" description="Webhook experiment IDs field label" />
+              </FormUI.Label>
+              <FormUI.Hint>
+                <FormattedMessage
+                  defaultMessage="IDs of the experiments to send events from, separated by commas. Leave blank to send events from every experiment."
+                  description="Webhook experiment IDs field description"
+                />
+              </FormUI.Hint>
+              <RHFControlledComponents.Input
+                name="experimentIds"
+                control={form.control}
+                id="mlflow.settings.webhooks.experiment-ids-input"
+                componentId="mlflow.settings.webhooks.experiment-ids-input"
+                placeholder={intl.formatMessage({
+                  defaultMessage: 'All experiments',
+                  description: 'Webhook experiment IDs placeholder',
+                })}
+              />
+            </div>
+          )}
         </div>
       </Modal>
     </FormProvider>

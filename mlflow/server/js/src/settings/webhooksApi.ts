@@ -14,6 +14,8 @@ export interface Webhook {
   creation_timestamp: string;
   last_updated_timestamp: string;
   description?: string;
+  /** Experiments the webhook is limited to. Absent or empty means every experiment. */
+  experiment_ids?: string[];
 }
 
 export interface ListWebhooksResponse {
@@ -27,6 +29,7 @@ export interface CreateWebhookRequest {
   description?: string;
   secret?: string;
   status: 'ACTIVE' | 'DISABLED';
+  experiment_ids?: string[];
 }
 
 export interface UpdateWebhookRequest {
@@ -36,6 +39,8 @@ export interface UpdateWebhookRequest {
   description?: string;
   secret?: string;
   status: 'ACTIVE' | 'DISABLED';
+  /** Replaces the experiments the webhook is limited to; an empty list removes the limit. */
+  experiment_ids?: string[];
 }
 
 export interface TestWebhookResult {

@@ -296,7 +296,17 @@ def _deliver_webhook_impl(
 
     # Get only webhooks subscribed to this specific event (filtered at DB level when possible)
     webhooks = _get_cached_webhooks_by_event(store, event, ttl_seconds)
-    if not (active_webhooks := [w for w in webhooks if w.status.is_active()]):
+    # Only an event that happens in an experiment carries its ID; any other event reaches every
+    # webhook subscribed to it, since only those webhooks can be limited to experiments.
+    experiment_id = payload.get("experiment_id") if event.is_experiment_scoped else None
+    if not (
+        active_webhooks := [
+            w
+            for w in webhooks
+            if w.status.is_active()
+            and (not event.is_experiment_scoped or w.is_subscribed_to_experiment(experiment_id))
+        ]
+    ):
         return []
     session = _get_or_create_webhook_session()
     return [

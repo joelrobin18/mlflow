@@ -75,6 +75,15 @@ const WebhookListItem = ({
         <Typography.Text size="sm" color="secondary" css={{ display: 'block', marginTop: theme.spacing.xs }}>
           {formatEvents(intl, webhook.events)}
         </Typography.Text>
+        {webhook.experiment_ids && webhook.experiment_ids.length > 0 && (
+          <Typography.Text size="sm" color="secondary" css={{ display: 'block', marginTop: theme.spacing.xs }}>
+            <FormattedMessage
+              defaultMessage="Experiments: {experimentIds}"
+              description="Lists the experiment IDs a webhook is limited to"
+              values={{ experimentIds: webhook.experiment_ids.join(', ') }}
+            />
+          </Typography.Text>
+        )}
       </div>
       <div css={{ display: 'flex', gap: theme.spacing.sm, flexShrink: 0 }}>
         <Button

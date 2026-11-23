@@ -183,6 +183,7 @@ class Webhook(_message.Message):
     STATUS_FIELD_NUMBER: _builtins.int
     CREATION_TIMESTAMP_FIELD_NUMBER: _builtins.int
     LAST_UPDATED_TIMESTAMP_FIELD_NUMBER: _builtins.int
+    EXPERIMENT_IDS_FIELD_NUMBER: _builtins.int
     webhook_id: _builtins.str
     """Unique identifier for the webhook"""
     name: _builtins.str
@@ -201,6 +202,13 @@ class Webhook(_message.Message):
     def events(self) -> _containers.RepeatedCompositeFieldContainer[Global___WebhookEvent]:
         """List of events this webhook is subscribed to"""
 
+    @_builtins.property
+    def experiment_ids(self) -> _containers.RepeatedScalarFieldContainer[_builtins.str]:
+        """IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+        from every experiment, and is always empty for a webhook subscribed to events that don't
+        belong to an experiment.
+        """
+
     def __init__(
         self,
         *,
@@ -212,10 +220,11 @@ class Webhook(_message.Message):
         status: Global___WebhookStatus.ValueType | None = ...,
         creation_timestamp: _builtins.int | None = ...,
         last_updated_timestamp: _builtins.int | None = ...,
+        experiment_ids: _abc.Iterable[_builtins.str] | None = ...,
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "events", b"events", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["creation_timestamp", b"creation_timestamp", "description", b"description", "events", b"events", "experiment_ids", b"experiment_ids", "last_updated_timestamp", b"last_updated_timestamp", "name", b"name", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -285,6 +294,7 @@ class CreateWebhook(_message.Message):
     EVENTS_FIELD_NUMBER: _builtins.int
     SECRET_FIELD_NUMBER: _builtins.int
     STATUS_FIELD_NUMBER: _builtins.int
+    EXPERIMENT_IDS_FIELD_NUMBER: _builtins.int
     name: _builtins.str
     """Name of the webhook"""
     description: _builtins.str
@@ -299,6 +309,13 @@ class CreateWebhook(_message.Message):
     def events(self) -> _containers.RepeatedCompositeFieldContainer[Global___WebhookEvent]:
         """List of events to subscribe to"""
 
+    @_builtins.property
+    def experiment_ids(self) -> _containers.RepeatedScalarFieldContainer[_builtins.str]:
+        """IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+        as issue.created, can be limited this way. Leave empty to receive events from every
+        experiment.
+        """
+
     def __init__(
         self,
         *,
@@ -308,10 +325,11 @@ class CreateWebhook(_message.Message):
         events: _abc.Iterable[Global___WebhookEvent] | None = ...,
         secret: _builtins.str | None = ...,
         status: Global___WebhookStatus.ValueType | None = ...,
+        experiment_ids: _abc.Iterable[_builtins.str] | None = ...,
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "events", b"events", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "events", b"events", "experiment_ids", b"experiment_ids", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
@@ -438,6 +456,7 @@ class UpdateWebhook(_message.Message):
     EVENTS_FIELD_NUMBER: _builtins.int
     SECRET_FIELD_NUMBER: _builtins.int
     STATUS_FIELD_NUMBER: _builtins.int
+    EXPERIMENT_IDS_FIELD_NUMBER: _builtins.int
     webhook_id: _builtins.str
     """ID of the webhook to update"""
     name: _builtins.str
@@ -454,6 +473,13 @@ class UpdateWebhook(_message.Message):
     def events(self) -> _containers.RepeatedCompositeFieldContainer[Global___WebhookEvent]:
         """New list of events to subscribe to"""
 
+    @_builtins.property
+    def experiment_ids(self) -> _containers.RepeatedScalarFieldContainer[_builtins.str]:
+        """New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+        list to receive events from every experiment, or leave the field out to keep the current
+        experiments.
+        """
+
     def __init__(
         self,
         *,
@@ -464,10 +490,11 @@ class UpdateWebhook(_message.Message):
         events: _abc.Iterable[Global___WebhookEvent] | None = ...,
         secret: _builtins.str | None = ...,
         status: Global___WebhookStatus.ValueType | None = ...,
+        experiment_ids: _abc.Iterable[_builtins.str] | None = ...,
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "events", b"events", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["description", b"description", "events", b"events", "experiment_ids", b"experiment_ids", "name", b"name", "secret", b"secret", "status", b"status", "url", b"url", "webhook_id", b"webhook_id"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 

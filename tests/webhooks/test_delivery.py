@@ -235,3 +235,34 @@ def test_send_webhook_request_omits_workspace_when_disabled(
 
     actual_payload = json.loads(session.post.call_args.kwargs["data"].decode("utf-8"))
     assert "workspace" not in actual_payload
+
+
+def test_deliver_webhook_skips_webhooks_limited_to_other_experiments(sql_store: SqlAlchemyStore):
+    event = WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)
+
+    def issue_webhook(webhook_id, experiment_ids):
+        return Webhook(
+            webhook_id=webhook_id,
+            name=webhook_id,
+            url="https://example.com/hook",
+            events=[event],
+            creation_timestamp=0,
+            last_updated_timestamp=0,
+            experiment_ids=experiment_ids,
+        )
+
+    webhooks = [
+        issue_webhook("everywhere", []),
+        issue_webhook("this-experiment", ["7"]),
+        issue_webhook("other-experiment", ["8"]),
+    ]
+    with (
+        patch("mlflow.webhooks.delivery._get_cached_webhooks_by_event", return_value=webhooks),
+        patch("mlflow.webhooks.delivery._send_webhook_with_error_handling") as send,
+    ):
+        deliver_webhook(event=event, payload={"experiment_id": "7"}, store=sql_store, wait=True)
+
+    assert sorted(call.args[0].webhook_id for call in send.call_args_list) == [
+        "everywhere",
+        "this-experiment",
+    ]

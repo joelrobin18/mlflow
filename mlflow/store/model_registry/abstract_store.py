@@ -1194,6 +1194,7 @@ class AbstractStore:
         description: str | None = None,
         secret: str | None = None,
         status: WebhookStatus | None = None,
+        experiment_ids: list[str] | None = None,
     ) -> Webhook:
         """
         Create a new webhook in the backend store.
@@ -1205,6 +1206,8 @@ class AbstractStore:
             description: Optional description of the webhook.
             secret: Optional secret for HMAC signature verification.
             status: Webhook status (defaults to ACTIVE).
+            experiment_ids: Experiments to limit the webhook to. Only events that belong to an
+                experiment can be limited. None or empty means every experiment.
 
         Returns:
             A single :py:class:`mlflow.entities.model_registry.Webhook` object
@@ -1272,6 +1275,7 @@ class AbstractStore:
         events: list[WebhookEvent] | None = None,
         secret: str | None = None,
         status: WebhookStatus | None = None,
+        experiment_ids: list[str] | None = None,
     ) -> Webhook:
         """
         Update an existing webhook.
@@ -1284,6 +1288,8 @@ class AbstractStore:
             events: New list of event types.
             secret: New webhook secret.
             status: New webhook status.
+            experiment_ids: Experiments to limit the webhook to, replacing the current ones.
+                ``[]`` removes the limit and None leaves it unchanged.
 
         Returns:
             A single updated :py:class:`mlflow.entities.model_registry.Webhook` object.

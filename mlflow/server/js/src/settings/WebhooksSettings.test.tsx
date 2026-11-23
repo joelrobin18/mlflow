@@ -19,6 +19,7 @@ jest.mock('./webhooksApi', () => ({
 
 const mockListWebhooks = jest.mocked(WebhooksApi.listWebhooks);
 const mockCreateWebhook = jest.mocked(WebhooksApi.createWebhook);
+const mockUpdateWebhook = jest.mocked(WebhooksApi.updateWebhook);
 const mockDeleteWebhook = jest.mocked(WebhooksApi.deleteWebhook);
 const mockTestWebhook = jest.mocked(WebhooksApi.testWebhook);
 
@@ -42,6 +43,17 @@ const BUDGET_WEBHOOK = {
   creation_timestamp: '1700000000000',
   last_updated_timestamp: '1700000000000',
   description: 'A budget webhook',
+};
+
+const ISSUE_WEBHOOK = {
+  webhook_id: 'wh-3',
+  name: 'issue-alerts',
+  url: 'https://example.com/issues',
+  events: [{ entity: 'ISSUE', action: 'CREATED' }],
+  status: 'ACTIVE',
+  creation_timestamp: '1700000000000',
+  last_updated_timestamp: '1700000000000',
+  experiment_ids: ['7', '12'],
 };
 
 describe('WebhooksSettings', () => {
@@ -230,6 +242,75 @@ describe('WebhooksSettings', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Network error')).toBeInTheDocument();
+    });
+  });
+  const openCreateModal = async () => {
+    await waitFor(() => {
+      expect(screen.getByText('Create webhook')).toBeInTheDocument();
+    });
+    await userEvent.click(screen.getByText('Create webhook'));
+    await userEvent.type(screen.getByPlaceholderText('My webhook'), 'issue-alerts');
+    await userEvent.type(screen.getByPlaceholderText('https://example.com/webhook'), 'https://test.com/issues');
+  };
+
+  const submitModal = async (label: string) => {
+    const buttons = screen.getAllByText(label);
+    await userEvent.click(buttons[buttons.length - 1]);
+  };
+
+  it('limits an issue webhook to the experiments entered', async () => {
+    renderComponent();
+    await openCreateModal();
+
+    expect(screen.queryByPlaceholderText('All experiments')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByText('Issue created'));
+    await userEvent.type(screen.getByPlaceholderText('All experiments'), '7, 12 7');
+    await submitModal('Create');
+
+    await waitFor(() => {
+      expect(mockCreateWebhook).toHaveBeenCalledWith(
+        expect.objectContaining({
+          events: [{ entity: 'ISSUE', action: 'CREATED' }],
+          experiment_ids: ['7', '12'],
+        }),
+      );
+    });
+  });
+
+  it('drops the experiment limit when an event outside an experiment is selected', async () => {
+    renderComponent();
+    await openCreateModal();
+
+    await userEvent.click(screen.getByText('Issue created'));
+    await userEvent.type(screen.getByPlaceholderText('All experiments'), '7');
+    await userEvent.click(screen.getByText('Prompt created'));
+
+    expect(screen.queryByPlaceholderText('All experiments')).not.toBeInTheDocument();
+    await submitModal('Create');
+
+    await waitFor(() => {
+      expect(mockCreateWebhook).toHaveBeenCalledWith(expect.objectContaining({ experiment_ids: [] }));
+    });
+  });
+
+  it('shows and edits the experiments a webhook is limited to', async () => {
+    mockListWebhooks.mockResolvedValue({ webhooks: [ISSUE_WEBHOOK] });
+    mockUpdateWebhook.mockResolvedValue({} as any);
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Experiments: 7, 12')).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByText('Edit'));
+    const experimentInput = screen.getByPlaceholderText('All experiments');
+    expect(experimentInput).toHaveValue('7, 12');
+    await userEvent.clear(experimentInput);
+    await submitModal('Save');
+
+    await waitFor(() => {
+      expect(mockUpdateWebhook).toHaveBeenCalledWith('wh-3', expect.objectContaining({ experiment_ids: [] }));
     });
   });
 });

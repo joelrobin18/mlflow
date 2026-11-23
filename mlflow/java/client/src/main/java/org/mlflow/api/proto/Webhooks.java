@@ -1570,6 +1570,55 @@ public final class Webhooks {
      * @return The lastUpdatedTimestamp.
      */
     long getLastUpdatedTimestamp();
+
+    /**
+     * <pre>
+     * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+     * from every experiment, and is always empty for a webhook subscribed to events that don't
+     * belong to an experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 9;</code>
+     * @return A list containing the experimentIds.
+     */
+    java.util.List<java.lang.String>
+        getExperimentIdsList();
+    /**
+     * <pre>
+     * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+     * from every experiment, and is always empty for a webhook subscribed to events that don't
+     * belong to an experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 9;</code>
+     * @return The count of experimentIds.
+     */
+    int getExperimentIdsCount();
+    /**
+     * <pre>
+     * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+     * from every experiment, and is always empty for a webhook subscribed to events that don't
+     * belong to an experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 9;</code>
+     * @param index The index of the element to return.
+     * @return The experimentIds at the given index.
+     */
+    java.lang.String getExperimentIds(int index);
+    /**
+     * <pre>
+     * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+     * from every experiment, and is always empty for a webhook subscribed to events that don't
+     * belong to an experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 9;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the experimentIds at the given index.
+     */
+    com.google.protobuf.ByteString
+        getExperimentIdsBytes(int index);
   }
   /**
    * <pre>
@@ -1594,6 +1643,7 @@ public final class Webhooks {
       url_ = "";
       events_ = java.util.Collections.emptyList();
       status_ = 1;
+      experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
 
     @java.lang.Override
@@ -1682,6 +1732,15 @@ public final class Webhooks {
               lastUpdatedTimestamp_ = input.readInt64();
               break;
             }
+            case 74: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000100) != 0)) {
+                experimentIds_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000100;
+              }
+              experimentIds_.add(bs);
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -1699,6 +1758,9 @@ public final class Webhooks {
       } finally {
         if (((mutable_bitField0_ & 0x00000010) != 0)) {
           events_ = java.util.Collections.unmodifiableList(events_);
+        }
+        if (((mutable_bitField0_ & 0x00000100) != 0)) {
+          experimentIds_ = experimentIds_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -2099,6 +2161,65 @@ public final class Webhooks {
       return lastUpdatedTimestamp_;
     }
 
+    public static final int EXPERIMENT_IDS_FIELD_NUMBER = 9;
+    private com.google.protobuf.LazyStringList experimentIds_;
+    /**
+     * <pre>
+     * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+     * from every experiment, and is always empty for a webhook subscribed to events that don't
+     * belong to an experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 9;</code>
+     * @return A list containing the experimentIds.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getExperimentIdsList() {
+      return experimentIds_;
+    }
+    /**
+     * <pre>
+     * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+     * from every experiment, and is always empty for a webhook subscribed to events that don't
+     * belong to an experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 9;</code>
+     * @return The count of experimentIds.
+     */
+    public int getExperimentIdsCount() {
+      return experimentIds_.size();
+    }
+    /**
+     * <pre>
+     * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+     * from every experiment, and is always empty for a webhook subscribed to events that don't
+     * belong to an experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 9;</code>
+     * @param index The index of the element to return.
+     * @return The experimentIds at the given index.
+     */
+    public java.lang.String getExperimentIds(int index) {
+      return experimentIds_.get(index);
+    }
+    /**
+     * <pre>
+     * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+     * from every experiment, and is always empty for a webhook subscribed to events that don't
+     * belong to an experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 9;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the experimentIds at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getExperimentIdsBytes(int index) {
+      return experimentIds_.getByteString(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2137,6 +2258,9 @@ public final class Webhooks {
       if (((bitField0_ & 0x00000040) != 0)) {
         output.writeInt64(8, lastUpdatedTimestamp_);
       }
+      for (int i = 0; i < experimentIds_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 9, experimentIds_.getRaw(i));
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2173,6 +2297,14 @@ public final class Webhooks {
       if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(8, lastUpdatedTimestamp_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < experimentIds_.size(); i++) {
+          dataSize += computeStringSizeNoTag(experimentIds_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getExperimentIdsList().size();
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2225,6 +2357,8 @@ public final class Webhooks {
         if (getLastUpdatedTimestamp()
             != other.getLastUpdatedTimestamp()) return false;
       }
+      if (!getExperimentIdsList()
+          .equals(other.getExperimentIdsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2269,6 +2403,10 @@ public final class Webhooks {
         hash = (37 * hash) + LAST_UPDATED_TIMESTAMP_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
             getLastUpdatedTimestamp());
+      }
+      if (getExperimentIdsCount() > 0) {
+        hash = (37 * hash) + EXPERIMENT_IDS_FIELD_NUMBER;
+        hash = (53 * hash) + getExperimentIdsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2428,6 +2566,8 @@ public final class Webhooks {
         bitField0_ = (bitField0_ & ~0x00000040);
         lastUpdatedTimestamp_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000080);
+        experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -2493,6 +2633,11 @@ public final class Webhooks {
           result.lastUpdatedTimestamp_ = lastUpdatedTimestamp_;
           to_bitField0_ |= 0x00000040;
         }
+        if (((bitField0_ & 0x00000100) != 0)) {
+          experimentIds_ = experimentIds_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000100);
+        }
+        result.experimentIds_ = experimentIds_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2596,6 +2741,16 @@ public final class Webhooks {
         }
         if (other.hasLastUpdatedTimestamp()) {
           setLastUpdatedTimestamp(other.getLastUpdatedTimestamp());
+        }
+        if (!other.experimentIds_.isEmpty()) {
+          if (experimentIds_.isEmpty()) {
+            experimentIds_ = other.experimentIds_;
+            bitField0_ = (bitField0_ & ~0x00000100);
+          } else {
+            ensureExperimentIdsIsMutable();
+            experimentIds_.addAll(other.experimentIds_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -3536,6 +3691,169 @@ public final class Webhooks {
       public Builder clearLastUpdatedTimestamp() {
         bitField0_ = (bitField0_ & ~0x00000080);
         lastUpdatedTimestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureExperimentIdsIsMutable() {
+        if (!((bitField0_ & 0x00000100) != 0)) {
+          experimentIds_ = new com.google.protobuf.LazyStringArrayList(experimentIds_);
+          bitField0_ |= 0x00000100;
+         }
+      }
+      /**
+       * <pre>
+       * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+       * from every experiment, and is always empty for a webhook subscribed to events that don't
+       * belong to an experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 9;</code>
+       * @return A list containing the experimentIds.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getExperimentIdsList() {
+        return experimentIds_.getUnmodifiableView();
+      }
+      /**
+       * <pre>
+       * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+       * from every experiment, and is always empty for a webhook subscribed to events that don't
+       * belong to an experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 9;</code>
+       * @return The count of experimentIds.
+       */
+      public int getExperimentIdsCount() {
+        return experimentIds_.size();
+      }
+      /**
+       * <pre>
+       * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+       * from every experiment, and is always empty for a webhook subscribed to events that don't
+       * belong to an experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 9;</code>
+       * @param index The index of the element to return.
+       * @return The experimentIds at the given index.
+       */
+      public java.lang.String getExperimentIds(int index) {
+        return experimentIds_.get(index);
+      }
+      /**
+       * <pre>
+       * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+       * from every experiment, and is always empty for a webhook subscribed to events that don't
+       * belong to an experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 9;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the experimentIds at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getExperimentIdsBytes(int index) {
+        return experimentIds_.getByteString(index);
+      }
+      /**
+       * <pre>
+       * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+       * from every experiment, and is always empty for a webhook subscribed to events that don't
+       * belong to an experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 9;</code>
+       * @param index The index to set the value at.
+       * @param value The experimentIds to set.
+       * @return This builder for chaining.
+       */
+      public Builder setExperimentIds(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExperimentIdsIsMutable();
+        experimentIds_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+       * from every experiment, and is always empty for a webhook subscribed to events that don't
+       * belong to an experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 9;</code>
+       * @param value The experimentIds to add.
+       * @return This builder for chaining.
+       */
+      public Builder addExperimentIds(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExperimentIdsIsMutable();
+        experimentIds_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+       * from every experiment, and is always empty for a webhook subscribed to events that don't
+       * belong to an experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 9;</code>
+       * @param values The experimentIds to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllExperimentIds(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureExperimentIdsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, experimentIds_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+       * from every experiment, and is always empty for a webhook subscribed to events that don't
+       * belong to an experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 9;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearExperimentIds() {
+        experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * IDs of the experiments the webhook is limited to. Empty means the webhook receives its events
+       * from every experiment, and is always empty for a webhook subscribed to events that don't
+       * belong to an experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 9;</code>
+       * @param value The bytes of the experimentIds to add.
+       * @return This builder for chaining.
+       */
+      public Builder addExperimentIdsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExperimentIdsIsMutable();
+        experimentIds_.add(value);
         onChanged();
         return this;
       }
@@ -4929,6 +5247,55 @@ public final class Webhooks {
      * @return The status.
      */
     org.mlflow.api.proto.Webhooks.WebhookStatus getStatus();
+
+    /**
+     * <pre>
+     * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+     * as issue.created, can be limited this way. Leave empty to receive events from every
+     * experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 7;</code>
+     * @return A list containing the experimentIds.
+     */
+    java.util.List<java.lang.String>
+        getExperimentIdsList();
+    /**
+     * <pre>
+     * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+     * as issue.created, can be limited this way. Leave empty to receive events from every
+     * experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 7;</code>
+     * @return The count of experimentIds.
+     */
+    int getExperimentIdsCount();
+    /**
+     * <pre>
+     * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+     * as issue.created, can be limited this way. Leave empty to receive events from every
+     * experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 7;</code>
+     * @param index The index of the element to return.
+     * @return The experimentIds at the given index.
+     */
+    java.lang.String getExperimentIds(int index);
+    /**
+     * <pre>
+     * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+     * as issue.created, can be limited this way. Leave empty to receive events from every
+     * experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 7;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the experimentIds at the given index.
+     */
+    com.google.protobuf.ByteString
+        getExperimentIdsBytes(int index);
   }
   /**
    * <pre>
@@ -4953,6 +5320,7 @@ public final class Webhooks {
       events_ = java.util.Collections.emptyList();
       secret_ = "";
       status_ = 1;
+      experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
 
     @java.lang.Override
@@ -5031,6 +5399,15 @@ public final class Webhooks {
               }
               break;
             }
+            case 58: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000040) != 0)) {
+                experimentIds_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000040;
+              }
+              experimentIds_.add(bs);
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -5048,6 +5425,9 @@ public final class Webhooks {
       } finally {
         if (((mutable_bitField0_ & 0x00000008) != 0)) {
           events_ = java.util.Collections.unmodifiableList(events_);
+        }
+        if (((mutable_bitField0_ & 0x00000040) != 0)) {
+          experimentIds_ = experimentIds_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -6026,6 +6406,65 @@ public final class Webhooks {
       return result == null ? org.mlflow.api.proto.Webhooks.WebhookStatus.ACTIVE : result;
     }
 
+    public static final int EXPERIMENT_IDS_FIELD_NUMBER = 7;
+    private com.google.protobuf.LazyStringList experimentIds_;
+    /**
+     * <pre>
+     * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+     * as issue.created, can be limited this way. Leave empty to receive events from every
+     * experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 7;</code>
+     * @return A list containing the experimentIds.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getExperimentIdsList() {
+      return experimentIds_;
+    }
+    /**
+     * <pre>
+     * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+     * as issue.created, can be limited this way. Leave empty to receive events from every
+     * experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 7;</code>
+     * @return The count of experimentIds.
+     */
+    public int getExperimentIdsCount() {
+      return experimentIds_.size();
+    }
+    /**
+     * <pre>
+     * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+     * as issue.created, can be limited this way. Leave empty to receive events from every
+     * experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 7;</code>
+     * @param index The index of the element to return.
+     * @return The experimentIds at the given index.
+     */
+    public java.lang.String getExperimentIds(int index) {
+      return experimentIds_.get(index);
+    }
+    /**
+     * <pre>
+     * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+     * as issue.created, can be limited this way. Leave empty to receive events from every
+     * experiment.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 7;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the experimentIds at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getExperimentIdsBytes(int index) {
+      return experimentIds_.getByteString(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -6058,6 +6497,9 @@ public final class Webhooks {
       if (((bitField0_ & 0x00000010) != 0)) {
         output.writeEnum(6, status_);
       }
+      for (int i = 0; i < experimentIds_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, experimentIds_.getRaw(i));
+      }
       unknownFields.writeTo(output);
     }
 
@@ -6086,6 +6528,14 @@ public final class Webhooks {
       if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(6, status_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < experimentIds_.size(); i++) {
+          dataSize += computeStringSizeNoTag(experimentIds_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getExperimentIdsList().size();
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -6128,6 +6578,8 @@ public final class Webhooks {
       if (hasStatus()) {
         if (status_ != other.status_) return false;
       }
+      if (!getExperimentIdsList()
+          .equals(other.getExperimentIdsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -6162,6 +6614,10 @@ public final class Webhooks {
       if (hasStatus()) {
         hash = (37 * hash) + STATUS_FIELD_NUMBER;
         hash = (53 * hash) + status_;
+      }
+      if (getExperimentIdsCount() > 0) {
+        hash = (37 * hash) + EXPERIMENT_IDS_FIELD_NUMBER;
+        hash = (53 * hash) + getExperimentIdsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -6317,6 +6773,8 @@ public final class Webhooks {
         bitField0_ = (bitField0_ & ~0x00000010);
         status_ = 1;
         bitField0_ = (bitField0_ & ~0x00000020);
+        experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -6374,6 +6832,11 @@ public final class Webhooks {
           to_bitField0_ |= 0x00000010;
         }
         result.status_ = status_;
+        if (((bitField0_ & 0x00000040) != 0)) {
+          experimentIds_ = experimentIds_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000040);
+        }
+        result.experimentIds_ = experimentIds_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6471,6 +6934,16 @@ public final class Webhooks {
         }
         if (other.hasStatus()) {
           setStatus(other.getStatus());
+        }
+        if (!other.experimentIds_.isEmpty()) {
+          if (experimentIds_.isEmpty()) {
+            experimentIds_ = other.experimentIds_;
+            bitField0_ = (bitField0_ & ~0x00000040);
+          } else {
+            ensureExperimentIdsIsMutable();
+            experimentIds_.addAll(other.experimentIds_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -7301,6 +7774,169 @@ public final class Webhooks {
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000020);
         status_ = 1;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureExperimentIdsIsMutable() {
+        if (!((bitField0_ & 0x00000040) != 0)) {
+          experimentIds_ = new com.google.protobuf.LazyStringArrayList(experimentIds_);
+          bitField0_ |= 0x00000040;
+         }
+      }
+      /**
+       * <pre>
+       * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+       * as issue.created, can be limited this way. Leave empty to receive events from every
+       * experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 7;</code>
+       * @return A list containing the experimentIds.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getExperimentIdsList() {
+        return experimentIds_.getUnmodifiableView();
+      }
+      /**
+       * <pre>
+       * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+       * as issue.created, can be limited this way. Leave empty to receive events from every
+       * experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 7;</code>
+       * @return The count of experimentIds.
+       */
+      public int getExperimentIdsCount() {
+        return experimentIds_.size();
+      }
+      /**
+       * <pre>
+       * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+       * as issue.created, can be limited this way. Leave empty to receive events from every
+       * experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 7;</code>
+       * @param index The index of the element to return.
+       * @return The experimentIds at the given index.
+       */
+      public java.lang.String getExperimentIds(int index) {
+        return experimentIds_.get(index);
+      }
+      /**
+       * <pre>
+       * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+       * as issue.created, can be limited this way. Leave empty to receive events from every
+       * experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 7;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the experimentIds at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getExperimentIdsBytes(int index) {
+        return experimentIds_.getByteString(index);
+      }
+      /**
+       * <pre>
+       * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+       * as issue.created, can be limited this way. Leave empty to receive events from every
+       * experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 7;</code>
+       * @param index The index to set the value at.
+       * @param value The experimentIds to set.
+       * @return This builder for chaining.
+       */
+      public Builder setExperimentIds(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExperimentIdsIsMutable();
+        experimentIds_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+       * as issue.created, can be limited this way. Leave empty to receive events from every
+       * experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 7;</code>
+       * @param value The experimentIds to add.
+       * @return This builder for chaining.
+       */
+      public Builder addExperimentIds(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExperimentIdsIsMutable();
+        experimentIds_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+       * as issue.created, can be limited this way. Leave empty to receive events from every
+       * experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 7;</code>
+       * @param values The experimentIds to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllExperimentIds(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureExperimentIdsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, experimentIds_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+       * as issue.created, can be limited this way. Leave empty to receive events from every
+       * experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 7;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearExperimentIds() {
+        experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * IDs of the experiments to limit the webhook to. Only events that belong to an experiment, such
+       * as issue.created, can be limited this way. Leave empty to receive events from every
+       * experiment.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 7;</code>
+       * @param value The bytes of the experimentIds to add.
+       * @return This builder for chaining.
+       */
+      public Builder addExperimentIdsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExperimentIdsIsMutable();
+        experimentIds_.add(value);
         onChanged();
         return this;
       }
@@ -10794,6 +11430,55 @@ public final class Webhooks {
      * @return The status.
      */
     org.mlflow.api.proto.Webhooks.WebhookStatus getStatus();
+
+    /**
+     * <pre>
+     * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+     * list to receive events from every experiment, or leave the field out to keep the current
+     * experiments.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 8;</code>
+     * @return A list containing the experimentIds.
+     */
+    java.util.List<java.lang.String>
+        getExperimentIdsList();
+    /**
+     * <pre>
+     * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+     * list to receive events from every experiment, or leave the field out to keep the current
+     * experiments.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 8;</code>
+     * @return The count of experimentIds.
+     */
+    int getExperimentIdsCount();
+    /**
+     * <pre>
+     * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+     * list to receive events from every experiment, or leave the field out to keep the current
+     * experiments.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 8;</code>
+     * @param index The index of the element to return.
+     * @return The experimentIds at the given index.
+     */
+    java.lang.String getExperimentIds(int index);
+    /**
+     * <pre>
+     * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+     * list to receive events from every experiment, or leave the field out to keep the current
+     * experiments.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 8;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the experimentIds at the given index.
+     */
+    com.google.protobuf.ByteString
+        getExperimentIdsBytes(int index);
   }
   /**
    * <pre>
@@ -10819,6 +11504,7 @@ public final class Webhooks {
       events_ = java.util.Collections.emptyList();
       secret_ = "";
       status_ = 1;
+      experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
 
     @java.lang.Override
@@ -10903,6 +11589,15 @@ public final class Webhooks {
               }
               break;
             }
+            case 66: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField0_ & 0x00000080) != 0)) {
+                experimentIds_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000080;
+              }
+              experimentIds_.add(bs);
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -10920,6 +11615,9 @@ public final class Webhooks {
       } finally {
         if (((mutable_bitField0_ & 0x00000010) != 0)) {
           events_ = java.util.Collections.unmodifiableList(events_);
+        }
+        if (((mutable_bitField0_ & 0x00000080) != 0)) {
+          experimentIds_ = experimentIds_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -11958,6 +12656,65 @@ public final class Webhooks {
       return result == null ? org.mlflow.api.proto.Webhooks.WebhookStatus.ACTIVE : result;
     }
 
+    public static final int EXPERIMENT_IDS_FIELD_NUMBER = 8;
+    private com.google.protobuf.LazyStringList experimentIds_;
+    /**
+     * <pre>
+     * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+     * list to receive events from every experiment, or leave the field out to keep the current
+     * experiments.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 8;</code>
+     * @return A list containing the experimentIds.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getExperimentIdsList() {
+      return experimentIds_;
+    }
+    /**
+     * <pre>
+     * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+     * list to receive events from every experiment, or leave the field out to keep the current
+     * experiments.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 8;</code>
+     * @return The count of experimentIds.
+     */
+    public int getExperimentIdsCount() {
+      return experimentIds_.size();
+    }
+    /**
+     * <pre>
+     * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+     * list to receive events from every experiment, or leave the field out to keep the current
+     * experiments.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 8;</code>
+     * @param index The index of the element to return.
+     * @return The experimentIds at the given index.
+     */
+    public java.lang.String getExperimentIds(int index) {
+      return experimentIds_.get(index);
+    }
+    /**
+     * <pre>
+     * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+     * list to receive events from every experiment, or leave the field out to keep the current
+     * experiments.
+     * </pre>
+     *
+     * <code>repeated string experiment_ids = 8;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the experimentIds at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getExperimentIdsBytes(int index) {
+      return experimentIds_.getByteString(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -11993,6 +12750,9 @@ public final class Webhooks {
       if (((bitField0_ & 0x00000020) != 0)) {
         output.writeEnum(7, status_);
       }
+      for (int i = 0; i < experimentIds_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 8, experimentIds_.getRaw(i));
+      }
       unknownFields.writeTo(output);
     }
 
@@ -12024,6 +12784,14 @@ public final class Webhooks {
       if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(7, status_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < experimentIds_.size(); i++) {
+          dataSize += computeStringSizeNoTag(experimentIds_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getExperimentIdsList().size();
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -12071,6 +12839,8 @@ public final class Webhooks {
       if (hasStatus()) {
         if (status_ != other.status_) return false;
       }
+      if (!getExperimentIdsList()
+          .equals(other.getExperimentIdsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -12109,6 +12879,10 @@ public final class Webhooks {
       if (hasStatus()) {
         hash = (37 * hash) + STATUS_FIELD_NUMBER;
         hash = (53 * hash) + status_;
+      }
+      if (getExperimentIdsCount() > 0) {
+        hash = (37 * hash) + EXPERIMENT_IDS_FIELD_NUMBER;
+        hash = (53 * hash) + getExperimentIdsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -12266,6 +13040,8 @@ public final class Webhooks {
         bitField0_ = (bitField0_ & ~0x00000020);
         status_ = 1;
         bitField0_ = (bitField0_ & ~0x00000040);
+        experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -12327,6 +13103,11 @@ public final class Webhooks {
           to_bitField0_ |= 0x00000020;
         }
         result.status_ = status_;
+        if (((bitField0_ & 0x00000080) != 0)) {
+          experimentIds_ = experimentIds_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000080);
+        }
+        result.experimentIds_ = experimentIds_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -12429,6 +13210,16 @@ public final class Webhooks {
         }
         if (other.hasStatus()) {
           setStatus(other.getStatus());
+        }
+        if (!other.experimentIds_.isEmpty()) {
+          if (experimentIds_.isEmpty()) {
+            experimentIds_ = other.experimentIds_;
+            bitField0_ = (bitField0_ & ~0x00000080);
+          } else {
+            ensureExperimentIdsIsMutable();
+            experimentIds_.addAll(other.experimentIds_);
+          }
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -13367,6 +14158,169 @@ public final class Webhooks {
       public Builder clearStatus() {
         bitField0_ = (bitField0_ & ~0x00000040);
         status_ = 1;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureExperimentIdsIsMutable() {
+        if (!((bitField0_ & 0x00000080) != 0)) {
+          experimentIds_ = new com.google.protobuf.LazyStringArrayList(experimentIds_);
+          bitField0_ |= 0x00000080;
+         }
+      }
+      /**
+       * <pre>
+       * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+       * list to receive events from every experiment, or leave the field out to keep the current
+       * experiments.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 8;</code>
+       * @return A list containing the experimentIds.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getExperimentIdsList() {
+        return experimentIds_.getUnmodifiableView();
+      }
+      /**
+       * <pre>
+       * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+       * list to receive events from every experiment, or leave the field out to keep the current
+       * experiments.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 8;</code>
+       * @return The count of experimentIds.
+       */
+      public int getExperimentIdsCount() {
+        return experimentIds_.size();
+      }
+      /**
+       * <pre>
+       * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+       * list to receive events from every experiment, or leave the field out to keep the current
+       * experiments.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 8;</code>
+       * @param index The index of the element to return.
+       * @return The experimentIds at the given index.
+       */
+      public java.lang.String getExperimentIds(int index) {
+        return experimentIds_.get(index);
+      }
+      /**
+       * <pre>
+       * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+       * list to receive events from every experiment, or leave the field out to keep the current
+       * experiments.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 8;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the experimentIds at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getExperimentIdsBytes(int index) {
+        return experimentIds_.getByteString(index);
+      }
+      /**
+       * <pre>
+       * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+       * list to receive events from every experiment, or leave the field out to keep the current
+       * experiments.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 8;</code>
+       * @param index The index to set the value at.
+       * @param value The experimentIds to set.
+       * @return This builder for chaining.
+       */
+      public Builder setExperimentIds(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExperimentIdsIsMutable();
+        experimentIds_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+       * list to receive events from every experiment, or leave the field out to keep the current
+       * experiments.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 8;</code>
+       * @param value The experimentIds to add.
+       * @return This builder for chaining.
+       */
+      public Builder addExperimentIds(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExperimentIdsIsMutable();
+        experimentIds_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+       * list to receive events from every experiment, or leave the field out to keep the current
+       * experiments.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 8;</code>
+       * @param values The experimentIds to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllExperimentIds(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureExperimentIdsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, experimentIds_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+       * list to receive events from every experiment, or leave the field out to keep the current
+       * experiments.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 8;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearExperimentIds() {
+        experimentIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * New IDs of the experiments to limit the webhook to, replacing the current ones. Send an empty
+       * list to receive events from every experiment, or leave the field out to keep the current
+       * experiments.
+       * </pre>
+       *
+       * <code>repeated string experiment_ids = 8;</code>
+       * @param value The bytes of the experimentIds to add.
+       * @return This builder for chaining.
+       */
+      public Builder addExperimentIdsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureExperimentIdsIsMutable();
+        experimentIds_.add(value);
         onChanged();
         return this;
       }
@@ -16176,76 +17130,77 @@ public final class Webhooks {
       "to\032\025scalapb/scalapb.proto\"h\n\014WebhookEven" +
       "t\022+\n\006entity\030\001 \001(\0162\025.mlflow.WebhookEntity" +
       "B\004\370\206\031\001\022+\n\006action\030\002 \001(\0162\025.mlflow.WebhookA" +
-      "ctionB\004\370\206\031\001\"\326\001\n\007Webhook\022\022\n\nwebhook_id\030\001 " +
+      "ctionB\004\370\206\031\001\"\356\001\n\007Webhook\022\022\n\nwebhook_id\030\001 " +
       "\001(\t\022\014\n\004name\030\002 \001(\t\022\023\n\013description\030\003 \001(\t\022\013" +
       "\n\003url\030\004 \001(\t\022$\n\006events\030\005 \003(\0132\024.mlflow.Web" +
       "hookEvent\022%\n\006status\030\006 \001(\0162\025.mlflow.Webho" +
       "okStatus\022\032\n\022creation_timestamp\030\007 \001(\003\022\036\n\026" +
-      "last_updated_timestamp\030\010 \001(\003\"k\n\021WebhookT" +
-      "estResult\022\017\n\007success\030\001 \001(\010\022\027\n\017response_s" +
-      "tatus\030\002 \001(\005\022\025\n\rresponse_body\030\003 \001(\t\022\025\n\rer" +
-      "ror_message\030\004 \001(\t\"\211\002\n\rCreateWebhook\022\022\n\004n" +
-      "ame\030\001 \001(\tB\004\370\206\031\001\022\023\n\013description\030\002 \001(\t\022\021\n\003" +
-      "url\030\003 \001(\tB\004\370\206\031\001\022*\n\006events\030\004 \003(\0132\024.mlflow" +
-      ".WebhookEventB\004\370\206\031\001\022\016\n\006secret\030\005 \001(\t\022%\n\006s" +
-      "tatus\030\006 \001(\0162\025.mlflow.WebhookStatus\032,\n\010Re" +
+      "last_updated_timestamp\030\010 \001(\003\022\026\n\016experime" +
+      "nt_ids\030\t \003(\t\"k\n\021WebhookTestResult\022\017\n\007suc" +
+      "cess\030\001 \001(\010\022\027\n\017response_status\030\002 \001(\005\022\025\n\rr" +
+      "esponse_body\030\003 \001(\t\022\025\n\rerror_message\030\004 \001(" +
+      "\t\"\241\002\n\rCreateWebhook\022\022\n\004name\030\001 \001(\tB\004\370\206\031\001\022" +
+      "\023\n\013description\030\002 \001(\t\022\021\n\003url\030\003 \001(\tB\004\370\206\031\001\022" +
+      "*\n\006events\030\004 \003(\0132\024.mlflow.WebhookEventB\004\370" +
+      "\206\031\001\022\016\n\006secret\030\005 \001(\t\022%\n\006status\030\006 \001(\0162\025.ml" +
+      "flow.WebhookStatus\022\026\n\016experiment_ids\030\007 \003" +
+      "(\t\032,\n\010Response\022 \n\007webhook\030\001 \001(\0132\017.mlflow" +
+      ".Webhook:+\342?(\n&com.databricks.rpc.RPC[$t" +
+      "his.Response]\"\261\001\n\014ListWebhooks\022\030\n\013max_re" +
+      "sults\030\001 \001(\005:\003100\022\022\n\npage_token\030\002 \001(\t\032F\n\010" +
+      "Response\022!\n\010webhooks\030\001 \003(\0132\017.mlflow.Webh" +
+      "ook\022\027\n\017next_page_token\030\002 \001(\t:+\342?(\n&com.d" +
+      "atabricks.rpc.RPC[$this.Response]\"\201\001\n\nGe" +
+      "tWebhook\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206\031\001\032,\n\010Re" +
       "sponse\022 \n\007webhook\030\001 \001(\0132\017.mlflow.Webhook" +
       ":+\342?(\n&com.databricks.rpc.RPC[$this.Resp" +
-      "onse]\"\261\001\n\014ListWebhooks\022\030\n\013max_results\030\001 " +
-      "\001(\005:\003100\022\022\n\npage_token\030\002 \001(\t\032F\n\010Response" +
-      "\022!\n\010webhooks\030\001 \003(\0132\017.mlflow.Webhook\022\027\n\017n" +
-      "ext_page_token\030\002 \001(\t:+\342?(\n&com.databrick" +
-      "s.rpc.RPC[$this.Response]\"\201\001\n\nGetWebhook" +
-      "\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206\031\001\032,\n\010Response\022 " +
-      "\n\007webhook\030\001 \001(\0132\017.mlflow.Webhook:+\342?(\n&c" +
-      "om.databricks.rpc.RPC[$this.Response]\"\221\002" +
-      "\n\rUpdateWebhook\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206\031" +
-      "\001\022\014\n\004name\030\002 \001(\t\022\023\n\013description\030\003 \001(\t\022\013\n\003" +
-      "url\030\004 \001(\t\022$\n\006events\030\005 \003(\0132\024.mlflow.Webho" +
-      "okEvent\022\016\n\006secret\030\006 \001(\t\022%\n\006status\030\007 \001(\0162" +
-      "\025.mlflow.WebhookStatus\032,\n\010Response\022 \n\007we" +
-      "bhook\030\001 \001(\0132\017.mlflow.Webhook:+\342?(\n&com.d" +
-      "atabricks.rpc.RPC[$this.Response]\"b\n\rDel" +
-      "eteWebhook\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206\031\001\032\n\n\010" +
-      "Response:+\342?(\n&com.databricks.rpc.RPC[$t" +
-      "his.Response]\"\260\001\n\013TestWebhook\022\030\n\nwebhook" +
-      "_id\030\001 \001(\tB\004\370\206\031\001\022#\n\005event\030\002 \001(\0132\024.mlflow." +
-      "WebhookEvent\0325\n\010Response\022)\n\006result\030\001 \001(\013" +
-      "2\031.mlflow.WebhookTestResult:+\342?(\n&com.da" +
-      "tabricks.rpc.RPC[$this.Response]*)\n\rWebh" +
-      "ookStatus\022\n\n\006ACTIVE\020\001\022\014\n\010DISABLED\020\002*\221\002\n\r" +
-      "WebhookEntity\022\026\n\022ENTITY_UNSPECIFIED\020\000\022\024\n" +
-      "\020REGISTERED_MODEL\020\001\022\021\n\rMODEL_VERSION\020\002\022\025" +
-      "\n\021MODEL_VERSION_TAG\020\003\022\027\n\023MODEL_VERSION_A" +
-      "LIAS\020\004\022\n\n\006PROMPT\020\005\022\022\n\016PROMPT_VERSION\020\006\022\016" +
-      "\n\nPROMPT_TAG\020\007\022\026\n\022PROMPT_VERSION_TAG\020\010\022\020" +
-      "\n\014PROMPT_ALIAS\020\t\022\021\n\rBUDGET_POLICY\020\n\022\t\n\005I" +
-      "SSUE\020\013\022\027\n\023ISSUE_DETECTION_RUN\020\014*t\n\rWebho" +
-      "okAction\022\026\n\022ACTION_UNSPECIFIED\020\000\022\013\n\007CREA" +
-      "TED\020\001\022\013\n\007UPDATED\020\002\022\013\n\007DELETED\020\003\022\007\n\003SET\020\004" +
-      "\022\014\n\010EXCEEDED\020\005\022\r\n\tCOMPLETED\020\0062\265\006\n\016Webhoo" +
-      "kService\022~\n\rcreateWebhook\022\025.mlflow.Creat" +
-      "eWebhook\032\036.mlflow.CreateWebhook.Response" +
-      "\"6\362\206\0312\n\036\n\004POST\022\020/mlflow/webhooks\032\004\010\002\020\000\020\001" +
-      "*\016Create Webhook\022y\n\014listWebhooks\022\024.mlflo" +
-      "w.ListWebhooks\032\035.mlflow.ListWebhooks.Res" +
-      "ponse\"4\362\206\0310\n\035\n\003GET\022\020/mlflow/webhooks\032\004\010\002" +
-      "\020\000\020\001*\rList Webhooks\022~\n\ngetWebhook\022\022.mlfl" +
-      "ow.GetWebhook\032\033.mlflow.GetWebhook.Respon" +
-      "se\"?\362\206\031;\n*\n\003GET\022\035/mlflow/webhooks/{webho" +
-      "ok_id}\032\004\010\002\020\000\020\001*\013Get Webhook\022\214\001\n\rupdateWe" +
-      "bhook\022\025.mlflow.UpdateWebhook\032\036.mlflow.Up" +
-      "dateWebhook.Response\"D\362\206\031@\n,\n\005PATCH\022\035/ml" +
-      "flow/webhooks/{webhook_id}\032\004\010\002\020\000\020\001*\016Upda" +
-      "te Webhook\022\215\001\n\rdeleteWebhook\022\025.mlflow.De" +
-      "leteWebhook\032\036.mlflow.DeleteWebhook.Respo" +
-      "nse\"E\362\206\031A\n-\n\006DELETE\022\035/mlflow/webhooks/{w" +
-      "ebhook_id}\032\004\010\002\020\000\020\001*\016Delete Webhook\022\210\001\n\013t" +
-      "estWebhook\022\023.mlflow.TestWebhook\032\034.mlflow" +
-      ".TestWebhook.Response\"F\362\206\031B\n0\n\004POST\022\"/ml" +
-      "flow/webhooks/{webhook_id}/test\032\004\010\002\020\000\020\001*" +
-      "\014Test WebhookB!\n\024org.mlflow.api.proto\220\001\001" +
-      "\240\001\001\342?\002\020\001"
+      "onse]\"\251\002\n\rUpdateWebhook\022\030\n\nwebhook_id\030\001 " +
+      "\001(\tB\004\370\206\031\001\022\014\n\004name\030\002 \001(\t\022\023\n\013description\030\003" +
+      " \001(\t\022\013\n\003url\030\004 \001(\t\022$\n\006events\030\005 \003(\0132\024.mlfl" +
+      "ow.WebhookEvent\022\016\n\006secret\030\006 \001(\t\022%\n\006statu" +
+      "s\030\007 \001(\0162\025.mlflow.WebhookStatus\022\026\n\016experi" +
+      "ment_ids\030\010 \003(\t\032,\n\010Response\022 \n\007webhook\030\001 " +
+      "\001(\0132\017.mlflow.Webhook:+\342?(\n&com.databrick" +
+      "s.rpc.RPC[$this.Response]\"b\n\rDeleteWebho" +
+      "ok\022\030\n\nwebhook_id\030\001 \001(\tB\004\370\206\031\001\032\n\n\010Response" +
+      ":+\342?(\n&com.databricks.rpc.RPC[$this.Resp" +
+      "onse]\"\260\001\n\013TestWebhook\022\030\n\nwebhook_id\030\001 \001(" +
+      "\tB\004\370\206\031\001\022#\n\005event\030\002 \001(\0132\024.mlflow.WebhookE" +
+      "vent\0325\n\010Response\022)\n\006result\030\001 \001(\0132\031.mlflo" +
+      "w.WebhookTestResult:+\342?(\n&com.databricks" +
+      ".rpc.RPC[$this.Response]*)\n\rWebhookStatu" +
+      "s\022\n\n\006ACTIVE\020\001\022\014\n\010DISABLED\020\002*\221\002\n\rWebhookE" +
+      "ntity\022\026\n\022ENTITY_UNSPECIFIED\020\000\022\024\n\020REGISTE" +
+      "RED_MODEL\020\001\022\021\n\rMODEL_VERSION\020\002\022\025\n\021MODEL_" +
+      "VERSION_TAG\020\003\022\027\n\023MODEL_VERSION_ALIAS\020\004\022\n" +
+      "\n\006PROMPT\020\005\022\022\n\016PROMPT_VERSION\020\006\022\016\n\nPROMPT" +
+      "_TAG\020\007\022\026\n\022PROMPT_VERSION_TAG\020\010\022\020\n\014PROMPT" +
+      "_ALIAS\020\t\022\021\n\rBUDGET_POLICY\020\n\022\t\n\005ISSUE\020\013\022\027" +
+      "\n\023ISSUE_DETECTION_RUN\020\014*t\n\rWebhookAction" +
+      "\022\026\n\022ACTION_UNSPECIFIED\020\000\022\013\n\007CREATED\020\001\022\013\n" +
+      "\007UPDATED\020\002\022\013\n\007DELETED\020\003\022\007\n\003SET\020\004\022\014\n\010EXCE" +
+      "EDED\020\005\022\r\n\tCOMPLETED\020\0062\265\006\n\016WebhookService" +
+      "\022~\n\rcreateWebhook\022\025.mlflow.CreateWebhook" +
+      "\032\036.mlflow.CreateWebhook.Response\"6\362\206\0312\n\036" +
+      "\n\004POST\022\020/mlflow/webhooks\032\004\010\002\020\000\020\001*\016Create" +
+      " Webhook\022y\n\014listWebhooks\022\024.mlflow.ListWe" +
+      "bhooks\032\035.mlflow.ListWebhooks.Response\"4\362" +
+      "\206\0310\n\035\n\003GET\022\020/mlflow/webhooks\032\004\010\002\020\000\020\001*\rLi" +
+      "st Webhooks\022~\n\ngetWebhook\022\022.mlflow.GetWe" +
+      "bhook\032\033.mlflow.GetWebhook.Response\"?\362\206\031;" +
+      "\n*\n\003GET\022\035/mlflow/webhooks/{webhook_id}\032\004" +
+      "\010\002\020\000\020\001*\013Get Webhook\022\214\001\n\rupdateWebhook\022\025." +
+      "mlflow.UpdateWebhook\032\036.mlflow.UpdateWebh" +
+      "ook.Response\"D\362\206\031@\n,\n\005PATCH\022\035/mlflow/web" +
+      "hooks/{webhook_id}\032\004\010\002\020\000\020\001*\016Update Webho" +
+      "ok\022\215\001\n\rdeleteWebhook\022\025.mlflow.DeleteWebh" +
+      "ook\032\036.mlflow.DeleteWebhook.Response\"E\362\206\031" +
+      "A\n-\n\006DELETE\022\035/mlflow/webhooks/{webhook_i" +
+      "d}\032\004\010\002\020\000\020\001*\016Delete Webhook\022\210\001\n\013testWebho" +
+      "ok\022\023.mlflow.TestWebhook\032\034.mlflow.TestWeb" +
+      "hook.Response\"F\362\206\031B\n0\n\004POST\022\"/mlflow/web" +
+      "hooks/{webhook_id}/test\032\004\010\002\020\000\020\001*\014Test We" +
+      "bhookB!\n\024org.mlflow.api.proto\220\001\001\240\001\001\342?\002\020\001"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -16264,7 +17219,7 @@ public final class Webhooks {
     internal_static_mlflow_Webhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_Webhook_descriptor,
-        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Status", "CreationTimestamp", "LastUpdatedTimestamp", });
+        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Status", "CreationTimestamp", "LastUpdatedTimestamp", "ExperimentIds", });
     internal_static_mlflow_WebhookTestResult_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_mlflow_WebhookTestResult_fieldAccessorTable = new
@@ -16276,7 +17231,7 @@ public final class Webhooks {
     internal_static_mlflow_CreateWebhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_CreateWebhook_descriptor,
-        new java.lang.String[] { "Name", "Description", "Url", "Events", "Secret", "Status", });
+        new java.lang.String[] { "Name", "Description", "Url", "Events", "Secret", "Status", "ExperimentIds", });
     internal_static_mlflow_CreateWebhook_Response_descriptor =
       internal_static_mlflow_CreateWebhook_descriptor.getNestedTypes().get(0);
     internal_static_mlflow_CreateWebhook_Response_fieldAccessorTable = new
@@ -16312,7 +17267,7 @@ public final class Webhooks {
     internal_static_mlflow_UpdateWebhook_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_mlflow_UpdateWebhook_descriptor,
-        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Secret", "Status", });
+        new java.lang.String[] { "WebhookId", "Name", "Description", "Url", "Events", "Secret", "Status", "ExperimentIds", });
     internal_static_mlflow_UpdateWebhook_Response_descriptor =
       internal_static_mlflow_UpdateWebhook_descriptor.getNestedTypes().get(0);
     internal_static_mlflow_UpdateWebhook_Response_fieldAccessorTable = new

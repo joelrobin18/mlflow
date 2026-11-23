@@ -212,3 +212,29 @@ def test_delete_webhook(store: RestStore):
 def test_delete_webhook_not_found(store: RestStore):
     with pytest.raises(MlflowException, match="Webhook with ID nonexistent not found"):
         store.delete_webhook("nonexistent")
+
+
+def test_webhook_experiments_round_trip_and_clear(store: RestStore):
+    event = WebhookEvent(WebhookEntity.ISSUE, WebhookAction.CREATED)
+    webhook = store.create_webhook(
+        name="issue_webhook",
+        url="https://example.com/webhook",
+        events=[event],
+        experiment_ids=["7", "12"],
+    )
+    assert webhook.experiment_ids == ["12", "7"]
+    assert store.get_webhook(webhook.webhook_id).experiment_ids == ["12", "7"]
+
+    assert store.update_webhook(webhook.webhook_id, name="renamed").experiment_ids == ["12", "7"]
+    # An empty list has to reach the server to remove the limit, though protobuf JSON drops it.
+    assert store.update_webhook(webhook.webhook_id, experiment_ids=[]).experiment_ids == []
+
+
+def test_create_webhook_rejects_experiments_for_registry_events(store: RestStore):
+    with pytest.raises(MlflowException, match="can be limited to experiments"):
+        store.create_webhook(
+            name="model_webhook",
+            url="https://example.com/webhook",
+            events=[WebhookEvent(WebhookEntity.MODEL_VERSION, WebhookAction.CREATED)],
+            experiment_ids=["7"],
+        )

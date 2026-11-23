@@ -355,6 +355,7 @@ class SqlWebhook(Base):
             description=self.description,
             status=WebhookStatus(self.status),
             secret=self.secret,
+            experiment_ids=sorted(we.experiment_id for we in self.webhook_experiments),
         )
 
 
@@ -382,3 +383,35 @@ class SqlWebhookEvent(Base):
 
     def to_mlflow_entity(self):
         return WebhookEvent(entity=WebhookEntity(self.entity), action=WebhookAction(self.action))
+
+
+class SqlWebhookExperiment(Base):
+    """
+    An experiment a webhook is limited to. A webhook with none receives its events from every
+    experiment, as webhooks did before they could be limited.
+    """
+
+    __tablename__ = "webhook_experiments"
+
+    webhook_id = Column(
+        String(256),
+        # Named so the constraint reads the same in every database: unnamed, SQL Server makes one
+        # up with a random suffix.
+        ForeignKey(
+            "webhooks.webhook_id", ondelete="cascade", name="fk_webhook_experiments_webhook_id"
+        ),
+        nullable=False,
+    )
+    experiment_id = Column(String(32), nullable=False)
+
+    webhook = relationship(
+        "SqlWebhook", backref=backref("webhook_experiments", cascade="all, delete-orphan")
+    )
+
+    __table_args__ = (
+        PrimaryKeyConstraint("webhook_id", "experiment_id", name="webhook_experiment_pk"),
+        Index("idx_webhook_experiments_experiment_id", "experiment_id"),
+    )
+
+    def __repr__(self):
+        return f"<SqlWebhookExperiment ({self.webhook_id}, {self.experiment_id})>"

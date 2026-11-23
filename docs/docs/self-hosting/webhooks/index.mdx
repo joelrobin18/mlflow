@@ -272,6 +272,24 @@ client.update_webhook(
 )
 ```
 
+### Limiting a Webhook to Experiments
+
+A webhook subscribed to events that happen inside an experiment, such as `issue.created` and `issue_detection_run.completed`, receives them from every experiment by default. Pass `experiment_ids` to receive them only from some experiments:
+
+```python
+webhook = client.create_webhook(
+    name="checkout-agent-issues",
+    url="https://your-app.com/mlflow-issues",
+    events=["issue.created"],
+    experiment_ids=["7", "12"],
+)
+
+# Replace the experiments, or pass [] to receive events from every experiment again
+client.update_webhook(webhook_id=webhook.webhook_id, experiment_ids=["7"])
+```
+
+Only a webhook whose events all belong to an experiment can be limited this way. MLflow rejects `experiment_ids` on a webhook subscribed to any other event, such as `model_version.created`, since that event would never match. In the UI, the **Experiments** field appears once every selected event belongs to an experiment.
+
 ### Deleting a Webhook
 
 Use <APILink fn="mlflow.client.MlflowClient.delete_webhook" >`MlflowClient.delete_webhook()`</APILink> to remove a webhook:
