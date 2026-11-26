@@ -343,6 +343,31 @@ def test_get_all_windows():
     assert by_id["bp-2"].exceeded is False
 
 
+def test_get_all_windows_reports_the_current_window_after_the_stored_one_ends():
+    tracker = _make_tracker()
+    tracker.refresh_policies([
+        _make_policy(
+            budget_amount=10.0,
+            duration=BudgetDuration(unit=BudgetDurationUnit.MINUTES, value=15),
+        )
+    ])
+    tracker.record_cost(12.0)
+    [ended] = tracker.get_all_windows()
+    assert ended.cumulative_spend == 12.0
+    assert ended.exceeded is True
+
+    # No cost and no refresh after the window ended, so Redis still stores the ended one.
+    with patch("mlflow.gateway.budget_tracker.redis.datetime") as mock_dt:
+        mock_dt.now.return_value = ended.window_end + timedelta(minutes=20)
+        mock_dt.fromisoformat = datetime.fromisoformat
+        [current] = tracker.get_all_windows()
+
+    assert current.window_start == ended.window_end + timedelta(minutes=15)
+    assert current.window_end == current.window_start + timedelta(minutes=15)
+    assert current.cumulative_spend == 0.0
+    assert current.exceeded is False
+
+
 def test_should_reject_request_workspace_filtering():
     tracker = _make_tracker()
     policy = _make_policy(

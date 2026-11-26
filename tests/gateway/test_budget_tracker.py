@@ -570,6 +570,29 @@ def test_get_all_windows_after_policy_removed():
     assert windows[0].policy.budget_policy_id == "bp-1"
 
 
+def test_get_all_windows_reports_the_current_window_after_the_stored_one_ends():
+    tracker = InMemoryBudgetTracker()
+    policy = _make_policy(
+        budget_amount=10.0,
+        duration=BudgetDuration(unit=BudgetDurationUnit.MINUTES, value=15),
+    )
+    tracker.refresh_policies([policy])
+    tracker.record_cost(12.0)
+    [ended] = tracker.get_all_windows()
+    assert ended.cumulative_spend == 12.0
+    assert ended.exceeded is True
+
+    # No cost and no refresh after the window ended, so the tracker still stores the ended one.
+    with patch("mlflow.gateway.budget_tracker.in_memory.datetime") as mock_dt:
+        mock_dt.now.return_value = ended.window_end + timedelta(minutes=20)
+        [current] = tracker.get_all_windows()
+
+    assert current.window_start == ended.window_end + timedelta(minutes=15)
+    assert current.window_end == current.window_start + timedelta(minutes=15)
+    assert current.cumulative_spend == 0.0
+    assert current.exceeded is False
+
+
 # --- InMemoryBudgetTracker endpoint-scoped tests ---
 
 

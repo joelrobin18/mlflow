@@ -269,3 +269,20 @@ def _policy_applies(
         return policy.target_value is not None and policy.target_value == username
     effective_workspace = workspace or DEFAULT_WORKSPACE_NAME
     return policy.workspace == effective_workspace
+
+
+def _window_as_of(window: BudgetWindow, now: datetime) -> BudgetWindow:
+    """Return the window that is current at ``now``.
+
+    A tracker rolls a stored window forward only when it records a cost or refreshes its
+    policies, so the stored window can have ended already. Its spend belongs to the ended
+    period, so the current window starts with no spend.
+    """
+    if now < window.window_end:
+        return window
+    window_start = _compute_window_start(window.policy.duration, now)
+    return BudgetWindow(
+        policy=window.policy,
+        window_start=window_start,
+        window_end=_compute_window_end(window.policy.duration, window_start),
+    )

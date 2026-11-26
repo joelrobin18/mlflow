@@ -13,6 +13,7 @@ from mlflow.gateway.budget_tracker import (
     _compute_window_end,
     _compute_window_start,
     _policy_applies,
+    _window_as_of,
 )
 
 
@@ -173,8 +174,9 @@ class InMemoryBudgetTracker(BudgetTracker):
         return newly_exceeded
 
     def get_all_windows(self) -> list[BudgetWindow]:
+        now = datetime.now(timezone.utc)
         with self._lock:
-            return list(self._windows.values())
+            return [_window_as_of(window, now) for window in self._windows.values()]
 
     def _get_window_info(self, budget_policy_id: str) -> BudgetWindow | None:
         """Get the current window info for a policy (for payload construction)."""

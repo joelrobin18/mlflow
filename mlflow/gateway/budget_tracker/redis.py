@@ -26,6 +26,7 @@ from mlflow.gateway.budget_tracker import (
     _compute_window_end,
     _compute_window_start,
     _policy_applies,
+    _window_as_of,
 )
 
 _logger = logging.getLogger(__name__)
@@ -425,8 +426,9 @@ class RedisBudgetTracker(BudgetTracker):
         return newly_exceeded
 
     def get_all_windows(self) -> list[BudgetWindow]:
+        now = datetime.now(timezone.utc)
         return [
-            window
+            _window_as_of(window, now)
             for pid in self._client.smembers(_policy_set_key())
             if (window := self._get_window_info(pid))
         ]
